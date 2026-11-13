@@ -53,12 +53,22 @@ val hasReleaseSigningConfig = releaseStoreFile.isNotBlank() &&
     releaseKeyAlias.isNotBlank() &&
     releaseKeyPassword.isNotBlank()
 
+// Tester signing config (see android/local.properties.example). In CI these come from GitHub secrets.
+val testerStoreFile = localProperties.getProperty("TESTER_STORE_FILE", "")
+val testerStorePassword = localProperties.getProperty("TESTER_STORE_PASSWORD", "")
+val testerKeyAlias = localProperties.getProperty("TESTER_KEY_ALIAS", "")
+val testerKeyPassword = localProperties.getProperty("TESTER_KEY_PASSWORD", "")
+val hasTesterSigningConfig = testerStoreFile.isNotBlank() &&
+    testerStorePassword.isNotBlank() &&
+    testerKeyAlias.isNotBlank() &&
+    testerKeyPassword.isNotBlank()
+
 android {
-    namespace = "com.assistant.app"
+    namespace = "com.nandivex.friday"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.assistant.app"
+        applicationId = "com.nandivex.friday"
         minSdk = 26
         targetSdk = 35
         versionCode = appVersionCode
@@ -81,6 +91,16 @@ android {
                 keyPassword = "android"
             }
         }
+        // Tester builds go to testers through Firebase App Distribution. One shared key (kept outside git) lets every
+        // new build install over the last one and keep the tester's data. Falls back to the debug key on a dev PC.
+        if (hasTesterSigningConfig) {
+            create("beta") {
+                storeFile = rootProject.file(testerStoreFile)
+                storePassword = testerStorePassword
+                keyAlias = testerKeyAlias
+                keyPassword = testerKeyPassword
+            }
+        }
         if (hasReleaseSigningConfig) {
             create("release") {
                 storeFile = rootProject.file(releaseStoreFile)
@@ -99,16 +119,20 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
-        // Build published to the AWS update server: signed with the same debug key as the installed app
-        // (so Android accepts it as an update), but shrunk and phone-ABI only, so the download is a fraction
-        // of the debug APK's size and the app runs without debuggable slowdowns.
-        create("ota") {
+        // Developer build: sits next to the tester and Play builds on one phone ("FRIDAY Dev").
+        debug {
+            applicationIdSuffix = ".debug"
+        }
+        // Build sent to testers by Firebase App Distribution: shrunk, phone-ABI only, not debuggable. Its package
+        // (com.nandivex.friday.tester) differs from debug and release, so all three can be installed together.
+        create("beta") {
             initWith(getByName("debug"))
+            applicationIdSuffix = ".tester"
             isDebuggable = false
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("beta") ?: signingConfigs.getByName("debug")
             matchingFallbacks += "debug"
             ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
         }

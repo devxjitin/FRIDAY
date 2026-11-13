@@ -194,7 +194,7 @@ Minimum Android version is 8.0 (API 26); the app targets API 35 and compiles aga
 ```text
 .
 ├── android/                         Android application (Gradle project)
-│   ├── app/src/main/java/com/assistant/app/
+│   ├── app/src/main/java/com/nandivex/friday/
 │   │   ├── audio/                   Microphone streaming, playback, amplitude
 │   │   ├── data/                    Settings, stores, device tools, RAG, usage
 │   │   ├── network/                 Gemini Live client, MCP client, updater

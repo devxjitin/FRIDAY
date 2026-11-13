@@ -17,3 +17,15 @@ RELEASE_STORE_PASSWORD=your_store_password_here
 RELEASE_KEY_ALIAS=assistant-release
 RELEASE_KEY_PASSWORD=your_key_password_here
 
+
+# Tester signing key (Firebase App Distribution builds). Keep the keystore outside git; in CI use GitHub secrets.
+# TESTER_STORE_FILE=keystore/tester.jks
+# TESTER_STORE_PASSWORD=...
+# TESTER_KEY_ALIAS=tester
+# TESTER_KEY_PASSWORD=...
+
+# Tester signing key (Firebase App Distribution builds). Keep the keystore outside git; in CI use GitHub secrets.
+# TESTER_STORE_FILE=keystore/tester.jks
+# TESTER_STORE_PASSWORD=...
+# TESTER_KEY_ALIAS=tester
+# TESTER_KEY_PASSWORD=...

@@ -20,6 +20,10 @@ class VersionBumpTests(unittest.TestCase):
     def test_older_version_is_rejected(self):
         self.assertIsNotNone(bump.check(OLD, OLD.replace("1.7.0", "1.6.5")))
 
+    def test_friday_restart_at_0_0_1_passes_once(self):
+        self.assertIsNone(bump.check(OLD, "## 0.0.1\n"))
+        self.assertIn("still 0.0.1", bump.check("## 0.0.1\n", "## 0.0.1\n"))
+
     def test_newer_version_passes_and_compares_numbers_not_text(self):
         self.assertIsNone(bump.check(OLD, "## 1.8.0\n" + OLD))
         self.assertIsNone(bump.check("## 1.9.0\n", "## 1.10.0\n## 1.9.0\n"))

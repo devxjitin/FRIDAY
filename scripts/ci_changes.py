@@ -8,7 +8,7 @@ import subprocess
 def classify(paths):
     result = dict(android=False, backend=False, web=False, publish=False)
     for path in paths:
-        if path.startswith("android/") or path == "scripts/publish-update.ps1":
+        if path.startswith("android/"):
             result.update(android=True, publish=True)
         if (path.startswith("mcp/") and not path.endswith(".md")) or path.startswith("infra/") or path == ".python-version":
             result["backend"] = True
@@ -16,7 +16,7 @@ def classify(paths):
             result["web"] = True
         if path in (".github/workflows/checks.yml", "scripts/ci_changes.py") or path.startswith("tests/ci/"):
             result.update(android=True, backend=True, web=True)
-        if path == ".github/workflows/publish-ota.yml" or path.startswith(".github/actions/"):
+        if path == ".github/workflows/distribute.yml" or path.startswith(".github/actions/"):
             result.update(android=True, backend=True, web=True, publish=True)
     return result
 

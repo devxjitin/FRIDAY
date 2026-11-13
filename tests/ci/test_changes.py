@@ -26,7 +26,7 @@ class ChangesTests(unittest.TestCase):
         self.assertFalse(any(ci.classify(["mcp/youtube-search/README.md"]).values()))
 
     def test_publishing_logic_is_validated_and_released(self):
-        for path in ("scripts/publish-update.ps1", ".github/workflows/publish-ota.yml"):
+        for path in (".github/workflows/distribute.yml",):
             result = ci.classify([path])
             self.assertTrue(result["android"] and result["publish"])
 
