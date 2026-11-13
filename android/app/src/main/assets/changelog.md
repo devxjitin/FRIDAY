@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.2 - 2026-11-13
+
+### Fixed
+- Build tooling only: the tester build can now be built by the automatic checks. No change to how the app works.
+
 ## 0.0.1 - 2026-11-13
 
 ### Changed

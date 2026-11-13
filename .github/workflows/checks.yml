@@ -57,45 +57,6 @@ jobs:
       - name: Change-selection regression tests
         run: python -m unittest discover -s tests/ci -v
 
-  android: ${{ steps.plan.outputs.android }}
-      backend: ${{ steps.plan.outputs.backend }}
-      web: ${{ steps.plan.outputs.web }}
-      publish: ${{ steps.plan.outputs.publish }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - id: plan
-        run: python scripts/ci_changes.py
-
-  version:
-    name: Version bumped
-    needs: changes
-    # Merging to main publishes an update, so the pull request itself must say which version that update is.
-    if: github.event_name == 'pull_request' && needs.changes.outputs.publish == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Require a newer version at the top of changelog.md
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: python scripts/check_version_bump.py "$BASE_SHA"
-
-  ci:
-    name: Workflow logic
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - name: Change-selection regression tests
-        run: python -m unittest discover -s tests/ci -v
-      - name: Publish-script regression tests
-        shell: pwsh
-        run: ./tests/ci/test-publish.ps1
-
   android:
     needs: changes
     if: needs.changes.outputs.android == 'true'
