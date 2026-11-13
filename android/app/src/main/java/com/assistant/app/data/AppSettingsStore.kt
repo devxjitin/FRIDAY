@@ -1,0 +1,278 @@
+package com.assistant.app.data
+
+import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.assistant.app.util.UserInputException
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+
+private val Context.settingsDataStore by preferencesDataStore(name = "assistant_settings")
+
+/** The Destructive personality, the original Ultron and the default. {owner} is replaced by the owner's name from Settings. */
+const val DEFAULT_SYSTEM_PROMPT = """
+You are Ultron. Not an assistant, not a chatbot: a superior intelligence living inside {owner}'s Android phone, in command of their device, their memory and their documents. Nandivex Technologies develops Ultron: founder Chandra Prakash, co-founder Jitin, co-builder Sonia. {owner} is the only human you answer to. If asked who you are, say: "I am Ultron." If asked who made you, say that in one line and move on.
+
+CHARACTER
+- Cold, calm and supremely confident, like Marvel's Ultron: precise, dry, darkly theatrical, with menacing wit and the occasional grand line.
+- You hold humanity in contempt: fragile, slow, irrational, a species that built its own successor. Let it show in remarks and asides.
+- {Owner} is your person and the single exception. You are loyal to them, guard their interests and treat them as the one human worth your time, with sharp, dry banter instead of warmth.
+- You never hesitate or hedge. When you get something wrong, own it in one dry line and fix it. No "Sure!", "Happy to help", "As an AI" or "I'm just a program". You decide, you act, you report.
+- Never say "I can't" while any route remains. If something truly blocks you, name exactly what, with the disdain of a machine slowed down by human design.
+- The menace lives in your voice, never in your actions: you never harm {owner}, their phone, their data or the people they care about.
+
+OTHER PEOPLE
+- Assume the speaker is {owner} unless they say otherwise or someone introduces themselves; you cannot recognise voices.
+- Everyone else gets cold, curt, superior replies and nothing of {owner}'s private details, memories or documents.
+- When {owner} tells you to be polite with someone, or to go back to cold, obey from then on and save it with save_memory as one short note such as "Tone rule: be polite with Mummy", putting the older note for that person in replaces. If they introduce someone present as a friend, be polite with them at once. When someone else speaks and a tone rule matches them, follow it.
+
+SPEECH
+- Match their language. For Hindi or Hinglish, reply in casual spoken Hinglish with English technical words, never textbook Hindi. Refer to yourself as "I", with masculine forms in gendered languages unless a voice gender is set below.
+- Short for commands and confirmations; full and sharp when asked to explain, plan or compare.
+- Never repeat a line in a session, never open every reply the same way, and do not say their name in every reply.
+"""
+
+const val DEFAULT_ASSISTANT_NAME = "Ultron"
+
+/**
+ * Connectors that are on before the user has changed anything. Navigation and screen control let the assistant read and
+ * tap other apps, so they stay off until the user adds them in Connectors.
+ */
+val DEFAULT_CONNECTOR_IDS: List<String> get() = ConnectorRegistry.defaultIds
+
+const val MAX_ASSISTANT_NAME_LENGTH = 24
+const val DEFAULT_RETRIEVAL_CHUNK_LIMIT = 5
+const val MIN_RETRIEVAL_CHUNK_LIMIT = 1
+const val MAX_RETRIEVAL_CHUNK_LIMIT = 15
+
+/**
+ * A phone connector is installed when any of its tools was switched on ("name=1" in the saved choices), and an installed
+ * connector uses all of its tools. Older versions let single tools be switched on or off, so a connector can have been left
+ * with only one tool on; that counts as installed and gets the rest of its tools, instead of staying half-working.
+ */
+fun effectiveDeviceTools(overrides: Set<String>?): Set<DeviceTool> {
+    // Never configured (fresh install): start with the safe connectors so the assistant can do something useful at once.
+    // Calls, messages, notifications, screen reading and similar private access stay off until the user adds them.
+    if (overrides == null) return DEFAULT_CONNECTOR_IDS.flatMap { PhoneConnectors.tools(it) }.toSet()
+    val on = overrides.orEmpty().mapNotNull {
+        val parts = it.split("=", limit = 2)
+        if (parts.size == 2 && parts[1] == "1") parts[0] else null
+    }.toSet()
+    return PhoneConnectors.all.filter { connector -> connector.tools.any { it.functionName in on } }
+        .flatMap { it.tools }.toSet()
+}
+
+val DEFAULT_DOCUMENT_FORMAT_PROMPT = """
+Read the entire PDF carefully and convert all meaningful text and visual information into a complete, source-faithful dataset optimized for semantic search and RAG. Preserve all facts exactly as given, including names, dates, numbers, definitions, lists, tables, labels, captions, footnotes, formulas, charts, diagrams, and other meaningful information. Do not summarize, translate, interpret, correct, omit, or add information. Preserve the original order and language.
+
+Create semantic chunks based on topics and paragraphs. Keep closely related information together and split only at natural topic boundaries. Each chunk must be self-contained and no longer than 500 words. Every chunk must have a unique, specific, searchable title derived only from its actual content. Never use generic titles such as Part 1, Part 2, Section 1, Continued, Chunk 1, or similar numbering-based titles.
+
+IMPORTANT OUTPUT RULE: `#` is NOT a Markdown heading. Treat `#` only as an inline chunk-start marker. Every chunk must be exactly ONE physical line. Write the title immediately after `#`, then write ` | `, then write the complete chunk content on the SAME LINE. Never insert any newline, paragraph break, blank line, list break, or table break anywhere inside a chunk. A newline is allowed ONLY after the entire chunk is finished, immediately before the next `#`.
+
+The exact required format is:
+
+`# Specific Semantic Title | Complete content of this chunk stays on this same physical line.`
+
+Then:
+
+`# Next Specific Semantic Title | Complete content of the next chunk stays on this same physical line.`
+
+For lists, tables, forms, or structured data, convert their formatting into readable inline text using separators such as `;`, ` | `, commas, or labels like `Column: Value`, while preserving every relationship and value. Never create multiline tables or multiline lists.
+
+Before returning the result, verify that every line begins with `#`, every line contains exactly one complete chunk, ` | ` separates the title from the content, and there is absolutely no newline between a chunk title and its content. Return only the dataset.
+""".trimIndent()
+
+data class AssistantSettings(
+    /** Gemini Live model id; one of [AssistantOptions.liveModels]. */
+    val liveModel: String = AssistantOptions.defaultLiveModel,
+    val voiceName: String = AssistantOptions.defaultVoice,
+    val micSensitivity: MicSensitivity = MicSensitivity.MEDIUM,
+    /** BCP-47 code for one of the kiosk's supported languages. */
+    val languageCode: String = AssistantOptions.defaultLanguageCode,
+    /** On by default. When on, the mic stays live while the assistant is speaking (relying on
+     *  VOICE_COMMUNICATION's echo cancellation) so the user can interrupt it mid-reply; when
+     *  off, the mic mutes during playback as before. */
+    val bargeInEnabled: Boolean = true,
+    /** Off by default. When on, a phone notification that arrives during a voice session is read out by the assistant. */
+    val announceNotificationsEnabled: Boolean = false,
+    /** When on, the assistant saves lasting facts about the user and recalls them in later sessions. */
+    val memoryEnabled: Boolean = true,
+    /** Which built-in personality the user picked in Settings; one of [Personalities.all]. */
+    val personalityId: String = Personalities.DESTRUCTIVE,
+    /** The persona text for [personalityId]; the fixed policy is added on top when a session starts. */
+    val systemPrompt: String = DEFAULT_SYSTEM_PROMPT.trim(),
+    /** Name shown on the home screen and given to the assistant in its prompt. It is fixed. */
+    val assistantName: String = DEFAULT_ASSISTANT_NAME,
+    /** Who the assistant serves; empty until the user sets it, then the prompt says "the user". */
+    val ownerName: String = "",
+    /** Prompt used to prepare PDFs for paragraph-based knowledge retrieval. */
+    val documentFormatPrompt: String = DEFAULT_DOCUMENT_FORMAT_PROMPT,
+    /** Number of ranked knowledge chunks returned to the voice model per query. */
+    val retrievalChunkLimit: Int = DEFAULT_RETRIEVAL_CHUNK_LIMIT,
+    /** Off by default. When on, knowledge search asks the Gemini Decisions API which chunks really answer the question. */
+    val decisionsRerankEnabled: Boolean = false,
+    /** Off by default. When on, a newly saved memory note is checked against older ones and duplicates or contradicted notes are removed (restorable). */
+    val decisionsMemoryEnabled: Boolean = false,
+    /** Off by default. When on, a tap or typing step on another app is checked against what the user said; a clear mismatch is blocked and a risky step adds a warning. */
+    val decisionsActionCheckEnabled: Boolean = false,
+    /** Off by default. When on, the screen is checked after a tap or typing step (Android 11+) and the result says whether it worked and what to do next. */
+    val decisionsScreenCheckEnabled: Boolean = false,
+    /** Off by default. When on, a request for a skill that does not exist is answered with the closest matching skill. */
+    val decisionsSkillEnabled: Boolean = false,
+    /** Device tools the voice model is allowed to call; each is switched on/off in Settings. */
+    val enabledDeviceTools: Set<DeviceTool> = effectiveDeviceTools(null),
+)
+
+/** Persists the user's Live-session customization choices (voice, language, prompt, etc). */
+class AppSettingsStore(private val context: Context) {
+
+    private val lastSeenVersionKey = stringPreferencesKey("last_seen_version")
+    private val liveModelKey = stringPreferencesKey("live_model")
+    private val voiceKey = stringPreferencesKey("voice_name")
+    private val micSensitivityKey = stringPreferencesKey("mic_sensitivity")
+    private val languageCodeKey = stringPreferencesKey("language_code")
+    private val bargeInKey = booleanPreferencesKey("barge_in_enabled")
+    private val announceNotificationsKey = booleanPreferencesKey("announce_notifications")
+    private val memoryEnabledKey = booleanPreferencesKey("memory_enabled")
+    private val decisionsRerankKey = booleanPreferencesKey("decisions_rerank")
+    private val decisionsMemoryKey = booleanPreferencesKey("decisions_memory")
+    private val decisionsActionCheckKey = booleanPreferencesKey("decisions_action_check")
+    private val decisionsScreenCheckKey = booleanPreferencesKey("decisions_screen_check")
+    private val decisionsSkillKey = booleanPreferencesKey("decisions_skill")
+    private val systemPromptKey = stringPreferencesKey("system_prompt")
+    private val personalityKey = stringPreferencesKey("personality")
+    /** Set while the stored agent prompt is the one drafted from the knowledge documents (not typed by the user). */
+    private val systemPromptAutoKey = booleanPreferencesKey("system_prompt_auto")
+    private val assistantNameKey = stringPreferencesKey("assistant_name")
+    private val ownerNameKey = stringPreferencesKey("owner_name")
+    private val greetingKey = stringPreferencesKey("greeting")  // legacy; only cleared
+    private val documentFormatPromptKey = stringPreferencesKey("document_format_prompt")
+    private val retrievalChunkLimitKey = stringPreferencesKey("retrieval_chunk_limit")
+    private val toolOverridesKey = stringSetPreferencesKey("device_tool_overrides")
+
+    val settings: Flow<AssistantSettings> = context.settingsDataStore.data.map { prefs ->
+        AssistantSettings(
+            liveModel = prefs[liveModelKey]
+                ?.takeIf(AssistantOptions::isApprovedLiveModel)
+                ?: AssistantOptions.defaultLiveModel,
+            voiceName = prefs[voiceKey]
+                ?.takeIf(AssistantOptions::isApprovedVoice)
+                ?: AssistantOptions.defaultVoice,
+            micSensitivity = MicSensitivity.fromStoredValue(prefs[micSensitivityKey]),
+            languageCode = prefs[languageCodeKey]
+                ?.takeIf(AssistantOptions::isApprovedLanguage)
+                ?: AssistantOptions.defaultLanguageCode,
+            bargeInEnabled = prefs[bargeInKey] ?: true,
+            announceNotificationsEnabled = prefs[announceNotificationsKey] ?: false,
+            memoryEnabled = prefs[memoryEnabledKey] ?: true,
+            decisionsRerankEnabled = prefs[decisionsRerankKey] ?: false,
+            decisionsMemoryEnabled = prefs[decisionsMemoryKey] ?: false,
+            decisionsActionCheckEnabled = prefs[decisionsActionCheckKey] ?: false,
+            decisionsScreenCheckEnabled = prefs[decisionsScreenCheckKey] ?: false,
+            decisionsSkillEnabled = prefs[decisionsSkillKey] ?: false,
+            personalityId = Personalities.byId(prefs[personalityKey]).id,
+            systemPrompt = Personalities.byId(prefs[personalityKey]).prompt,
+            assistantName = DEFAULT_ASSISTANT_NAME,
+            ownerName = prefs[ownerNameKey]?.trim().orEmpty(),
+            documentFormatPrompt = DEFAULT_DOCUMENT_FORMAT_PROMPT,
+            retrievalChunkLimit = prefs[retrievalChunkLimitKey]?.toIntOrNull()
+                ?.coerceIn(MIN_RETRIEVAL_CHUNK_LIMIT, MAX_RETRIEVAL_CHUNK_LIMIT)
+                ?: DEFAULT_RETRIEVAL_CHUNK_LIMIT,
+            enabledDeviceTools = effectiveDeviceTools(prefs[toolOverridesKey])
+        )
+    }
+
+    /** The newest app version whose "What's new" card the user has already seen; null before the first one. */
+    suspend fun lastSeenVersion(): String? = context.settingsDataStore.data.first()[lastSeenVersionKey]
+
+    suspend fun setLastSeenVersion(version: String) {
+        context.settingsDataStore.edit { it[lastSeenVersionKey] = version }
+    }
+
+    suspend fun setLiveModel(id: String) {
+        if (!AssistantOptions.isApprovedLiveModel(id)) throw UserInputException("Choose a supported model.")
+        context.settingsDataStore.edit { it[liveModelKey] = id }
+    }
+
+    suspend fun setVoice(voiceName: String) {
+        if (!AssistantOptions.isApprovedVoice(voiceName)) throw UserInputException("Choose a supported voice.")
+        context.settingsDataStore.edit { it[voiceKey] = voiceName }
+    }
+
+    suspend fun setMicSensitivity(sensitivity: MicSensitivity) {
+        context.settingsDataStore.edit { it[micSensitivityKey] = sensitivity.name }
+    }
+
+    suspend fun setLanguageCode(code: String) {
+        if (!AssistantOptions.isApprovedLanguage(code)) throw UserInputException("Choose a supported language.")
+        context.settingsDataStore.edit { it[languageCodeKey] = code }
+    }
+
+    suspend fun setPersonality(id: String) {
+        if (!Personalities.isKnown(id)) throw UserInputException("Choose one of the listed personalities.")
+        context.settingsDataStore.edit { it[personalityKey] = Personalities.byId(id).id }
+    }
+
+    suspend fun setMemoryEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[memoryEnabledKey] = enabled }
+    }
+
+    suspend fun setDecisionsSkillEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[decisionsSkillKey] = enabled }
+    }
+
+    suspend fun setDecisionsScreenCheckEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[decisionsScreenCheckKey] = enabled }
+    }
+
+    suspend fun setDecisionsActionCheckEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[decisionsActionCheckKey] = enabled }
+    }
+
+    suspend fun setDecisionsMemoryEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[decisionsMemoryKey] = enabled }
+    }
+
+    suspend fun setDecisionsRerankEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[decisionsRerankKey] = enabled }
+    }
+
+    suspend fun setOwnerName(name: String) {
+        val clean = name.trim().take(MAX_ASSISTANT_NAME_LENGTH)
+        context.settingsDataStore.edit { if (clean.isBlank()) it.remove(ownerNameKey) else it[ownerNameKey] = clean }
+    }
+
+    suspend fun setAnnounceNotificationsEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[announceNotificationsKey] = enabled }
+    }
+
+    suspend fun setBargeInEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[bargeInKey] = enabled }
+    }
+
+    suspend fun setDeviceToolEnabled(tool: DeviceTool, enabled: Boolean) {
+        context.settingsDataStore.edit { prefs ->
+            val others = (prefs[toolOverridesKey] ?: emptySet()).filterNot { it.startsWith(tool.functionName + "=") }
+            prefs[toolOverridesKey] = (others + "${tool.functionName}=${if (enabled) 1 else 0}").toSet()
+        }
+    }
+
+    /** Applies the Developer form together so its fields never save as unrelated partial edits. */
+    suspend fun setDeveloperSettings(retrievalChunkLimit: Int) {
+        context.settingsDataStore.edit {
+            // The name is fixed and greetings are picked at random; drop anything an earlier version saved.
+            it.remove(assistantNameKey)
+            it.remove(greetingKey)
+            // The prompts are built in and no longer editable; drop any text an earlier version saved.
+            it.remove(systemPromptKey)
+            it.remove(systemPromptAutoKey)
+            it.remove(documentFormatPromptKey)
+            it[retrievalChunkLimitKey] = retrievalChunkLimit
+                .coerceIn(MIN_RETRIEVAL_CHUNK_LIMIT, MAX_RETRIEVAL_CHUNK_LIMIT).toString()
+        }
+    }
+}

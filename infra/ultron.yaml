@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Ultron backend - the private OTA update bucket. Lambdas and the API live in api.yaml and youtube.yaml.
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+# Rebuild from scratch in a new account/region. Existing resources were created by hand with the same
+# settings; do not deploy this over them (names would clash). Deploy with:
+#   aws cloudformation deploy --template-file infra/ultron.yaml --stack-name ultron
+
+Resources:
+  UpdatesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "ultron-app-updates-${AWS::AccountId}"
+      AccelerateConfiguration: { AccelerationStatus: Enabled }
+      VersioningConfiguration: { Status: Enabled }
+      PublicAccessBlockConfiguration: { BlockPublicAcls: true, IgnorePublicAcls: true, BlockPublicPolicy: true, RestrictPublicBuckets: true }
+      BucketEncryption:
+        ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }]
+      LifecycleConfiguration:
+        Rules:
+          - { Id: expire-old-versions, Status: Enabled, NoncurrentVersionExpiration: { NoncurrentDays: 30 }, AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 } }
+      Tags: [{ Key: project, Value: ultron }]
+
+Outputs:
+  Bucket: { Value: !Ref UpdatesBucket }

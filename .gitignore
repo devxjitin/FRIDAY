@@ -1,0 +1,51 @@
+
+# Local reference frames and device verification artifacts
+.review/
+
+# Kotlin compiler crash logs and captured device-baseline logs
+.kotlin/
+baseline/
+
+# Local tool settings and generated native libraries
+.claude/
+android/app/objectbox-jni-*.dll
+
+# Web extract MCP Lambda build artifacts and secret token
+mcp/web-extract/build/
+mcp/web-extract/function.zip
+mcp/web-extract/.access_token
+mcp/youtube-search/build/
+mcp/youtube-search/function.zip
+
+# MCP config containing secret URL
+.mcp.json
+
+mcp/ultron-updates/function.zip
+mcp/ultron-updates/.access_token
+
+
+
+# Built APKs and device screenshots
+*.apk
+phone_ss.png
+
+# Generated native libs and Python caches
+android/app/libobjectbox-jni-*.so
+__pycache__/
+*.pyc
+
+# Firebase client config (contains the project API key)
+android/app/google-services.json
+
+# Firebase config must never be committed
+/google-services.json
+mcp/web-search/build/
+mcp/web-search/function.zip
+
+# Packaged site bundles and Firebase hosting caches (rebuilt on deploy)
+sites/*.tar.gz
+sites/*.zip
+.firebase/
+
+# Separate repo (devxjitin/ultron-website)
+sites/ultron-showcase/

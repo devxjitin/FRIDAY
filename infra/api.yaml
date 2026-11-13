@@ -1,0 +1,466 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Ultron API - one HTTP API that checks the caller's Firebase token, in front of the release, web-extract, web-search, YouTube-search, license and request Lambdas.
+Metadata:
+  AWSToolsMetrics:
+    AWSAgentToolkit: aws-cloudformation@3
+  com.aws.cloudformation.Context:
+    why: Keep the backend runtime aligned with Python 3.14 CI and packaged Linux dependencies.
+    must: [Rebuild native dependency packages before migrating a live runtime, Preserve existing authentication and data]
+# Deploy without the SAM CLI (build the three zips first):
+#   python mcp/web-extract/build.py
+#   python mcp/web-search/build.py
+#   python mcp/youtube-search/build.py
+#   aws cloudformation package --template-file infra/api.yaml --s3-bucket <bucket> --s3-prefix cfn --output-template-file packaged.yaml
+#   aws cloudformation deploy --template-file packaged.yaml --stack-name ultron-api --capabilities CAPABILITY_IAM
+# Every route must be an Event of a function in THIS template. Each deploy re-imports the API from the routes found here
+# and deletes any route that was added from another stack, which is how the search and YouTube MCP routes went missing.
+# The existing hand-made resources (ultron-updates, web-extract-mcp, the releases bucket) are not touched. The old
+# Function URLs keep working until every phone has moved to this API.
+
+Parameters:
+  FirebaseProjectId:
+    Type: String
+    Default: ultron-5350c
+    Description: Firebase project whose ID tokens are accepted (issuer and audience).
+  ReleasesBucket:
+    Type: String
+    Default: ultron-app-updates-143920986615
+    Description: Existing private bucket that holds latest.json and the APKs.
+  DomainName:
+    Type: String
+    Default: ""
+    Description: Custom domain such as api.devxjitin.dev. Leave empty until the certificate is issued.
+  CertificateArn:
+    Type: String
+    Default: ""
+    Description: ACM certificate (same region) for DomainName.
+  FirebaseProjectNumber:
+    Type: String
+    Default: "434457544612"
+    Description: Numeric Firebase project number (not the id); App Check tokens are checked against it.
+  AppCheckMode:
+    Type: String
+    Default: enforce
+    AllowedValues: [off, log, enforce]
+    Description: log records a missing or bad App Check token but lets the request run; enforce refuses it with 401.
+  AdminEmails:
+    Type: String
+    Default: ""
+    Description: Comma separated Google emails allowed to use Ultronapp (the activation key admin). Empty locks everyone out.
+  AdminOrigins:
+    Type: CommaDelimitedList
+    Default: "http://localhost:8080"
+    Description: Web origins of Ultronapp allowed to call the admin routes, such as https://ultronapp.web.app. No trailing slash.
+
+  DeveloperEmail:
+    Type: String
+    Default: ""
+    Description: Where skill and connector requests from the app are emailed. Empty keeps them in the table only.
+  RequestSenderEmail:
+    Type: String
+    Default: ""
+    Description: The address the request emails and the activation key emails are sent from, on a domain verified in Resend, for example no-reply@devxjitin.dev.
+  ResendApiKeyParam:
+    Type: String
+    Default: /ultron/resend-api-key
+    Description: Name of the SSM SecureString parameter that holds the Resend API key (sending access). Create it before deploying; it is never stored in this template.
+  SupportEmail:
+    Type: String
+    Default: ""
+    Description: Where buyers can write; shown in the activation key email and used as its reply-to address.
+  DownloadUrl:
+    Type: String
+    Default: ""
+    Description: Page or file where buyers download the app; linked from the activation key email. Blank leaves the link out.
+
+Conditions:
+  HasDomain: !And
+    - !Not [!Equals [!Ref DomainName, ""]]
+    - !Not [!Equals [!Ref CertificateArn, ""]]
+
+Globals:
+  Function:
+    Runtime: python3.14
+    Handler: lambda_function.lambda_handler
+    Environment:
+      Variables:
+        JWT_AUTH: "1"
+    Tags:
+      project: ultron
+
+Resources:
+  UltronApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Description: Ultron API (Firebase JWT)
+      Auth:
+        DefaultAuthorizer: FirebaseJwt
+        Authorizers:
+          FirebaseJwt:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              issuer: !Sub "https://securetoken.google.com/${FirebaseProjectId}"
+              audience:
+                - !Ref FirebaseProjectId
+      # Only Ultronapp (the browser admin app) needs CORS; the phone app is not a browser and ignores it.
+      CorsConfiguration:
+        AllowOrigins: !Ref AdminOrigins
+        AllowMethods: [GET, POST, PATCH, OPTIONS]
+        AllowHeaders: [authorization, content-type]
+        MaxAge: 600
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 40
+        ThrottlingRateLimit: 20
+      # Web reading is the one route anyone with an anonymous account can make expensive; keep it small. Activation is
+      # kept slow so nobody can guess keys by trying many of them.
+      RouteSettings:
+        "POST /v1/web/mcp":
+          ThrottlingBurstLimit: 10
+          ThrottlingRateLimit: 3
+        "POST /v1/license/activate":
+          ThrottlingBurstLimit: 5
+          ThrottlingRateLimit: 1
+        "POST /v1/admin/licenses":
+          ThrottlingBurstLimit: 5
+          ThrottlingRateLimit: 2
+        "GET /v1/releases/download":
+          ThrottlingBurstLimit: 5
+          ThrottlingRateLimit: 2
+        "POST /v1/requests":
+          ThrottlingBurstLimit: 3
+          ThrottlingRateLimit: 1
+      Tags:
+        project: ultron
+
+  # Custom domain, created only once DomainName and CertificateArn are given (SAM cannot make it conditional).
+  ApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: HasDomain
+    Properties:
+      DomainName: !Ref DomainName
+      DomainNameConfigurations:
+        - CertificateArn: !Ref CertificateArn
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  ApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: HasDomain
+    DependsOn: UltronApiApiGatewayDefaultStage
+    Properties:
+      DomainName: !Ref ApiDomain
+      ApiId: !Ref UltronApi
+      Stage: $default
+
+  ReleasesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-releases
+      CodeUri: ../mcp/ultron-updates/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          BUCKET: !Ref ReleasesBucket
+          FIREBASE_PROJECT_NUMBER: !Ref FirebaseProjectNumber
+          APP_CHECK_MODE: !Ref AppCheckMode
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref ReleasesBucket
+      Events:
+        Latest:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/releases/latest
+            Method: GET
+        Download:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/releases/download
+            Method: GET
+            Auth:
+              Authorizer: NONE
+
+  ReleasesLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${ReleasesFunction}"
+      RetentionInDays: 14
+
+  WebExtractFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-web-extract
+      # Built by mcp/web-extract/build.py with Linux x86_64 wheels.
+      CodeUri: ../mcp/web-extract/function.zip
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 25
+      Environment:
+        Variables:
+          FIREBASE_PROJECT_NUMBER: !Ref FirebaseProjectNumber
+          APP_CHECK_MODE: !Ref AppCheckMode
+      Events:
+        Mcp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/web/mcp
+            Method: POST
+
+  WebExtractLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${WebExtractFunction}"
+      RetentionInDays: 14
+
+  WebSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-web-search
+      # Built by mcp/web-search/build.py with Linux x86_64 wheels.
+      CodeUri: ../mcp/web-search/function.zip
+      Architectures: [x86_64]
+      MemorySize: 256
+      Timeout: 25
+      Environment:
+        Variables:
+          FIREBASE_PROJECT_NUMBER: !Ref FirebaseProjectNumber
+          APP_CHECK_MODE: !Ref AppCheckMode
+      Events:
+        Mcp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/search/mcp
+            Method: POST
+
+  WebSearchLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${WebSearchFunction}"
+      RetentionInDays: 14
+
+  # Read-only yt-dlp lookups (search, info, listings, captions). Downloads never run here; they stay on the phone.
+  YouTubeSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-youtube-search
+      # Built by mcp/youtube-search/build.py with Linux x86_64 wheels.
+      CodeUri: ../mcp/youtube-search/function.zip
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 25
+      Environment:
+        Variables:
+          FIREBASE_PROJECT_NUMBER: !Ref FirebaseProjectNumber
+          APP_CHECK_MODE: !Ref AppCheckMode
+      Events:
+        Mcp:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/youtube/mcp
+            Method: POST
+
+  YouTubeSearchLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${YouTubeSearchFunction}"
+      RetentionInDays: 14
+
+  # One item per activation key sold on the website store (see mcp/license/lambda_function.py for the fields).
+  LicensesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: ultron-licenses
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: keyHash
+          AttributeType: S
+      KeySchema:
+        - AttributeName: keyHash
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: project
+          Value: ultron
+
+  LicenseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-license
+      CodeUri: ../mcp/license/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 10
+      Environment:
+        Variables:
+          TABLE: !Ref LicensesTable
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:GetItem, dynamodb:UpdateItem]
+              Resource: !GetAtt LicensesTable.Arn
+      Events:
+        Activate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/license/activate
+            Method: POST
+        Status:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/license/status
+            Method: POST
+
+  LicenseLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LicenseFunction}"
+      RetentionInDays: 30
+
+  # Ultronapp's backend: list, create and edit activation keys. Any signed-in Firebase user passes the API's JWT check, so
+  # the Lambda itself only lets the verified emails in AdminEmails through.
+  LicenseAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-license-admin
+      CodeUri: ../mcp/license-admin/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          TABLE: !Ref LicensesTable
+          ADMIN_EMAILS: !Ref AdminEmails
+          SENDER_EMAIL: !Ref RequestSenderEmail
+          RESEND_API_KEY_PARAM: !Ref ResendApiKeyParam
+          SUPPORT_EMAIL: !Ref SupportEmail
+          DOWNLOAD_URL: !Ref DownloadUrl
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:Scan, dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt LicensesTable.Arn
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ResendApiKeyParam}"
+      Events:
+        List:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/admin/licenses
+            Method: GET
+        Create:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/admin/licenses
+            Method: POST
+        Update:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/admin/licenses/{id}
+            Method: PATCH
+        AllowMove:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/admin/licenses/{id}/allow-move
+            Method: POST
+        Reissue:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/admin/licenses/{id}/reissue
+            Method: POST
+
+  LicenseAdminLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LicenseAdminFunction}"
+      RetentionInDays: 30
+
+  # Requests for a new skill or connector, sent from the app's request form (see mcp/feature-requests/lambda_function.py).
+  RequestsTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: ultron-requests
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      # Only the daily-limit counters carry expiresAt; the requests themselves have none and are kept.
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: project
+          Value: ultron
+
+  RequestsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: ultron-api-requests
+      CodeUri: ../mcp/feature-requests/
+      Architectures: [arm64]
+      MemorySize: 256
+      Timeout: 15
+      Environment:
+        Variables:
+          TABLE: !Ref RequestsTable
+          DEVELOPER_EMAIL: !Ref DeveloperEmail
+          SENDER_EMAIL: !Ref RequestSenderEmail
+          RESEND_API_KEY_PARAM: !Ref ResendApiKeyParam
+          FIREBASE_PROJECT_NUMBER: !Ref FirebaseProjectNumber
+          APP_CHECK_MODE: !Ref AppCheckMode
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+              Resource: !GetAtt RequestsTable.Arn
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter${ResendApiKeyParam}"
+      Events:
+        Submit:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref UltronApi
+            Path: /v1/requests
+            Method: POST
+
+  RequestsLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${RequestsFunction}"
+      RetentionInDays: 30
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${UltronApi}.execute-api.${AWS::Region}.amazonaws.com"
+  CustomDomainTarget:
+    Condition: HasDomain
+    Description: Point the DNS CNAME for DomainName at this value.
+    Value: !GetAtt ApiDomain.RegionalDomainName
