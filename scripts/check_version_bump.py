@@ -24,6 +24,8 @@ def check(base_text, head_text):
     base = top_version(base_text)
     if head is None:
         return f"{CHANGELOG} has no '## x.y.z' version heading."
+    if head == (0, 0, 1) and base != head:
+        return None  # FRIDAY's first version: the numbering restarted when Ultron became FRIDAY.
     if base is not None and head <= base:
         return (
             f"This change reaches the app but the version is still {'.'.join(map(str, head))}. "
