@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 1.26.0 - 2026-11-13
+
+### Changed
+- The app now has a new package name (com.nandivex.friday). Testers receive builds through Firebase App Distribution instead of the old update server, so install the new "FRIDAY Tester" app from the invite email. It can sit on the same phone next to the debug build ("FRIDAY Dev").
+
 ## 1.25.0 - 2026-11-13
 
 ### Changed

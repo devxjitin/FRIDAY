@@ -549,3 +549,4 @@
 [2026-11-08 17:00] [Claude] [Perf: 1.18.5 - Knowledge import and re-index embed chunks with batchEmbedContents (50 per call) instead of one call per chunk; 4 new tests]
 [2026-11-08 18:00] [Claude] [Refactor: 1.18.6 - AssistantScreen takes one AssistantActions object (69 callbacks) instead of 75 parameters; no behaviour change; build and unit tests pass]
 [2026-11-08 19:00] [Claude] [Refactor: 1.19.0 - knowledge documents and chunks now live only in ObjectBox (one transaction per change); one-time verified import from DataStore on first use; old DataStore copy kept untouched for one release; 5 new native tests]
+[2026-11-13 22:40] [Claude] [Update: Sprint 1.1 - package com.nandivex.friday, debug/beta build variants, Firebase project friday-nandivex, App Distribution workflow replaces publish-ota]

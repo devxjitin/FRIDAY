@@ -3,5 +3,5 @@
 # runtime compiles the screens, the voice session and the stores ahead of time. Compose and the other libraries
 # ship their own profiles, which the build merges in. Replace with a measured profile when a device is available:
 # generate it with a Macrobenchmark BaselineProfileRule and overwrite this file.
-HSPLcom/assistant/app/**;->**(**)**
-Lcom/assistant/app/**;
+HSPLcom/nandivex/friday/**;->**(**)**
+Lcom/nandivex/friday/**;

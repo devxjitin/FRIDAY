@@ -33,7 +33,7 @@ Fix ka order section 20.4 me hai.
 
 ```mermaid
 flowchart LR
-  subgraph Phone["Android app (com.assistant.app, debug key signed)"]
+  subgraph Phone["Android app (com.nandivex.friday, debug key signed)"]
     ACC["AccessViewModel<br/>Google sign-in, subscription lock<br/>(AccessGate, client-side)"]
     VM["AssistantViewModel<br/>voice, tools, knowledge, updates"]
     DTR["DeviceToolRunner<br/>SMS, calls, screen, files ..."]
@@ -409,7 +409,7 @@ aur `release`. SMS, call log, accessibility automation aur `REQUEST_INSTALL_PACK
   khoni nahi chahiye**, kyunki iske bina koi update nahi de sakte. Memory note wala "never replace" rule ab nayi key par lagega.
 - **Key badalne ka asar:** abhi installed apps debug key se sign hain. Nayi key se signature match nahi hoga, to existing
   phones ko ek baar naya install karna padega (uninstall, install). Memory, knowledge aur settings ke export ka rasta pehle sochna hoga.
-- **Package name:** `com.assistant.app` rakh sakte ho (Play par clash ka darr nahi). Rename karna ho to key badalne ke
+- **Package name:** `com.nandivex.friday` rakh sakte ho (Play par clash ka darr nahi). Rename karna ho to key badalne ke
   saath hi karo, taaki reinstall ek hi baar ho. Rename par naya Firebase app, naya SHA aur nayi `google-services.json` chahiye.
 - **Update trust:** `latest.json` me sha256 already hai. Download page par bhi SHA-256 aur signing certificate fingerprint dikhao.
 
@@ -514,7 +514,7 @@ Phase 0 ka kaam ho gaya hai, do cheezein aise hain jinhe aapne kiya aur maine co
 | Root account (S1) | Ho gaya. Root par MFA on, root keys nahi. CLI ab IAM user `jitin-admin` se chalta hai (`aws sts get-caller-identity` se verify kiya) |
 | `google-workspace-mcp` | Reserved concurrency 0 hai, yaani koi request nahi chalegi. Function aur URL delete nahi kiye. Undo: `aws lambda delete-function-concurrency --function-name google-workspace-mcp --region us-east-1`. Phase 2 me delete hoga |
 | `ultron-updates`, `web-extract-mcp` | Abhi band nahi, live app inhe use karti hai. Phase 2 me API Gateway par shift hone ke baad band honge |
-| S6 API key restriction | Aapne Google Cloud Console me Android app (package `com.assistant.app` + debug key SHA-1) tak restrict ki. **Maine console se verify nahi kiya.** Phone par voice session chal jaye to sahi hai |
+| S6 API key restriction | Aapne Google Cloud Console me Android app (package `com.nandivex.friday` + debug key SHA-1) tak restrict ki. **Maine console se verify nahi kiya.** Phone par voice session chal jaye to sahi hai |
 | S7 Firestore | Rules `firestore.rules` se deploy hue (sab read/write band). Bina login ke `remote/prompts` par `403 PERMISSION_DENIED` aata hai (verify kiya). Purana `remote` aur `remote_skills` data delete commands exit 0 se chale, **console me refresh karke confirm karna baaki hai** |
 | `android/local.properties` | Stale `GOOGLE_MCP_URL` line hai (gitignored, app padhti nahi), aap hata sakte ho |
 
@@ -535,7 +535,7 @@ Commits `194d203` (docs aur Firestore rules) aur `7e52801` (app code). Push ya P
 | App Check verification | Ho gaya (2026-11-02). OTA build phone par chali, console me anonymous user aur verified App Check requests dono dikhe (aapne dekha). Maine console khud nahi dekha |
 | App Check enforcement | **Ho gaya (2026-11-02).** AI Logic par enforce hai, sideloaded APK se voice session chal raha hai (user ne verify kiya), to device integrity token accept ho raha hai. Custom provider fallback ki zaroorat nahi. Firestore par zaroorat nahi, rules pehle se sab band karte hain |
 | Release keystore | **Baaki.** Website distribution ke liye zaroori. Asli key banani hai, backup ke saath. Key badalne par ek baar reinstall |
-| Package name | **Optional ab.** `com.assistant.app` rakh sakte ho. Rename karna ho to key badalne ke saath hi |
+| Package name | **Optional ab.** `com.nandivex.friday` rakh sakte ho. Rename karna ho to key badalne ke saath hi |
 | Flavors | **Hata diya.** `play` flavor nahi banega, ek hi full build (section 15) |
 
 **Dhyan:** `main` par push karte hi OTA APK sab phones par jaata hai (`publish-ota.yml`). Isliye PR banao, test karo, phir merge.

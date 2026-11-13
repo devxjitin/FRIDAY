@@ -1,0 +1,85 @@
+name: Distribute tester build
+
+# Every merge to main that touches the app builds the beta (tester) variant and sends it to the Firebase App Distribution
+# group "testers". Release notes are the newest entry of changelog.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - android/**
+      - .github/workflows/distribute.yml
+      - .github/actions/**
+  workflow_dispatch:
+
+# A newer merge supersedes an older upload that has not started yet; never cancel one halfway.
+concurrency:
+  group: distribute
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    uses: ./.github/workflows/checks.yml
+
+  distribute:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      FIREBASE_APP_ID: 1:825446749947:android:0f394cb6598617b582c25e # com.nandivex.friday.tester
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore Firebase config and tester signing key
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          TESTER_KEYSTORE: ${{ secrets.TESTER_KEYSTORE }}
+          TESTER_STORE_PASSWORD: ${{ secrets.TESTER_STORE_PASSWORD }}
+          TESTER_KEY_ALIAS: ${{ secrets.TESTER_KEY_ALIAS }}
+          TESTER_KEY_PASSWORD: ${{ secrets.TESTER_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in GOOGLE_SERVICES_JSON TESTER_KEYSTORE TESTER_STORE_PASSWORD TESTER_KEY_ALIAS TESTER_KEY_PASSWORD; do
+            test -n "${!name}" || { echo "::error::Secret $name is missing"; exit 1; }
+          done
+          printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+          mkdir -p android/keystore
+          printf '%s' "$TESTER_KEYSTORE" | base64 -d > android/keystore/tester.jks
+          {
+            echo "TESTER_STORE_FILE=keystore/tester.jks"
+            echo "TESTER_STORE_PASSWORD=$TESTER_STORE_PASSWORD"
+            echo "TESTER_KEY_ALIAS=$TESTER_KEY_ALIAS"
+            echo "TESTER_KEY_PASSWORD=$TESTER_KEY_PASSWORD"
+          } > android/local.properties
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: ./.github/actions/gradle-memory
+      - name: Build tester APK
+        working-directory: android
+        run: ./gradlew assembleBeta --console=plain
+      - name: Release notes from changelog.md
+        run: |
+          python - <<'PY' > release-notes.txt
+          import re
+          text = open("android/app/src/main/assets/changelog.md", encoding="utf-8").read()
+          parts = re.split(r"(?m)^## ", text)
+          print(("## " + parts[1]).strip() if len(parts) > 1 else "New tester build")
+          PY
+      - name: Upload to Firebase App Distribution
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" || { echo "::error::Secret FIREBASE_SERVICE_ACCOUNT is missing"; exit 1; }
+          printf '%s' "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@15 appdistribution:distribute android/app/build/outputs/apk/beta/app-beta.apk \
+            --app "$FIREBASE_APP_ID" --groups testers --release-notes-file release-notes.txt
+          rm -f "$RUNNER_TEMP/sa.json"
