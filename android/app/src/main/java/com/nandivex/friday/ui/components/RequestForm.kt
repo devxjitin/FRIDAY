@@ -74,7 +74,7 @@ import com.nandivex.friday.ui.theme.AssistantTextMuted
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
 import com.nandivex.friday.ui.theme.AssistantTextSecondary
 
-/** What the request form sends. [type] is "skill", "connector" or "bug"; [device] is filled only for a bug report. */
+/** What the request form sends. [type] is "connector" or "bug"; [device] is filled only for a bug report. */
 data class FeatureRequest(
     val type: String, val name: String, val details: String, val examples: String, val email: String, val device: String = ""
 )
@@ -87,7 +87,7 @@ private const val MAX_EMAIL = 120
 private const val MIN_NAME = 2
 private const val MIN_DETAILS = 10
 
-/** Words that change between the skill form and the connector form. */
+/** Words that change between the connector form and the bug form. */
 private class FormText(
     val icon: ImageVector,
     val title: String,
@@ -99,15 +99,6 @@ private class FormText(
     val examplesHint: String,
     val examplesLabel: String = "What would you say to it?",
     val sendLabel: String = "Send request"
-)
-
-private val SkillText = FormText(
-    icon = Icons.Outlined.Bolt,
-    title = "Request a skill",
-    intro = "A skill teaches Ultron how to do something, such as a routine or a way of answering.",
-    nameLabel = "Skill name", nameHint = "For example: Daily briefing",
-    detailsLabel = "What should it do?", detailsHint = "Describe the steps, when it should run and what you expect back. The more detail, the better.",
-    examplesHint = "For example: give me my morning briefing"
 )
 
 private val ConnectorText = FormText(
@@ -131,7 +122,7 @@ private val BugText = FormText(
 )
 
 /**
- * A full screen form to ask the developer for a skill or a connector, or to report a bug. Each kind has its own wording.
+ * A full screen form to ask the developer for a connector, or to report a bug. Each kind has its own wording.
  * [onSend] starts sending; the caller keeps [sending] and [error] up to date and closes the form with [onBack] when it worked.
  */
 @Composable
@@ -146,8 +137,7 @@ fun FeatureRequestPage(
     val isBug = type == "bug"
     val text = when {
         isBug -> BugText
-        isConnector -> ConnectorText
-        else -> SkillText
+        else -> ConnectorText
     }
     // On by default: the phone model and Android version make most bugs much easier to reproduce.
     var includeDevice by remember(type) { mutableStateOf(true) }

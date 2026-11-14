@@ -1,8 +1,6 @@
 package com.nandivex.friday.viewmodel
 
 import android.util.Log
-import com.nandivex.friday.decisions.ChunkReranker
-import com.nandivex.friday.decisions.DecisionsClient
 import com.nandivex.friday.data.AssistantOptions
 import com.nandivex.friday.data.KnowledgeToolResponse
 import com.nandivex.friday.data.NO_GEMINI_KEY_MESSAGE
@@ -77,25 +75,12 @@ internal class KnowledgeManager(
             ?: GeminiEmbeddingClient(key).also { cachedClient = key to it }
     }
 
-    private var cachedReranker: Pair<String, ChunkReranker>? = null
-
-    /** The Decisions reranker for the current key, or null while the setting is off or after the key said to slow down. */
-    private fun reranker(): ChunkReranker? {
-        if (!state.value.settings.decisionsRerankEnabled) return null
-        val key = resolveKey().takeIf { it.isNotBlank() } ?: return null
-        val cached = cachedReranker?.takeIf { it.first == key }?.second
-            ?: ChunkReranker(DecisionsClient(key)).also { cachedReranker = key to it }
-        return cached
-    }
-
     private suspend fun searchChunks(query: String, trace: LatencyTool?): List<String> {
         searchOverride?.let { return it(query, trace) }
-        val reranker = reranker()
         return RagSearchEngine(
             documentStore = store,
             embeddingClient = embeddingClient(),
-            retrievalChunkLimit = state.value.settings.retrievalChunkLimit,
-            rerank = reranker?.let { r -> { q, chunks -> r.rerank(q, chunks) } }
+            retrievalChunkLimit = state.value.settings.retrievalChunkLimit
         ).search(query, trace)
     }
 

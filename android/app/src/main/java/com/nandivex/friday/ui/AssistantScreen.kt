@@ -65,8 +65,6 @@ import androidx.compose.ui.unit.sp
 import com.nandivex.friday.ui.components.AboutPage
 import com.nandivex.friday.ui.components.DownloadsPage
 import com.nandivex.friday.ui.components.StoragePage
-import com.nandivex.friday.ui.components.SkillsPage
-import com.nandivex.friday.data.SkillRegistry
 import com.nandivex.friday.ui.components.UsagePage
 import com.nandivex.friday.ui.components.AssistantToastHost
 import com.nandivex.friday.ui.components.MemoryPage
@@ -136,7 +134,7 @@ fun AssistantScreen(
         // A live session keeps running behind the other pages without showing anything there.
         // Space the pages leave free at the top for the slim top bar.
         val topReserve = AppTopBarHeight
-        // The request form (one screen for a skill, one for a connector) opens from the Help & support page.
+        // The request form (one screen for a connector, one for a bug) opens from the Help & support page.
         var requestType by remember { mutableStateOf<String?>(null) }
         var requestSending by remember { mutableStateOf(false) }
         var requestError by remember { mutableStateOf<String?>(null) }
@@ -179,7 +177,6 @@ fun AssistantScreen(
                         NavTab.USAGE -> guardedNav(actions.onUsageTapped)
                         NavTab.STORAGE -> guardedNav(actions.onStorageTapped)
                         NavTab.DOWNLOADS -> guardedNav(actions.onDownloadsTapped)
-                        NavTab.SKILLS -> guardedNav(actions.onSkillsTapped)
                         NavTab.KNOWLEDGE -> guardedNav(actions.onKnowledgeTapped)
                         NavTab.CONNECTORS -> guardedNav(actions.onConnectorsTapped)
                         NavTab.MEMORY -> guardedNav(actions.onMemoryTapped)
@@ -305,13 +302,9 @@ fun AssistantScreen(
                 )
             }
 
-            if (tab in listOf(NavTab.SKILLS, NavTab.USAGE, NavTab.STORAGE, NavTab.DOWNLOADS, NavTab.ABOUT)) {
+            if (tab in listOf(NavTab.USAGE, NavTab.STORAGE, NavTab.DOWNLOADS, NavTab.ABOUT)) {
                 val pageModifier = Modifier.padding(top = topReserve)
                 when (tab) {
-                    NavTab.SKILLS -> {
-                        val skills by SkillRegistry.entries.collectAsState()
-                        SkillsPage(skills, actions.onSkillToggled, actions.onSkillSaved, actions.onSkillDeleted, pageModifier)
-                    }
                     NavTab.USAGE -> UsagePage(uiState.usageDays, pageModifier)
                     NavTab.DOWNLOADS -> DownloadsPage(pageModifier)
                     NavTab.STORAGE -> StoragePage(
@@ -378,11 +371,6 @@ fun AssistantScreen(
                     onMicSensitivitySelected = actions.onMicSensitivitySelected,
                     onBargeInToggled = actions.onBargeInToggled,
                     onAnnounceNotificationsToggled = actions.onAnnounceNotificationsToggled,
-                    onDecisionsRerankToggled = actions.onDecisionsRerankToggled,
-                    onDecisionsMemoryToggled = actions.onDecisionsMemoryToggled,
-                    onDecisionsActionCheckToggled = actions.onDecisionsActionCheckToggled,
-                    onDecisionsScreenCheckToggled = actions.onDecisionsScreenCheckToggled,
-                    onDecisionsSkillToggled = actions.onDecisionsSkillToggled,
                     onOwnerNameChanged = actions.onOwnerNameChanged,
                     onPersonalitySelected = actions.onPersonalitySelected,
                     onClearApiKey = actions.onClearApiKey,

@@ -9,7 +9,6 @@ import com.nandivex.friday.BuildConfig
 import com.nandivex.friday.data.AssistantSettings
 import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.data.KnowledgeBaseProvider
-import com.nandivex.friday.data.SkillRegistry
 import com.nandivex.friday.util.UserFacingError
 import com.nandivex.friday.util.newLatencySession
 import okhttp3.Request
@@ -488,7 +487,6 @@ internal fun liveFunctionDeclarations(settings: AssistantSettings): JSONArray {
     declarations.put(ToolDeclarations.knowledgeSearch())
     if (settings.memoryEnabled) ToolDeclarations.memory().forEach { declarations.put(it) }
     declarations.put(ToolDeclarations.personality())
-    SkillRegistry.all().takeIf { it.isNotEmpty() }?.let { declarations.put(ToolDeclarations.skill(it)) }
     DeviceTool.entries.filter { it in settings.enabledDeviceTools || it in DeviceTool.ASSISTANT_OWN }
         .forEach { declarations.put(ToolDeclarations.device(it)) }
     return declarations

@@ -68,7 +68,6 @@ enum class NavTab(val label: String, val icon: ImageVector) {
     KNOWLEDGE("Knowledge", AssistantIcons.Knowledge),
     MEMORY("Memory", Icons.Outlined.Psychology),
     HISTORY("History", Icons.Outlined.History),
-    SKILLS("Skills", Icons.Outlined.Bolt),
     CONNECTORS("Connectors", Icons.Outlined.Extension),
     SETTINGS("Settings", AssistantIcons.Settings),
     USAGE("Usage", Icons.Outlined.Insights),
@@ -87,7 +86,7 @@ private val RowHeight = 40.dp
 /** The menu in reading order: the basics, what Ultron does, what it knows about you, the numbers, then the app itself. */
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
-    "Assistant" to listOf(NavTab.SKILLS, NavTab.CONNECTORS),
+    "Assistant" to listOf(NavTab.CONNECTORS),
     "Your data" to listOf(NavTab.KNOWLEDGE, NavTab.MEMORY, NavTab.HISTORY, NavTab.DOWNLOADS),
     "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
     "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)

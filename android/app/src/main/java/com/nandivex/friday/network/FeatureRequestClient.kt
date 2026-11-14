@@ -7,7 +7,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-/** Sends a skill or connector request or a bug report to the Ultron API (mcp/feature-requests), which emails the developer. Blocks. */
+/** Sends a connector request or a bug report to the Ultron API (mcp/feature-requests), which emails the developer. Blocks. */
 class FeatureRequestClient {
     private val http = HttpClients.shared.newBuilder()
         .connectTimeout(10, TimeUnit.SECONDS)

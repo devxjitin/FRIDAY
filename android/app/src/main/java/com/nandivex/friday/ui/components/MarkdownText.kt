@@ -57,7 +57,7 @@ private val TABLE_DIVIDER = Regex("^\\s*\\|?\\s*:?-{2,}:?\\s*(\\|\\s*:?-{2,}:?\\
 private fun tableCells(line: String): List<String> =
     line.trim().removePrefix("|").removeSuffix("|").split('|').map { it.trim() }
 
-/** Splits Markdown text into blocks. Handles what skills use: headings, lists, code, quotes, rules, tables and paragraphs. */
+/** Splits Markdown text into blocks. Handles headings, lists, code, quotes, rules, tables and paragraphs. */
 private fun parseMarkdown(text: String): List<MdBlock> {
     val lines = text.replace("\r\n", "\n").lines()
     val blocks = ArrayList<MdBlock>()

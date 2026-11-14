@@ -64,8 +64,8 @@ fun deviceSummary(): String = "${Build.MANUFACTURER.replaceFirstChar { it.upperc
     "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 
 /**
- * Help and support: email the developer, report a bug, or ask for a skill or a connector.
- * [onRequest] gets "bug", "skill" or "connector" and opens that form.
+ * Help and support: email the developer, report a bug, or ask for a connector.
+ * [onRequest] gets "bug" or "connector" and opens that form.
  */
 @Composable
 fun HelpPage(onRequest: (String) -> Unit, modifier: Modifier = Modifier) {
@@ -88,11 +88,6 @@ fun HelpPage(onRequest: (String) -> Unit, modifier: Modifier = Modifier) {
             color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.padding(horizontal = 4.dp)
         )
         Spacer(Modifier.height(14.dp))
-        HelpAction(
-            Icons.Outlined.Bolt, "Request a skill",
-            "A skill teaches Ultron how to do something, such as a routine or a way of answering."
-        ) { onRequest("skill") }
-        Spacer(Modifier.height(12.dp))
         HelpAction(
             Icons.Outlined.Extension, "Request a connector",
             "A connector lets Ultron use another app or service, such as music, notes or a smart home."
