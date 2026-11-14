@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.6 - 2026-11-14
+
+### Changed
+- Tester and debug builds no longer ask for an activation key: they open straight to FRIDAY. Accounts and the free trial arrive in a later version.
+
 ## 0.0.5 - 2026-11-14
 
 ### Fixed
