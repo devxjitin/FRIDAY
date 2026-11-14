@@ -27,6 +27,9 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    permissions:
+      contents: read
+      id-token: write
     env:
       FIREBASE_APP_ID: 1:825446749947:android:0f394cb6598617b582c25e # com.nandivex.friday.tester
     steps:
@@ -72,11 +75,11 @@ jobs:
           parts = re.split(r"(?m)^## ", text)
           print(("## " + parts[1]).strip() if len(parts) > 1 else "New tester build")
           PY
+      # Keyless login: GitHub proves who it is to Google (Workload Identity Federation), so no key or token is stored.
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/825446749947/locations/global/workloadIdentityPools/github-actions/providers/github
+          service_account: firebase-adminsdk-fbsvc@friday-nandivex.iam.gserviceaccount.com
       - name: Upload to Firebase App Distribution
-        env:
-          # The organisation blocks service-account keys, so the upload authenticates with a Firebase CLI token.
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        run: |
-          set -euo pipefail
-          test -n "$FIREBASE_TOKEN" || { echo "::error::Secret FIREBASE_TOKEN is missing"; exit 1; }
-          npx --yes firebase-tools@15 appdistribution:distribute android/app/build/outputs/apk/beta/app-beta.apk --app "$FIREBASE_APP_ID" --groups testers --release-notes-file release-notes.txt
+        run: npx --yes firebase-tools@15 appdistribution:distribute android/app/build/outputs/apk/beta/app-beta.apk --app "$FIREBASE_APP_ID" --groups testers --release-notes-file release-notes.txt
