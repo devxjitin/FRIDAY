@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.3 - 2026-11-14
+
+### Fixed
+- Build tooling only: tester builds are now uploaded with a Firebase token. No change to how the app works.
+
 ## 0.0.2 - 2026-11-13
 
 ### Fixed

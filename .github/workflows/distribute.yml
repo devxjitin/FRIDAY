@@ -74,12 +74,9 @@ jobs:
           PY
       - name: Upload to Firebase App Distribution
         env:
-          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # The organisation blocks service-account keys, so the upload authenticates with a Firebase CLI token.
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         run: |
           set -euo pipefail
-          test -n "$GOOGLE_APPLICATION_CREDENTIALS_JSON" || { echo "::error::Secret FIREBASE_SERVICE_ACCOUNT is missing"; exit 1; }
-          printf '%s' "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$RUNNER_TEMP/sa.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          npx --yes firebase-tools@15 appdistribution:distribute android/app/build/outputs/apk/beta/app-beta.apk \
-            --app "$FIREBASE_APP_ID" --groups testers --release-notes-file release-notes.txt
-          rm -f "$RUNNER_TEMP/sa.json"
+          test -n "$FIREBASE_TOKEN" || { echo "::error::Secret FIREBASE_TOKEN is missing"; exit 1; }
+          npx --yes firebase-tools@15 appdistribution:distribute android/app/build/outputs/apk/beta/app-beta.apk --app "$FIREBASE_APP_ID" --groups testers --release-notes-file release-notes.txt
