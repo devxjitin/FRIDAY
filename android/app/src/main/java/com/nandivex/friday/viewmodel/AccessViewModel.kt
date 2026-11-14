@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.nandivex.friday.BuildConfig
 import com.nandivex.friday.data.AccessGate
 import com.nandivex.friday.data.LicenseKey
 import com.nandivex.friday.data.LicenseStatus
@@ -43,11 +44,17 @@ class AccessViewModel(application: Application) : AndroidViewModel(application) 
     private var activateJob: Job? = null
 
     init {
-        refresh()
+        if (GATE_OFF) {
+            // Debug and tester builds skip the activation key until accounts and the trial arrive (Phase 4).
+            setState(AccessState.Active(TESTER_KEY, LicenseStatus(active = true, plan = "tester", expiresAt = 0, reason = "")))
+        } else {
+            refresh()
+        }
     }
 
     /** Re-checks the saved key; [quiet] keeps the current screen while it loads, for example when the app comes back. */
     fun refresh(quiet: Boolean = false) {
+        if (GATE_OFF) return
         if (activateJob?.isActive == true) return
         refreshJob?.cancel()
         val key = store.key
@@ -78,6 +85,7 @@ class AccessViewModel(application: Application) : AndroidViewModel(application) 
 
     /** Checks a key the user typed or pasted and, when the server accepts it, binds it to this device. */
     fun activate(input: String) {
+        if (GATE_OFF) return
         if ((_state.value as? AccessState.NeedsKey)?.busy == true) return
         val key = LicenseKey.normalize(input)
         if (key == null) {
@@ -108,6 +116,7 @@ class AccessViewModel(application: Application) : AndroidViewModel(application) 
 
     /** Forgets the key on this phone only; it stays valid and can be activated again here or elsewhere. */
     fun removeKey() {
+        if (GATE_OFF) return
         refreshJob?.cancel()
         activateJob?.cancel()
         store.clear()
@@ -123,6 +132,10 @@ class AccessViewModel(application: Application) : AndroidViewModel(application) 
 
     private companion object {
         const val TAG = "Access"
+        const val TESTER_KEY = "FRIDAY-TESTER-BUILD"
+
+        /** Only the release build asks for an activation key. */
+        val GATE_OFF = BuildConfig.BUILD_TYPE != "release"
         const val OFFLINE = "Couldn't reach the server. Check your internet and try again."
 
         fun messageFor(reason: String): String = when (reason) {
