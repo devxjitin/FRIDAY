@@ -5,8 +5,6 @@ import com.nandivex.friday.data.MEMORY_FORGET_TOOL
 import com.nandivex.friday.data.Personalities
 import com.nandivex.friday.data.SET_PERSONALITY_TOOL
 import com.nandivex.friday.data.MEMORY_SAVE_TOOL
-import com.nandivex.friday.data.SkillGroup
-import com.nandivex.friday.data.USE_SKILL_TOOL
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -52,22 +50,6 @@ object ToolDeclarations {
                 .put("properties", JSONObject().put("query", JSONObject().put("type", "STRING").put("description", "The user's question, in their own words.")))
                 .put("required", JSONArray().put("query"))
         )
-
-    /**
-     * use_skill: opens one skill. Without a task it lists the skill's allowed tasks; with a task it loads only that task's
-     * instructions, so unused skills and tasks never fill the prompt.
-     */
-    fun skill(skills: List<SkillGroup>): JSONObject {
-        val declaration = JSONObject().put("name", USE_SKILL_TOOL)
-            .put("description", "Opens one skill listed in the system prompt. Call it with only the skill to see its tasks, then again with the skill and one task to load that task's instructions, and follow them. Use it only when the request clearly matches the skill.")
-            .put("parameters", JSONObject().put("type", "OBJECT")
-                .put("properties", JSONObject()
-                    .put("skill", JSONObject().put("type", "STRING").put("description", "Skill name.")
-                        .put("enum", JSONArray(skills.map { it.name })))
-                    .put("task", JSONObject().put("type", "STRING").put("description", "Optional. One task name exactly as the skill listed it.")))
-                .put("required", JSONArray().put("skill")))
-        return declaration
-    }
 
     /** set_personality: switches how the assistant talks when the user asks for it by voice. */
     fun personality(): JSONObject = JSONObject()

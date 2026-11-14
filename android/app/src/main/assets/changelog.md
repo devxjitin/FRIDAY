@@ -3,6 +3,15 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.4 - 2026-11-14
+
+### Removed
+- Skills are gone: the Skills page, the skill tool and the "Request a skill" form. Common asks will be handled by direct commands instead.
+- The Gemini Decisions checks are gone, along with their five switches in Settings (smarter document search, memory tidying, screen action checks, screen check after each step and skill matching). Voice commands no longer wait for an extra check before they run.
+
+### Changed
+- Asking what FRIDAY can do now answers from the abilities it has, without loading a skill first.
+
 ## 0.0.3 - 2026-11-14
 
 ### Fixed
