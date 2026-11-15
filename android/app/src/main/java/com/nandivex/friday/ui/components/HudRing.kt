@@ -51,8 +51,8 @@ fun HudRing(voiceState: VoiceState, amplitude: () -> Float, modifier: Modifier =
         val raw = if (live) amplitude().let { if (it.isFinite()) it.coerceIn(0f, 1f) else 0f } else 0f
         level[0] += (raw - level[0]) * 0.2f
         val l = level[0]
-        val alpha = (if (voiceState == VoiceState.IDLE) 0.22f else 0.4f) + l * 0.45f
-        drawRing(color.copy(alpha = alpha.coerceIn(0f, 1f)), amber.copy(alpha = (alpha + 0.2f).coerceIn(0f, 1f)), turn * (1f + l * 2f), l)
+        val alpha = (if (voiceState == VoiceState.IDLE) 0.3f else 0.5f) + l * 0.45f
+        drawRing(color.copy(alpha = alpha.coerceIn(0f, 1f)), amber, turn * (1f + l * 2f), l)
     }
 }
 
