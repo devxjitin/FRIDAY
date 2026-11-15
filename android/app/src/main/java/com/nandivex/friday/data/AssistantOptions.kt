@@ -58,8 +58,8 @@ object AssistantOptions {
         Voice("Sulafat", "Female", "Warm")
     )
 
-    /** Youthful female voice, so a fresh install sounds cute and light. */
-    val defaultVoice: String = "Algieba"
+    /** FRIDAY's default voice: a calm, firm female voice. */
+    val defaultVoice: String = "Kore"
 
     fun isApprovedVoice(voiceName: String): Boolean = voices.any { it.name == voiceName }
 

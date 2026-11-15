@@ -3,6 +3,16 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.11 - 2026-11-15
+
+### Changed
+- FRIDAY now has one personality: calm, warm, quick and quietly witty. It confirms commands in one short sentence and calls you "Boss" until you set a name in Settings.
+- Settings has a new Reply style choice: Short (default) or Detailed. The four old personalities and the "change personality" voice command are gone.
+- The default voice is now Kore, a female voice. Change it any time in Settings.
+- Asked who it is, FRIDAY says it is your phone assistant developed by Nandivex Technologies.
+- About shows "Developed by Nandivex Technologies" and the support email; personal names are removed.
+- New greetings on the home screen.
+
 ## 0.0.10 - 2026-11-15
 
 ### Added

@@ -7,8 +7,6 @@ import com.nandivex.friday.data.DeviceToolRunner
 import com.nandivex.friday.data.MEMORY_FORGET_TOOL
 import com.nandivex.friday.data.MEMORY_SAVE_TOOL
 import com.nandivex.friday.data.MemoryStore
-import com.nandivex.friday.data.Personalities
-import com.nandivex.friday.data.SET_PERSONALITY_TOOL
 import com.nandivex.friday.data.UntrustedContent
 import com.nandivex.friday.network.GeminiLiveClient
 import com.nandivex.friday.util.LatencyTool
@@ -24,8 +22,6 @@ internal class ToolRunner(
     private val memoryStore: MemoryStore,
     private val settingsStore: AppSettingsStore,
     private val deviceToolRunner: DeviceToolRunner,
-    /** A running or warm session was built with the old personality; discard it. */
-    private val onPersonalityChanged: () -> Unit,
     private val onMemorySaved: (String) -> Unit = {}
 ) {
     companion object {
@@ -33,7 +29,6 @@ internal class ToolRunner(
         fun displayName(functionName: String): String = when {
             functionName == MEMORY_SAVE_TOOL -> "Saving to memory"
             functionName == MEMORY_FORGET_TOOL -> "Forgetting a memory"
-            functionName == SET_PERSONALITY_TOOL -> "Changing personality"
             else -> DeviceTool.fromFunctionName(functionName)?.label ?: functionName.replace('_', ' ')
         }
     }
@@ -44,8 +39,6 @@ internal class ToolRunner(
             runDeviceTool(deviceTool, call.args)
         } else if (call.name == MEMORY_SAVE_TOOL || call.name == MEMORY_FORGET_TOOL) {
             runToolSafely(call.name) { runMemoryTool(call.name, call.args) }
-        } else if (call.name == SET_PERSONALITY_TOOL) {
-            runToolSafely(call.name) { runPersonalityTool(call.args) }
         } else {
             "status=unknown_tool\nThere is no tool named ${call.name}. Do not call it again; tell the user you cannot do that with the tools you have."
         }
@@ -91,20 +84,6 @@ internal class ToolRunner(
     } catch (e: Exception) {
         Log.e("AssistantError", "Tool $name failed", e)
         "status=failed\nThat action could not be completed."
-    }
-
-    /** set_personality, called by the voice model. The running session switches style at once through the reply. */
-    private suspend fun runPersonalityTool(args: JSONObject): String {
-        val id = args.optString("personality")
-        if (!Personalities.isKnown(id)) {
-            return "status=invalid\nChoose one of: ${Personalities.all.joinToString { it.id }}."
-        }
-        val personality = Personalities.byId(id)
-        settingsStore.setPersonality(personality.id)
-        onPersonalityChanged()
-        return "status=ok\nPersonality is now ${personality.label}. From your next reply on, speak this way: " +
-            "${personality.styleNote}. This replaces your earlier character description; every other rule stays. " +
-            "Confirm the change in one short line in the new style."
     }
 
     /** Runs a device tool and returns the text handed back to the voice model. */

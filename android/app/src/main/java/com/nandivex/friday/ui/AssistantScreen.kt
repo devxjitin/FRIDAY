@@ -333,7 +333,7 @@ fun AssistantScreen(
                     onBargeInToggled = actions.onBargeInToggled,
                     onAnnounceNotificationsToggled = actions.onAnnounceNotificationsToggled,
                     onOwnerNameChanged = actions.onOwnerNameChanged,
-                    onPersonalitySelected = actions.onPersonalitySelected,
+                    onReplyStyleSelected = actions.onReplyStyleSelected,
                     onClearApiKey = actions.onClearApiKey,
                     onSaveDeveloperChanges = actions.onSaveDeveloperChanges,
                     isSavingDeveloper = uiState.isSavingDeveloperSettings,

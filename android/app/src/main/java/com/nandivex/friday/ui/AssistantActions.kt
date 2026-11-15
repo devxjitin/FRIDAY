@@ -51,7 +51,7 @@ class AssistantActions(
     val onBargeInToggled: (Boolean) -> Unit,
     val onAnnounceNotificationsToggled: (Boolean) -> Unit,
     val onOwnerNameChanged: (String) -> Unit = {},
-    val onPersonalitySelected: (String) -> Unit = {},
+    val onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit = {},
     val onSaveDeveloperChanges: (String) -> Unit,
     val onDismissToast: () -> Unit,
     val onRemoveLicense: () -> Unit = {},

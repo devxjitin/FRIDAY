@@ -114,8 +114,8 @@ object KnowledgeBaseProvider {
     }
 }
 
-/** Fills the {owner} / {Owner} placeholders with the owner's name, or "the user" until one is set. */
+/** Fills the {owner} / {Owner} placeholders with the owner's name, or "Boss" until one is set. */
 internal fun String.withOwner(owner: String): String {
-    val label = owner.trim().ifBlank { "the user" }
+    val label = owner.trim().ifBlank { DEFAULT_ADDRESS }
     return replace("{owner}", label).replace("{Owner}", label.replaceFirstChar { it.uppercase() })
 }

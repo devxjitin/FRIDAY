@@ -485,7 +485,6 @@ class GeminiLiveClient(
 internal fun liveFunctionDeclarations(settings: AssistantSettings): JSONArray {
     val declarations = JSONArray()
     if (settings.memoryEnabled) ToolDeclarations.memory().forEach { declarations.put(it) }
-    declarations.put(ToolDeclarations.personality())
     DeviceTool.entries.filter { it in settings.enabledDeviceTools }
         .forEach { declarations.put(ToolDeclarations.device(it)) }
     return declarations
