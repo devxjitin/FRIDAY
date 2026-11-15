@@ -17,7 +17,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun slowToolsAreDeclaredNonBlocking() {
-        listOf("web_search", "fetch_webpage", "get_weather", "youtube_search", "look_at_screen", "search_knowledge_base")
+        listOf("web_search", "fetch_webpage", "get_weather", "look_at_screen", "search_knowledge_base")
             .forEach { assertEquals(it, "NON_BLOCKING", declaration(it).optString("behavior")) }
     }
 

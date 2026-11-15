@@ -3,6 +3,17 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.7 - 2026-11-15
+
+### Changed
+- Web search and web pages now work straight from your phone, with no server in between.
+- The app has no activation key at all: every build opens straight to FRIDAY. Accounts and the free trial come in a later version.
+- Feature requests and bug reports now open your email app with the message filled in. Support email is support@nandivex.com.
+
+### Removed
+- The YouTube connectors (search, video details, captions, playlists and downloads) and the Downloads page.
+- The built-in update check and installer. Testers get new builds through Firebase App Distribution.
+
 ## 0.0.6 - 2026-11-14
 
 ### Changed
