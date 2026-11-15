@@ -549,12 +549,14 @@ class DeviceToolRunner(
         return "status=ok\nCalling ${to.label}."
     }
 
+    @android.annotation.SuppressLint("MissingPermission") // ANSWER_PHONE_CALLS is checked by missingPermission just below
     private fun answerCall(): String {
         missingPermission(Manifest.permission.ANSWER_PHONE_CALLS)?.let { return it }
         app.getSystemService(TelecomManager::class.java).acceptRingingCall()
         return "status=ok\nAsked the phone to answer the ringing call."
     }
 
+    @android.annotation.SuppressLint("MissingPermission") // ANSWER_PHONE_CALLS is checked by missingPermission just below
     @Suppress("DEPRECATION")
     private fun endCall(declined: Boolean): String {
         if (Build.VERSION.SDK_INT < 28) return "status=unavailable\nEnding a call by voice needs Android 9 or newer."
