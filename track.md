@@ -551,3 +551,4 @@
 [2026-11-08 19:00] [Claude] [Refactor: 1.19.0 - knowledge documents and chunks now live only in ObjectBox (one transaction per change); one-time verified import from DataStore on first use; old DataStore copy kept untouched for one release; 5 new native tests]
 [2026-11-13 22:40] [Claude] [Update: Sprint 1.1 - package com.nandivex.friday, debug/beta build variants, Firebase project friday-nandivex, App Distribution workflow replaces publish-ota]
 [2026-11-14 15:20] [Claude] [Update: Sprint 1.2 - removed Skills and the Decisions API (package, toggles, tests, docs); version 0.0.4]
+[2026-11-14 20:10] [Claude] [Update: tester and debug builds skip the activation key (release keeps it); version 0.0.6]
