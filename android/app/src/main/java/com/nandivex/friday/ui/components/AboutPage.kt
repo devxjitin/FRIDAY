@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nandivex.friday.BuildConfig
-import com.nandivex.friday.network.UpdateInfo
 import com.nandivex.friday.ui.theme.AppButtonShape
 import com.nandivex.friday.ui.theme.AssistantAccent
 import com.nandivex.friday.ui.theme.AssistantAccentFill
@@ -45,21 +44,13 @@ import com.nandivex.friday.ui.theme.AssistantError
 import com.nandivex.friday.ui.theme.AssistantTextMuted
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
 import com.nandivex.friday.ui.theme.AssistantTextSecondary
-import com.nandivex.friday.viewmodel.UpdateCheckState
 import java.text.DateFormat
 import java.util.Date
 
-/** About: what this app is, which build is installed, and whether a newer one is waiting. */
+/** About: what this app is and which build is installed. */
 @Composable
 fun AboutPage(
     assistantName: String,
-    updateState: UpdateCheckState,
-    availableUpdate: UpdateInfo?,
-    lastCheckedAt: Long,
-    updateError: String?,
-    downloadProgress: Float?,
-    onCheckForUpdates: () -> Unit,
-    onUpdateNow: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     PageColumn(modifier) {
@@ -73,62 +64,6 @@ fun AboutPage(
                     textAlign = TextAlign.Center, modifier = Modifier.padding(top = 2.dp)
                 )
                 Text("Version ${BuildConfig.VERSION_NAME}", color = AssistantTextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
-            }
-        }
-
-        PageLabel("Updates")
-        PageCard {
-            when (updateState) {
-                UpdateCheckState.CHECKING -> StatusLine("Checking for updates…", spinner = true)
-                UpdateCheckState.UP_TO_DATE -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = AssistantAccent, modifier = Modifier.size(22.dp))
-                        Spacer(Modifier.size(10.dp))
-                        Column {
-                            Text("You're on the latest version", color = AssistantTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                            if (lastCheckedAt > 0) {
-                                Text("Last checked at ${DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(lastCheckedAt))}", color = AssistantTextMuted, fontSize = 13.sp)
-                            }
-                        }
-                    }
-                }
-                UpdateCheckState.AVAILABLE -> if (availableUpdate != null) {
-                    Text("Version ${availableUpdate.versionName} is available", color = AssistantTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    if (availableUpdate.sizeBytes > 0) {
-                        Text("Download size ${formatBytes(availableUpdate.sizeBytes)}", color = AssistantTextMuted, fontSize = 13.sp)
-                    }
-                    if (availableUpdate.notes.isNotBlank()) {
-                        Text(availableUpdate.notes, color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(top = 8.dp))
-                    }
-                }
-                UpdateCheckState.FAILED -> Text(updateError ?: "Could not check for updates.", color = AssistantError, fontSize = 14.sp, lineHeight = 20.sp)
-                UpdateCheckState.IDLE -> Text("Check whether a newer version is available.", color = AssistantTextSecondary, fontSize = 14.sp)
-            }
-            Spacer(Modifier.height(14.dp))
-            if (downloadProgress != null) {
-                LinearProgressIndicator(progress = { downloadProgress }, modifier = Modifier.fillMaxWidth(), color = AssistantAccent)
-                Text("Downloading ${(downloadProgress * 100).toInt()}%", color = AssistantTextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-            } else if (updateState == UpdateCheckState.AVAILABLE && availableUpdate != null) {
-                Button(
-                    shape = AppButtonShape,
-                    onClick = onUpdateNow, modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = com.nandivex.friday.ui.theme.AssistantButtonFill, contentColor = com.nandivex.friday.ui.theme.AssistantOnButtonFill)
-                ) { Text("Update now") }
-            } else {
-                OutlinedButton(
-                    shape = AppButtonShape,
-                    onClick = onCheckForUpdates, enabled = updateState != UpdateCheckState.CHECKING, modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        when (updateState) {
-                            UpdateCheckState.CHECKING -> "Checking…"
-                            UpdateCheckState.UP_TO_DATE -> "Check again"
-                            UpdateCheckState.FAILED -> "Try again"
-                            else -> "Check for updates"
-                        },
-                        color = AssistantAccent
-                    )
-                }
             }
         }
 
@@ -149,7 +84,7 @@ fun AboutPage(
             Text("Founder: Chandra Prakash", color = AssistantTextSecondary, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
             Text("Co-founder: Jitin", color = AssistantTextSecondary, fontSize = 14.sp, modifier = Modifier.padding(top = 2.dp))
             Text("Co-builder: Sonia", color = AssistantTextSecondary, fontSize = 14.sp, modifier = Modifier.padding(top = 2.dp))
-            Text("devxjitin@gmail.com", color = AssistantTextMuted, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+            Text("support@nandivex.com", color = AssistantTextMuted, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
         }
 
         PageLabel("Privacy")

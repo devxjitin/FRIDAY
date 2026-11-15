@@ -23,10 +23,6 @@ val localProperties = Properties().apply {
     if (file.exists()) load(file.inputStream())
 }
 
-// Base URL of the Ultron API on AWS (checks the user's Firebase token, so it is not a secret). Overridable from local.properties.
-val apiBaseUrl: String = localProperties.getProperty("API_BASE_URL", "https://api.devxjitin.dev")
-// Website store where activation keys are sold; the activation screen links to it. Blank hides the link.
-val storeUrl: String = localProperties.getProperty("STORE_URL", "")
 // Every build gets a higher version code than the one before (minutes since 1970), so the phone can always tell
 // which build is newer. scripts/publish-update.ps1 passes the same number with -PappVersionCode.
 val appVersionCode: Int = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: (System.currentTimeMillis() / 60000).toInt()
@@ -74,8 +70,6 @@ android {
         versionCode = appVersionCode
         versionName = appVersionName
 
-        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
-        buildConfigField("String", "STORE_URL", "\"$storeUrl\"")
     }
 
     signingConfigs {
@@ -190,7 +184,8 @@ dependencies {
     implementation("com.google.android.material:material:1.14.0")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.5")
+    // Reads web pages as plain text on the phone.
+    implementation("org.jsoup:jsoup:1.18.3")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("androidx.security:security-crypto:1.1.0")

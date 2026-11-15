@@ -9,11 +9,9 @@ import com.nandivex.friday.data.StoredTurn
 data class ShownImage(val uri: String, val title: String, val id: Int)
 
 /** The page on screen. Exactly one is shown at a time; HOME is the voice screen. */
-enum class AppPage { HOME, PROFILE, KNOWLEDGE, MEMORY, HISTORY, CONNECTORS, SETTINGS, USAGE, STORAGE, DOWNLOADS, DEVELOPER, HELP, ABOUT }
+enum class AppPage { HOME, PROFILE, KNOWLEDGE, MEMORY, HISTORY, CONNECTORS, SETTINGS, USAGE, STORAGE, DEVELOPER, HELP, ABOUT }
 
 /** Where the "is there a newer build" check stands; About shows it. */
-enum class UpdateCheckState { IDLE, CHECKING, UP_TO_DATE, AVAILABLE, FAILED }
-
 enum class KnowledgePreparationStage { ANALYZING, PREPARING }
 
 enum class AppNotificationType { SUCCESS, ERROR, WARNING, INFO }
@@ -38,22 +36,13 @@ data class AssistantUiState(
     val voiceState: VoiceState = VoiceState.IDLE,
     /** User pressed Mute during a session: mic audio isn't sent, the session stays open. */
     val isMicMuted: Boolean = false,
-    /** A newer build waiting on the AWS update server; shown in a dialog until installed or dismissed. */
-    val updateInfo: com.nandivex.friday.network.UpdateInfo? = null,
     /** Tokens the live session has used so far; 0 when no session is running. Drawn as a ring around the mic. */
     val liveContextTokens: Int = 0,
     /** Changes since the version the user last saw; the "What's new" card shows while this is not empty. */
     val whatsNew: List<com.nandivex.friday.data.ChangelogEntry> = emptyList(),
-    /** 0..1 while that build downloads; null otherwise. */
-    val updateDownloadProgress: Float? = null,
-    val updateCheckState: UpdateCheckState = UpdateCheckState.IDLE,
-    /** The newest build found, kept even after the dialog was dismissed so About can still offer it. */
-    val availableUpdate: com.nandivex.friday.network.UpdateInfo? = null,
-    val lastUpdateCheckAt: Long = 0L,
-    val updateCheckError: String? = null,
     /** Per-day usage counters, oldest first. */
     val usageDays: List<com.nandivex.friday.data.UsageDay> = emptyList(),
-    /** Bytes of temporary files (downloaded updates, previews) the app can clear. */
+    /** Bytes of temporary files (previews) the app can clear. */
     val cacheBytes: Long = 0L,
     /** Facts the assistant remembers about the user, newest last. */
     val memories: List<MemoryItem> = emptyList(),

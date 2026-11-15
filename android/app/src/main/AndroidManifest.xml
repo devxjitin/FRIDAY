@@ -13,7 +13,6 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <!-- Display over other apps: lets the accessibility-driven actions start screens from the background. Granted by the user in Settings. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
@@ -102,11 +101,6 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Keeps the assistant availability notification visible." />
         </service>
-
-        <service
-            android:name=".DownloadService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
 
         <service
             android:name=".AlarmRingService"
