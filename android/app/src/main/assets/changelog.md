@@ -3,6 +3,14 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.15 - 2026-11-15
+
+### Changed
+- The Connectors page is regrouped into Calls & messages, Connectivity, Device controls, Clock, Apps, Info, Personal and Phone control, with a short line under each heading.
+- Connectors are smaller and clearer: Wi-Fi, Bluetooth and Mobile & network; Torch, Sound, Display and Media; Apps, Camera and Clipboard & notes; Web search and web pages are now one Web connector.
+- A new "Connect all essentials" button adds every everyday connector in one tap, and asks once for the Android permissions they need.
+- Every command works as before. If you had a connector on, its tools stay on.
+
 ## 0.0.14 - 2026-11-15
 
 ### Changed

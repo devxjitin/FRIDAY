@@ -36,17 +36,57 @@ class ConnectorsTest {
         ids.forEach { assertTrue("$it has no info text", ConnectorRegistry.info(it) != null) }
     }
 
-    @Test fun aFreshInstallStartsWithTheSameSafeConnectorsAsBefore() {
+    @Test fun aFreshInstallStartsWithTheEverydayConnectors() {
         assertEquals(
-            setOf("device_info", "device_controls", "alarms", "reminders", "apps_settings", "duckduckgo", "web_reader", "weather"),
+            setOf(
+                "wifi", "bluetooth", "network", "torch", "sound", "display", "media", "alarms", "reminders",
+                "apps", "camera", "clipboard", "device_info", "weather", "web"
+            ),
             ConnectorRegistry.defaultIds.toSet()
         )
+        assertEquals(ConnectorRegistry.defaultIds, ConnectorRegistry.essentials.map { it.id })
     }
 
-    @Test fun onlyEssentialsAndSearchAreOnByDefault() {
+    @Test fun nothingPersonalIsOnByDefault() {
+        val off = setOf(ConnectorCategory.CALLS_MESSAGES, ConnectorCategory.PERSONAL, ConnectorCategory.PHONE_CONTROL)
         ConnectorRegistry.all.filter { it.defaultOn }.forEach {
-            assertTrue("${it.id} is on by default", it.category in setOf(ConnectorCategory.ESSENTIALS, ConnectorCategory.SEARCH_MEDIA))
+            assertTrue("${it.id} is on by default", it.category !in off)
         }
+        assertTrue("app_usage reads private data", !ConnectorRegistry.get("app_usage").defaultOn)
+    }
+
+    @Test fun categoriesAreTheEightGroupsInOrderAndEachHasConnectors() {
+        assertEquals(
+            listOf("Calls & messages", "Connectivity", "Device controls", "Clock", "Apps", "Info", "Personal", "Phone control"),
+            ConnectorCategory.entries.map { it.title }
+        )
+        ConnectorCategory.entries.forEach { c ->
+            assertTrue("${c.title} is empty", ConnectorRegistry.all.any { it.category == c })
+            assertTrue("${c.title} has no summary line", c.summary.isNotBlank())
+        }
+    }
+
+    @Test fun everyConnectorHasToolsAndAShortLineForEachTool() {
+        ConnectorRegistry.all.forEach { c ->
+            assertTrue("${c.id} has no tools", c.tools.isNotEmpty())
+            c.tools.forEach { assertTrue("${it.functionName} has no hint", it.hint.isNotBlank()) }
+        }
+    }
+
+    @Test fun phoneSettingsFromBeforeTheSplitKeepEveryCommandWorking() {
+        // Someone who had Device controls and Device info on keeps all of those tools after they were split into smaller connectors.
+        val saved = setOf("set_volume=1", "set_flashlight=1", "set_brightness=1", "media_control=1", "get_wifi_info=1", "get_bluetooth_status=1", "get_battery_status=1")
+        val on = effectiveDeviceTools(saved)
+        listOf("sound", "torch", "display", "media", "wifi", "bluetooth", "device_info").forEach { id ->
+            ConnectorRegistry.get(id).tools.forEach { assertTrue("${it.functionName} should stay on", it in on) }
+        }
+        assertTrue(DeviceTool.WEB_SEARCH !in on && DeviceTool.MAKE_CALL !in on)
+    }
+
+    @Test fun aToolIsDeclaredToTheModelOnlyWhenItsConnectorIsOn() {
+        val oneConnector = AssistantSettings(enabledDeviceTools = ConnectorRegistry.get("torch").tools.toSet(), memoryEnabled = false)
+        val names = com.nandivex.friday.network.liveFunctionDeclarations(oneConnector).let { a -> (0 until a.length()).map { a.getJSONObject(it).getString("name") } }
+        assertEquals(listOf(DeviceTool.FLASHLIGHT.functionName), names)
     }
 
     @Test fun riskyConnectorsLiveInTheirOwnCategories() {

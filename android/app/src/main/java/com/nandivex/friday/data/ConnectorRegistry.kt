@@ -4,14 +4,18 @@ import android.Manifest
 import android.os.Build
 
 /**
- * The groups the Connectors page is split into, in the order they appear. A group tells the user how sensitive a
- * connector is; [advanced] groups carry a warning and are never switched on by default.
+ * The groups the Connectors page is split into, in the order they appear. Each has a one-line summary shown under its
+ * heading; [advanced] groups carry a warning and are never switched on by default.
  */
 enum class ConnectorCategory(val title: String, val summary: String, val advanced: Boolean = false) {
-    ESSENTIALS("Essentials", "Everyday phone info and controls. Nothing here reads your personal data."),
-    SEARCH_MEDIA("Search & media", "Web search and web pages."),
-    PERSONAL("Personal data", "Reads private data from your phone, such as contacts, calendar, location, files and notifications. What you ask about is sent to Gemini."),
-    PHONE_CONTROL("Phone control", "Lets the assistant operate other apps through Android accessibility. It can tap, type and read the screen, so turn it on only if you understand that.", advanced = true),
+    CALLS_MESSAGES("Calls & messages", "Call people, find contacts and message them. Off until you add them."),
+    CONNECTIVITY("Connectivity", "Wi-Fi, Bluetooth and mobile network."),
+    DEVICE_CONTROLS("Device controls", "Torch, sound, screen and media keys."),
+    CLOCK("Clock", "Alarms, timers and reminders that ring on this phone."),
+    APPS("Apps", "Open apps, the camera and settings, and use the clipboard."),
+    INFO("Info", "Phone status, weather and the web."),
+    PERSONAL("Personal", "Reads private data from your phone, such as calendar, location, files and notifications. What you ask about is sent to Gemini."),
+    PHONE_CONTROL("Phone control", "Lets FRIDAY operate other apps through Android accessibility. It can tap, type and read the screen, so turn it on only if you understand that.", advanced = true),
 }
 
 /** Extra Android access (a special settings screen, not a normal permission) a connector needs before its tools work. */
@@ -43,11 +47,12 @@ class ConnectorSpec(
     val tools: List<DeviceTool>
 )
 
-private fun deviceInfoPermissions(): List<String> = buildList {
-    add(Manifest.permission.ACCESS_FINE_LOCATION)
-    add(Manifest.permission.ACCESS_COARSE_LOCATION)
-    if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
+private fun stepsPermissions(): List<String> = buildList {
     if (Build.VERSION.SDK_INT >= 29) add(Manifest.permission.ACTIVITY_RECOGNITION)
+}
+
+private fun bluetoothPermissions(): List<String> = buildList {
+    if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
 }
 
 /** Before Android 11 the ordinary storage permission already reaches every file; from 11 the special All files screen is used. */
@@ -62,52 +67,112 @@ private fun allFilesPermissions(): List<String> =
 object ConnectorRegistry {
     val all: List<ConnectorSpec> = listOf(
         ConnectorSpec(
-            id = "device_info", name = "Device info", description = "Battery, storage, network, time and more.",
-            subtitle = "On your phone", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.PHONE,
-            permissions = deviceInfoPermissions(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.TIME, DeviceTool.BATTERY, DeviceTool.DEVICE_INFO, DeviceTool.STORAGE_MEMORY, DeviceTool.NETWORK, DeviceTool.WIFI_INFO, DeviceTool.BLUETOOTH, DeviceTool.STEPS, DeviceTool.LIGHT)
+            id = "calls", name = "Phone calls", description = "Call a contact by name.",
+            subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
+            permissions = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
+            tools = listOf(DeviceTool.MAKE_CALL)
         ),
         ConnectorSpec(
-            id = "device_controls", name = "Device controls", description = "Flashlight, volume, brightness and phone modes.",
-            subtitle = "On your phone", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.PHONE,
+            id = "contacts", name = "Contacts", description = "Find contacts, birthdays and save new contacts.",
+            subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
+            permissions = listOf(Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
+            tools = listOf(DeviceTool.SEARCH_CONTACT, DeviceTool.CONTACT_BIRTHDAY, DeviceTool.CREATE_CONTACT)
+        ),
+        ConnectorSpec(
+            id = "wifi", name = "Wi-Fi", description = "Which Wi-Fi you are on and how strong it is.",
+            subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
+            permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.WIFI_INFO)
+        ),
+        ConnectorSpec(
+            id = "bluetooth", name = "Bluetooth", description = "Whether Bluetooth is on and what is paired.",
+            subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
+            permissions = bluetoothPermissions(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.BLUETOOTH)
+        ),
+        ConnectorSpec(
+            id = "network", name = "Mobile & network", description = "Online or not, and the Wi-Fi, data and NFC panels.",
+            subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.FLASHLIGHT, DeviceTool.BRIGHTNESS, DeviceTool.GET_BRIGHTNESS, DeviceTool.VOLUME, DeviceTool.GET_VOLUME, DeviceTool.GET_RINGER, DeviceTool.SET_RINGER, DeviceTool.VIBRATE, DeviceTool.SET_DND, DeviceTool.MEDIA_CONTROL, DeviceTool.SCREEN_TIMEOUT, DeviceTool.AUTO_ROTATE, DeviceTool.OPEN_PANEL)
+            tools = listOf(DeviceTool.NETWORK, DeviceTool.OPEN_PANEL)
+        ),
+        ConnectorSpec(
+            id = "torch", name = "Torch", description = "Switch the flashlight on and off.",
+            subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.FLASHLIGHT)
+        ),
+        ConnectorSpec(
+            id = "sound", name = "Sound", description = "Volume, ringer mode, vibration and Do Not Disturb.",
+            subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.VOLUME, DeviceTool.GET_VOLUME, DeviceTool.GET_RINGER, DeviceTool.SET_RINGER, DeviceTool.VIBRATE, DeviceTool.SET_DND)
+        ),
+        ConnectorSpec(
+            id = "display", name = "Display", description = "Brightness, screen timeout and auto-rotate.",
+            subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.BRIGHTNESS, DeviceTool.GET_BRIGHTNESS, DeviceTool.SCREEN_TIMEOUT, DeviceTool.AUTO_ROTATE)
+        ),
+        ConnectorSpec(
+            id = "media", name = "Media", description = "Play, pause and skip in any music or video app.",
+            subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.MEDIA_CONTROL)
         ),
         ConnectorSpec(
             id = "alarms", name = "Alarms & timers", description = "Set alarms and timers.",
-            subtitle = "On your phone", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.PHONE,
+            subtitle = "On your phone", category = ConnectorCategory.CLOCK, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
             tools = listOf(DeviceTool.SET_ALARM, DeviceTool.LIST_ALARMS, DeviceTool.CANCEL_ALARM, DeviceTool.MODIFY_ALARM, DeviceTool.SET_TIMER, DeviceTool.LIST_TIMERS, DeviceTool.CANCEL_TIMER)
         ),
         ConnectorSpec(
             id = "reminders", name = "Reminders", description = "Get reminded at a time, with a sound.",
-            subtitle = "On your phone", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.PHONE,
+            subtitle = "On your phone", category = ConnectorCategory.CLOCK, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
             tools = listOf(DeviceTool.SCHEDULE_REMINDER, DeviceTool.LIST_REMINDERS, DeviceTool.CANCEL_REMINDER, DeviceTool.MODIFY_REMINDER)
         ),
         ConnectorSpec(
-            id = "apps_settings", name = "Apps & settings", description = "Open apps and settings, use the clipboard.",
-            subtitle = "On your phone", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.PHONE,
+            id = "apps", name = "Apps", description = "Open apps and settings, links and share text.",
+            subtitle = "On your phone", category = ConnectorCategory.APPS, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.OPEN_APP, DeviceTool.OPEN_CAMERA, DeviceTool.OPEN_APP_SETTINGS, DeviceTool.OPEN_SETTINGS, DeviceTool.GET_CLIPBOARD, DeviceTool.SET_CLIPBOARD, DeviceTool.SHOW_NOTIFICATION, DeviceTool.LIST_APPS, DeviceTool.OPEN_URL, DeviceTool.SHARE_TEXT)
+            tools = listOf(DeviceTool.OPEN_APP, DeviceTool.LIST_APPS, DeviceTool.OPEN_APP_SETTINGS, DeviceTool.OPEN_SETTINGS, DeviceTool.OPEN_URL, DeviceTool.SHARE_TEXT)
+        ),
+        ConnectorSpec(
+            id = "camera", name = "Camera", description = "Open the camera for a photo or video.",
+            subtitle = "On your phone", category = ConnectorCategory.APPS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.OPEN_CAMERA)
+        ),
+        ConnectorSpec(
+            id = "clipboard", name = "Clipboard & notes", description = "Read and set the clipboard, and show a note.",
+            subtitle = "On your phone", category = ConnectorCategory.APPS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.GET_CLIPBOARD, DeviceTool.SET_CLIPBOARD, DeviceTool.SHOW_NOTIFICATION)
+        ),
+        ConnectorSpec(
+            id = "app_usage", name = "App usage", description = "See which apps you use most.",
+            subtitle = "On your phone", category = ConnectorCategory.APPS, kind = ConnectorKind.PHONE,
+            permissions = emptyList(), access = SpecialAccess.USAGE_ACCESS, defaultOn = false,
+            tools = listOf(DeviceTool.MOST_USED_APPS, DeviceTool.APP_USAGE)
+        ),
+        ConnectorSpec(
+            id = "device_info", name = "Device status", description = "Time, battery, storage, steps and light.",
+            subtitle = "On your phone", category = ConnectorCategory.INFO, kind = ConnectorKind.PHONE,
+            permissions = stepsPermissions(), access = SpecialAccess.NONE, defaultOn = true,
+            tools = listOf(DeviceTool.TIME, DeviceTool.BATTERY, DeviceTool.DEVICE_INFO, DeviceTool.STORAGE_MEMORY, DeviceTool.STEPS, DeviceTool.LIGHT)
         ),
         ConnectorSpec(
             id = "weather", name = "Weather", description = "Weather now and for the next few days.",
-            subtitle = "Free, no sign-in", category = ConnectorCategory.ESSENTIALS, kind = ConnectorKind.ONLINE,
+            subtitle = "Free, no sign-in", category = ConnectorCategory.INFO, kind = ConnectorKind.ONLINE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
             tools = listOf(DeviceTool.GET_WEATHER)
         ),
         ConnectorSpec(
-            id = "duckduckgo", name = "Web search", description = "Search the web.",
-            subtitle = "No sign-in", category = ConnectorCategory.SEARCH_MEDIA, kind = ConnectorKind.ONLINE,
+            id = "web", name = "Web", description = "Search the web and read any page or link.",
+            subtitle = "No sign-in", category = ConnectorCategory.INFO, kind = ConnectorKind.ONLINE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.WEB_SEARCH)
-        ),
-        ConnectorSpec(
-            id = "web_reader", name = "Web pages", description = "Read any web page or link.",
-            subtitle = "Free, no sign-in", category = ConnectorCategory.SEARCH_MEDIA, kind = ConnectorKind.ONLINE,
-            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.FETCH_WEBPAGE)
+            tools = listOf(DeviceTool.WEB_SEARCH, DeviceTool.FETCH_WEBPAGE)
         ),
         ConnectorSpec(
             id = "calendar", name = "Calendar", description = "Check your schedule and add events.",
@@ -116,40 +181,22 @@ object ConnectorRegistry {
             tools = listOf(DeviceTool.UPCOMING_EVENTS, DeviceTool.CALENDAR_CONFLICTS, DeviceTool.CREATE_EVENT, DeviceTool.CANCEL_EVENT)
         ),
         ConnectorSpec(
-            id = "contacts", name = "Contacts", description = "Find contacts, birthdays and save new contacts.",
-            subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
-            permissions = listOf(Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
-            tools = listOf(DeviceTool.SEARCH_CONTACT, DeviceTool.CONTACT_BIRTHDAY, DeviceTool.CREATE_CONTACT)
-        ),
-        ConnectorSpec(
-            id = "calls", name = "Calls", description = "Call a contact by name.",
-            subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
-            permissions = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
-            tools = listOf(DeviceTool.MAKE_CALL)
-        ),
-        ConnectorSpec(
             id = "location", name = "Location", description = "Know where you are and get directions.",
             subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
             permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), access = SpecialAccess.NONE, defaultOn = false,
             tools = listOf(DeviceTool.LOCATION, DeviceTool.DIRECTIONS)
         ),
         ConnectorSpec(
-            id = "files", name = "Files", description = "Browse folders, find any file and open it.",
-            subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
-            permissions = allFilesPermissions(), access = SpecialAccess.ALL_FILES, defaultOn = false,
-            tools = listOf(DeviceTool.SEARCH_FILES, DeviceTool.OPEN_FILE, DeviceTool.LIST_FOLDER, DeviceTool.SHARE_FILE)
-        ),
-        ConnectorSpec(
-            id = "app_usage", name = "App usage", description = "See which apps you use most.",
-            subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
-            permissions = emptyList(), access = SpecialAccess.USAGE_ACCESS, defaultOn = false,
-            tools = listOf(DeviceTool.MOST_USED_APPS, DeviceTool.APP_USAGE)
-        ),
-        ConnectorSpec(
             id = "notifications", name = "Notifications", description = "Read and reply to notifications.",
             subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NOTIFICATION_ACCESS, defaultOn = false,
             tools = listOf(DeviceTool.READ_NOTIFICATIONS, DeviceTool.REPLY_NOTIFICATION, DeviceTool.DISMISS_NOTIFICATION, DeviceTool.NOW_PLAYING)
+        ),
+        ConnectorSpec(
+            id = "files", name = "Files", description = "Browse folders, find any file and open it.",
+            subtitle = "On your phone", category = ConnectorCategory.PERSONAL, kind = ConnectorKind.PHONE,
+            permissions = allFilesPermissions(), access = SpecialAccess.ALL_FILES, defaultOn = false,
+            tools = listOf(DeviceTool.SEARCH_FILES, DeviceTool.OPEN_FILE, DeviceTool.LIST_FOLDER, DeviceTool.SHARE_FILE)
         ),
         ConnectorSpec(
             id = "navigation", name = "Phone navigation", description = "Go back, go home, scroll and take screenshots.",
@@ -171,19 +218,72 @@ object ConnectorRegistry {
 
     fun info(id: String): ConnectorInfo? = infos[id]
 
-    /** Ids switched on for a fresh install. */
+    /** Ids switched on for a fresh install. These are the essentials the "Connect all essentials" button adds. */
     val defaultIds: List<String> get() = all.filter { it.defaultOn }.map { it.id }
 
+    /** The connectors the "Connect all essentials" button adds: the ones that are on for a fresh install. */
+    val essentials: List<ConnectorSpec> get() = all.filter { it.defaultOn }
+
     private val infos: Map<String, ConnectorInfo> = mapOf(
-        "device_info" to ConnectorInfo(
-            "Tells you the time, battery, storage, network, Bluetooth, steps and light. It only reads.",
-            "Nothing to allow.",
+        "wifi" to ConnectorInfo(
+            "Tells you which Wi-Fi network you are on, how strong it is and how fast the link is. It only reads.",
+            "Location access. Android needs it to show a Wi-Fi name.",
             "Shared only when you ask."
         ),
-        "device_controls" to ConnectorInfo(
-            "Changes simple settings for you: flashlight, brightness, volume, ringer, Do Not Disturb, media keys and auto-rotate.",
-            "Android asks the first time for settings and Do Not Disturb.",
+        "bluetooth" to ConnectorInfo(
+            "Tells you whether Bluetooth is on and which devices are paired. It only reads.",
+            "Nearby devices access on Android 12 and newer.",
+            "Shared only when you ask."
+        ),
+        "network" to ConnectorInfo(
+            "Tells you whether you are online and on Wi-Fi or mobile data, and opens the Wi-Fi, mobile data, NFC and volume panels.",
+            "Nothing to allow.",
             "Nothing leaves your phone."
+        ),
+        "torch" to ConnectorInfo(
+            "Switches the flashlight on and off.",
+            "Nothing to allow.",
+            "Nothing leaves your phone."
+        ),
+        "sound" to ConnectorInfo(
+            "Changes the volume of the assistant, media, ring, alarm or notifications, sets silent, vibrate or normal, vibrates the phone and turns Do Not Disturb on or off.",
+            "Android asks the first time for Do Not Disturb access.",
+            "Nothing leaves your phone."
+        ),
+        "display" to ConnectorInfo(
+            "Makes the screen brighter or dimmer, sets how long it stays on and turns auto-rotate on or off.",
+            "Android asks the first time to change system settings.",
+            "Nothing leaves your phone."
+        ),
+        "media" to ConnectorInfo(
+            "Plays, pauses, skips and goes back in any music or video app.",
+            "Nothing to allow.",
+            "Nothing leaves your phone."
+        ),
+        "camera" to ConnectorInfo(
+            "Opens the camera app ready for a photo or a video.",
+            "Nothing to allow.",
+            "Nothing leaves your phone."
+        ),
+        "clipboard" to ConnectorInfo(
+            "Reads what you copied, copies text for you and shows a short note on the screen.",
+            "Nothing to allow.",
+            "Clipboard text is shared only when you ask."
+        ),
+        "web" to ConnectorInfo(
+            "Searches the web, answers from the results and reads a page or link you name.",
+            "Nothing to allow.",
+            "Your search words and the pages you ask about go from your phone straight to the website, as in a browser. Nothing goes through our servers."
+        ),
+        "apps" to ConnectorInfo(
+            "Opens apps and settings pages, opens links and shares text.",
+            "Nothing to allow.",
+            "Nothing leaves your phone."
+        ),
+        "device_info" to ConnectorInfo(
+            "Tells you the time, battery, storage and memory, steps, light and the phone model. It only reads.",
+            "Physical activity access for steps.",
+            "Shared only when you ask."
         ),
         "alarms" to ConnectorInfo(
             "F.R.I.D.A.Y.'s own alarms and timers. They ring on the alarm volume until you stop or snooze them, and you can list, change and cancel them by voice. They do not use the clock app.",
@@ -225,28 +325,11 @@ object ConnectorRegistry {
             "Usage access.",
             "App names and times are shared when you ask."
         ),
-        "duckduckgo" to ConnectorInfo(
-            "Searches the web and answers from the results.",
-            "Nothing to allow.",
-            "Your search words go from your phone straight to DuckDuckGo (or Bing if it is busy). Nothing goes through our servers.",
-            "Your phone"
-        ),
-        "web_reader" to ConnectorInfo(
-            "Reads a web page and gives you the main text.",
-            "Nothing to allow.",
-            "Your phone opens the page you ask about, as a browser would. Nothing goes through our servers.",
-            "Your phone"
-        ),
         "weather" to ConnectorInfo(
             "Tells you the weather now and for the next few days, for where you are or any city.",
             "Location access, only for where you are.",
             "A city name or your location goes to a free weather service.",
             "Your phone"
-        ),
-        "apps_settings" to ConnectorInfo(
-            "Opens apps, the camera and settings, uses the clipboard and shows notifications.",
-            "Nothing to allow.",
-            "Clipboard text is shared only when you ask."
         ),
         "files" to ConnectorInfo(
             "Looks inside any folder on the phone, finds photos, videos, music, documents and any other file by name, and opens them in your own apps.",
