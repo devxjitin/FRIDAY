@@ -63,8 +63,7 @@ internal class VoiceSessionController(
     private val recordUsage: (UsageDay) -> Unit,
     private val recordVoiceUsage: () -> Unit,
     private val markVoiceUsageStart: () -> Unit,
-    private val openDeveloperPage: () -> Unit,
-    private val indexConversationHistory: () -> Unit
+    private val openDeveloperPage: () -> Unit
 ) {
     private companion object {
         const val WARM_SESSION_TTL_MS = 4 * 60 * 1000L
@@ -727,13 +726,12 @@ internal class VoiceSessionController(
                 } catch (e: Exception) {
                     Log.e("AssistantError", "Failed to save conversation turn", e)
                 }
-                // Past conversations: keep this exchange for good and make it searchable in the background.
+                // Past conversations: keep this exchange for the History page.
                 try {
                     withContext(Dispatchers.IO) {
                         val id = conversationHistoryStore.append(sessionId, userText, assistantText, System.currentTimeMillis())
                         Log.i("AssistantMemory", "saved=${id != null} total=${conversationHistoryStore.count()}")
                     }
-                    indexConversationHistory()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {

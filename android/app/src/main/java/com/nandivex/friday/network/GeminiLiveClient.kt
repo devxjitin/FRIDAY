@@ -481,13 +481,12 @@ class GeminiLiveClient(
     }
 }
 
-/** Knowledge search is always declared; each other tool is added only if its switch is on.  */
+/** Each tool is added only if its switch is on.  */
 internal fun liveFunctionDeclarations(settings: AssistantSettings): JSONArray {
     val declarations = JSONArray()
-    declarations.put(ToolDeclarations.knowledgeSearch())
     if (settings.memoryEnabled) ToolDeclarations.memory().forEach { declarations.put(it) }
     declarations.put(ToolDeclarations.personality())
-    DeviceTool.entries.filter { it in settings.enabledDeviceTools || it in DeviceTool.ASSISTANT_OWN }
+    DeviceTool.entries.filter { it in settings.enabledDeviceTools }
         .forEach { declarations.put(ToolDeclarations.device(it)) }
     return declarations
 }

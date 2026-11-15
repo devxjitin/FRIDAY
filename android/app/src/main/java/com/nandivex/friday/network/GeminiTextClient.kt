@@ -14,18 +14,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Base64
 import java.util.concurrent.TimeUnit
-import com.nandivex.friday.data.DEFAULT_DOCUMENT_FORMAT_PROMPT
 
 /**
- * Plain (non-streaming) Gemini text generation, used to have the model draft an agent
- * persona/system prompt from the admin's knowledge documents -- a one-off text task, unrelated
- * to the Live voice session. Unlike embeddings, plain text output has no cross-model
- * compatibility issue, so [PRIMARY_MODEL] and [FALLBACK_MODEL] can be tried in plain sequence.
+ * Plain (non-streaming) Gemini text generation, used to describe a screenshot for look_at_screen. Plain text output
+ * has no cross-model compatibility issue, so [PRIMARY_MODEL] and [FALLBACK_MODEL] can be tried in plain sequence.
  */
 class GeminiTextClient(
     private val apiKey: String,
-    private val documentFormatPrompt: String = DEFAULT_DOCUMENT_FORMAT_PROMPT,
-    private val documentFormatModel: String = DOCUMENT_FORMAT_MODEL,
     /** Called with the input and output tokens Gemini reports for each successful request. */
     private val onUsage: ((inputTokens: Int, outputTokens: Int) -> Unit)? = null
 ) {
@@ -33,53 +28,13 @@ class GeminiTextClient(
     companion object {
         const val PRIMARY_MODEL = "gemini-3.5-flash-lite"
         const val FALLBACK_MODEL = "gemini-3.8-flash"
-        const val DOCUMENT_FORMAT_MODEL = "gemini-3.8-flash"
-        private const val DOCUMENT_OUTPUT_LIMIT_TOKENS = 65_536
-        /** 4.2 seconds between successful calls stays below the 15-RPM quota. */
-        private const val DOCUMENT_FORMAT_COOLDOWN_MS = 4_200L
         private val JSON_MEDIA_TYPE = "application/json".toMediaType()
-        private val documentFormatMutex = Mutex()
-        private var lastSuccessfulDocumentFormatAtMs = Long.MIN_VALUE
     }
 
     private val client = HttpClients.shared.newBuilder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(120, TimeUnit.SECONDS)
         .build()
-
-    /** Uses Gemini's native PDF understanding so the formatter sees visual layout, tables, and
-     * images in addition to selectable text. */
-    suspend fun formatKnowledgePdf(pdfBytes: ByteArray, retrievalChunkLimit: Int): String {
-        val contents = JSONArray().put(
-            JSONObject().put(
-                "parts",
-                JSONArray()
-                    .put(JSONObject().put("text", "$documentFormatPrompt\n\nRetrieval configuration: The assistant retrieves only $retrievalChunkLimit chunks per query. Keep each topic self-contained whenever possible."))
-                    .put(
-                        JSONObject().put(
-                            "inline_data",
-                            JSONObject()
-                                .put("mime_type", "application/pdf")
-                                .put("data", Base64.getEncoder().encodeToString(pdfBytes))
-                        )
-                    )
-            )
-        )
-        return documentFormatMutex.withLock {
-            val elapsed = System.currentTimeMillis() - lastSuccessfulDocumentFormatAtMs
-            if (lastSuccessfulDocumentFormatAtMs != Long.MIN_VALUE && elapsed < DOCUMENT_FORMAT_COOLDOWN_MS) {
-                delay(DOCUMENT_FORMAT_COOLDOWN_MS - elapsed)
-            }
-            val formatted = generateWithContents(
-                contents = contents,
-                model = documentFormatModel,
-                maxOutputTokens = DOCUMENT_OUTPUT_LIMIT_TOKENS,
-                rejectTruncatedOutput = true
-            ).trim()
-            lastSuccessfulDocumentFormatAtMs = System.currentTimeMillis()
-            formatted
-        }
-    }
 
     /** Describes a picture (for example a screenshot) following [prompt]. */
     suspend fun describeImage(jpeg: ByteArray, prompt: String): String {
@@ -134,7 +89,7 @@ class GeminiTextClient(
         try { call.execute().use { response ->
             val raw = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
-                throw GeminiEmbeddingClient.HttpFailure(
+                throw HttpFailure(
                     response.code, "Text generation request failed (${response.code}): ${raw.take(200)}"
                 )
             }

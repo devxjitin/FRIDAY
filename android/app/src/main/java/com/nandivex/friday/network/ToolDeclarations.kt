@@ -34,23 +34,6 @@ object ToolDeclarations {
         )
     }
 
-    /** Search over the user's saved knowledge documents (RAG). */
-    fun knowledgeSearch(): JSONObject = JSONObject()
-        .put("name", "search_knowledge_base")
-        .put("behavior", "NON_BLOCKING")
-        .put(
-            "description",
-            "Searches the documents the user saved in this app. Call this only " +
-                "when the user asks about information they stored themselves, never for " +
-                "everyday or general questions."
-        )
-        .put(
-            "parameters",
-            JSONObject().put("type", "OBJECT")
-                .put("properties", JSONObject().put("query", JSONObject().put("type", "STRING").put("description", "The user's question, in their own words.")))
-                .put("required", JSONArray().put("query"))
-        )
-
     /** set_personality: switches how the assistant talks when the user asks for it by voice. */
     fun personality(): JSONObject = JSONObject()
         .put("name", SET_PERSONALITY_TOOL)

@@ -65,7 +65,6 @@ import com.nandivex.friday.ui.theme.AssistantTextSecondary
 enum class NavTab(val label: String, val icon: ImageVector) {
     HOME("Home", AssistantIcons.Home),
     PROFILE("Profile", Icons.Outlined.AccountCircle),
-    KNOWLEDGE("Knowledge", AssistantIcons.Knowledge),
     MEMORY("Memory", Icons.Outlined.Psychology),
     HISTORY("History", Icons.Outlined.History),
     CONNECTORS("Connectors", Icons.Outlined.Extension),
@@ -86,7 +85,7 @@ private val RowHeight = 40.dp
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
     "Assistant" to listOf(NavTab.CONNECTORS),
-    "Your data" to listOf(NavTab.KNOWLEDGE, NavTab.MEMORY, NavTab.HISTORY),
+    "Your data" to listOf(NavTab.MEMORY, NavTab.HISTORY),
     "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
     "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)
 )

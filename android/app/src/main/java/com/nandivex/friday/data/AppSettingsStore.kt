@@ -45,9 +45,6 @@ const val DEFAULT_ASSISTANT_NAME = "Ultron"
 val DEFAULT_CONNECTOR_IDS: List<String> get() = ConnectorRegistry.defaultIds
 
 const val MAX_ASSISTANT_NAME_LENGTH = 24
-const val DEFAULT_RETRIEVAL_CHUNK_LIMIT = 5
-const val MIN_RETRIEVAL_CHUNK_LIMIT = 1
-const val MAX_RETRIEVAL_CHUNK_LIMIT = 15
 
 /**
  * A phone connector is installed when any of its tools was switched on ("name=1" in the saved choices), and an installed
@@ -65,26 +62,6 @@ fun effectiveDeviceTools(overrides: Set<String>?): Set<DeviceTool> {
     return PhoneConnectors.all.filter { connector -> connector.tools.any { it.functionName in on } }
         .flatMap { it.tools }.toSet()
 }
-
-val DEFAULT_DOCUMENT_FORMAT_PROMPT = """
-Read the entire PDF carefully and convert all meaningful text and visual information into a complete, source-faithful dataset optimized for semantic search and RAG. Preserve all facts exactly as given, including names, dates, numbers, definitions, lists, tables, labels, captions, footnotes, formulas, charts, diagrams, and other meaningful information. Do not summarize, translate, interpret, correct, omit, or add information. Preserve the original order and language.
-
-Create semantic chunks based on topics and paragraphs. Keep closely related information together and split only at natural topic boundaries. Each chunk must be self-contained and no longer than 500 words. Every chunk must have a unique, specific, searchable title derived only from its actual content. Never use generic titles such as Part 1, Part 2, Section 1, Continued, Chunk 1, or similar numbering-based titles.
-
-IMPORTANT OUTPUT RULE: `#` is NOT a Markdown heading. Treat `#` only as an inline chunk-start marker. Every chunk must be exactly ONE physical line. Write the title immediately after `#`, then write ` | `, then write the complete chunk content on the SAME LINE. Never insert any newline, paragraph break, blank line, list break, or table break anywhere inside a chunk. A newline is allowed ONLY after the entire chunk is finished, immediately before the next `#`.
-
-The exact required format is:
-
-`# Specific Semantic Title | Complete content of this chunk stays on this same physical line.`
-
-Then:
-
-`# Next Specific Semantic Title | Complete content of the next chunk stays on this same physical line.`
-
-For lists, tables, forms, or structured data, convert their formatting into readable inline text using separators such as `;`, ` | `, commas, or labels like `Column: Value`, while preserving every relationship and value. Never create multiline tables or multiline lists.
-
-Before returning the result, verify that every line begins with `#`, every line contains exactly one complete chunk, ` | ` separates the title from the content, and there is absolutely no newline between a chunk title and its content. Return only the dataset.
-""".trimIndent()
 
 data class AssistantSettings(
     /** Gemini Live model id; one of [AssistantOptions.liveModels]. */
@@ -109,10 +86,6 @@ data class AssistantSettings(
     val assistantName: String = DEFAULT_ASSISTANT_NAME,
     /** Who the assistant serves; empty until the user sets it, then the prompt says "the user". */
     val ownerName: String = "",
-    /** Prompt used to prepare PDFs for paragraph-based knowledge retrieval. */
-    val documentFormatPrompt: String = DEFAULT_DOCUMENT_FORMAT_PROMPT,
-    /** Number of ranked knowledge chunks returned to the voice model per query. */
-    val retrievalChunkLimit: Int = DEFAULT_RETRIEVAL_CHUNK_LIMIT,
     /** Device tools the voice model is allowed to call; each is switched on/off in Settings. */
     val enabledDeviceTools: Set<DeviceTool> = effectiveDeviceTools(null),
 )
@@ -158,10 +131,6 @@ class AppSettingsStore(private val context: Context) {
             systemPrompt = Personalities.byId(prefs[personalityKey]).prompt,
             assistantName = DEFAULT_ASSISTANT_NAME,
             ownerName = prefs[ownerNameKey]?.trim().orEmpty(),
-            documentFormatPrompt = DEFAULT_DOCUMENT_FORMAT_PROMPT,
-            retrievalChunkLimit = prefs[retrievalChunkLimitKey]?.toIntOrNull()
-                ?.coerceIn(MIN_RETRIEVAL_CHUNK_LIMIT, MAX_RETRIEVAL_CHUNK_LIMIT)
-                ?: DEFAULT_RETRIEVAL_CHUNK_LIMIT,
             enabledDeviceTools = effectiveDeviceTools(prefs[toolOverridesKey])
         )
     }
@@ -222,7 +191,7 @@ class AppSettingsStore(private val context: Context) {
     }
 
     /** Applies the Developer form together so its fields never save as unrelated partial edits. */
-    suspend fun setDeveloperSettings(retrievalChunkLimit: Int) {
+    suspend fun setDeveloperSettings() {
         context.settingsDataStore.edit {
             // The name is fixed and greetings are picked at random; drop anything an earlier version saved.
             it.remove(assistantNameKey)
@@ -231,8 +200,7 @@ class AppSettingsStore(private val context: Context) {
             it.remove(systemPromptKey)
             it.remove(systemPromptAutoKey)
             it.remove(documentFormatPromptKey)
-            it[retrievalChunkLimitKey] = retrievalChunkLimit
-                .coerceIn(MIN_RETRIEVAL_CHUNK_LIMIT, MAX_RETRIEVAL_CHUNK_LIMIT).toString()
+            it.remove(retrievalChunkLimitKey)
         }
     }
 }

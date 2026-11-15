@@ -50,7 +50,6 @@ private class StorageItem(
 @Composable
 fun StoragePage(
     memoryCount: Int,
-    knowledgeCount: Int,
     cacheBytes: Long,
     hasUsage: Boolean,
     onClearCache: () -> Unit,
@@ -60,11 +59,7 @@ fun StoragePage(
     pastConversationCount: Int = 0,
     pastConversationBytes: Long = 0L,
     onClearPastConversations: () -> Unit = {},
-    memoryBytes: Long = 0L,
-    knowledgeBytes: Long = 0L,
-    imageCount: Int = 0,
-    imageBytes: Long = 0L,
-    onClearImages: () -> Unit = {}
+    memoryBytes: Long = 0L
 ) {
     var pending by remember { mutableStateOf<StorageItem?>(null) }
     pending?.let { item ->
@@ -89,17 +84,6 @@ fun StoragePage(
             "Everything you and the assistant said before.", pastConversationBytes,
             "Clear past conversations?", "The assistant will no longer be able to look up anything said before.",
             if (pastConversationCount > 0) onClearPastConversations else null
-        ),
-        StorageItem(
-            AssistantIcons.Knowledge, "Knowledge documents",
-            "$knowledgeCount ${if (knowledgeCount == 1) "document" else "documents"}",
-            "Your own documents. Add or remove them in Knowledge.", knowledgeBytes
-        ),
-        StorageItem(
-            Icons.Outlined.Image, "Images",
-            if (imageCount == 0) "None" else "$imageCount ${if (imageCount == 1) "picture" else "pictures"}",
-            "Pictures you added for the assistant to show.", imageBytes,
-            "Clear all pictures?", "Every picture you added will be deleted.", if (imageCount > 0) onClearImages else null
         ),
         StorageItem(
             Icons.Outlined.Cached, "Cache",

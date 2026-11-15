@@ -68,13 +68,8 @@ import androidx.compose.ui.unit.sp
 import com.nandivex.friday.data.AssistantOptions
 import com.nandivex.friday.data.AssistantSettings
 import com.nandivex.friday.data.DeviceTool
-import com.nandivex.friday.data.MAX_RETRIEVAL_CHUNK_LIMIT
-import com.nandivex.friday.data.MIN_RETRIEVAL_CHUNK_LIMIT
 import com.nandivex.friday.data.MicSensitivity
-import com.nandivex.friday.data.RagDocument
-import com.nandivex.friday.viewmodel.ADD_DOCUMENT_TARGET_ID
 import com.nandivex.friday.viewmodel.AppPage
-import com.nandivex.friday.viewmodel.KnowledgePreparationStage
 import com.nandivex.friday.ui.theme.AssistantAccent
 import com.nandivex.friday.ui.theme.AssistantAccentFill
 import com.nandivex.friday.ui.theme.AssistantError
@@ -89,10 +84,8 @@ import com.nandivex.friday.ui.theme.AssistantTextSecondary
 @Composable
 fun SettingsPage(
     currentApiKey: String,
-    currentEmbeddingApiKey: String,
     settings: AssistantSettings,
     onClearApiKey: () -> Unit,
-    onClearEmbeddingApiKey: () -> Unit,
     onLiveModelSelected: (String) -> Unit,
     onVoiceSelected: (String) -> Unit,
     onLanguageSelected: (String) -> Unit,
@@ -101,24 +94,7 @@ fun SettingsPage(
     onAnnounceNotificationsToggled: (Boolean) -> Unit,
     onOwnerNameChanged: (String) -> Unit = {},
     onPersonalitySelected: (String) -> Unit = {},
-    onSaveDeveloperChanges: (String, String, Int) -> Unit,
-    knowledgeDocuments: List<RagDocument>,
-    isSavingKnowledgeDocument: Boolean,
-    knowledgePreparationStage: KnowledgePreparationStage?,
-    /** Which add/edit operation [isSavingKnowledgeDocument]/[knowledgeDocumentError] belong to
-     *  right now -- lets each dialog below react only to its own save, not an unrelated one that
-     *  happens to be in flight (or finish) at the same time. */
-    savingKnowledgeDocumentTarget: String?,
-    uploadedChunks: Int,
-    totalChunks: Int,
-    knowledgeDocumentError: String?,
-    onAddKnowledgeDocument: (String, String) -> Unit,
-    onUpdateKnowledgeDocument: (String, String, String) -> Unit,
-    onDeleteKnowledgeDocument: (String) -> Unit,
-    knowledgeStoreCorrupt: Boolean,
-    onResetKnowledge: () -> Unit,
-    onUploadPdfFile: () -> Unit,
-    onDismissKnowledgeDocumentError: () -> Unit,
+    onSaveDeveloperChanges: (String) -> Unit,
     page: AppPage,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
@@ -132,22 +108,9 @@ fun SettingsPage(
 ) {
     var keyInput by remember(currentApiKey) { mutableStateOf(currentApiKey) }
     var keyVisible by remember { mutableStateOf(false) }
-    var embeddingKeyInput by remember(currentEmbeddingApiKey) { mutableStateOf(currentEmbeddingApiKey) }
-    var embeddingKeyVisible by remember { mutableStateOf(false) }
     var confirmingRemove by remember { mutableStateOf(false) }
-    var confirmingRemoveEmbeddingKey by remember { mutableStateOf(false) }
-    var editingDocument by remember { mutableStateOf<RagDocument?>(null) }
-    var showAddDocumentDialog by remember { mutableStateOf(false) }
-    var confirmingDeleteDocId by remember { mutableStateOf<String?>(null) }
-    var confirmingResetKnowledge by remember { mutableStateOf(false) }
     var confirmingUnsavedChanges by remember { mutableStateOf(false) }
-    var retrievalChunkLimitInput by remember(settings.retrievalChunkLimit) {
-        androidx.compose.runtime.mutableIntStateOf(settings.retrievalChunkLimit)
-    }
-    val developerChangesPending =
-        keyInput != currentApiKey ||
-            embeddingKeyInput != currentEmbeddingApiKey ||
-            retrievalChunkLimitInput != settings.retrievalChunkLimit
+    val developerChangesPending = keyInput != currentApiKey
 
     val requestDismiss = {
         if (developerChangesPending) {
@@ -168,7 +131,6 @@ fun SettingsPage(
     }
     val activeBranch = when (page) {
         AppPage.SETTINGS, AppPage.DEVELOPER -> 0
-        AppPage.KNOWLEDGE -> 2
         else -> 3
     }
     val developerContent: @Composable () -> Unit = {
@@ -204,72 +166,6 @@ fun SettingsPage(
                         }
                     }
                     }
-                    PageLabel("Knowledge API key")
-                    PageCard {
-                    Text("Optional. Leave empty to use the Gemini key.", color = AssistantTextMuted, fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp))
-                    OutlinedTextField(
-                        value = embeddingKeyInput,
-                        onValueChange = { embeddingKeyInput = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        placeholder = { Text("AIza...") },
-                        visualTransformation = if (embeddingKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = {
-                            IconButton(onClick = { embeddingKeyVisible = !embeddingKeyVisible }) {
-                                Icon(
-                                    imageVector = if (embeddingKeyVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                    contentDescription = if (embeddingKeyVisible) "Hide key" else "Show key"
-                                )
-                            }
-                        },
-                        colors = assistantTextFieldColors()
-                    )
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        if (currentEmbeddingApiKey.isNotBlank()) {
-                            TextButton(onClick = { confirmingRemoveEmbeddingKey = true }) {
-                                Text("Remove", color = AssistantError)
-                            }
-                        }
-                    }
-                    }
-                    PageLabel("Knowledge search")
-                    PageCard {
-                    Text("Sections read per answer", color = AssistantTextMuted, fontSize = 13.sp, modifier = Modifier.padding(bottom = 6.dp))
-                    var retrievalLimitExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = retrievalLimitExpanded,
-                        onExpandedChange = { retrievalLimitExpanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = retrievalChunkLimitInput.toString(),
-                            onValueChange = {},
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth().menuAnchor(),
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = retrievalLimitExpanded) },
-                            colors = assistantTextFieldColors()
-                        )
-                        DropdownMenu(
-                            expanded = retrievalLimitExpanded,
-                            onDismissRequest = { retrievalLimitExpanded = false },
-                            modifier = Modifier.background(AssistantSurfaceElevated)
-                        ) {
-                            (MIN_RETRIEVAL_CHUNK_LIMIT..MAX_RETRIEVAL_CHUNK_LIMIT).forEach { limit ->
-                                DropdownMenuItem(
-                                    text = { Text("$limit chunks", color = AssistantTextSecondary) },
-                                    onClick = {
-                                        retrievalChunkLimitInput = limit
-                                        retrievalLimitExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    }
                 }
     }
     // Scoped to this page only: slightly smaller text than the app-wide typography.
@@ -298,141 +194,13 @@ fun SettingsPage(
                     Spacer(Modifier.height(24.dp))
                     developerContent()
                 }
-                2 -> Column {
-                    Text(
-                        "Documents the assistant can search when you ask about them.",
-                        color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 12.dp)
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        androidx.compose.material3.Button(
-                            shape = AppButtonShape,
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = com.nandivex.friday.ui.theme.AssistantButtonFill,
-                                contentColor = com.nandivex.friday.ui.theme.AssistantOnButtonFill
-                            ),
-                            onClick = { showAddDocumentDialog = true },
-                            enabled = !isSavingKnowledgeDocument && !knowledgeStoreCorrupt
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Add document", maxLines = 1, softWrap = false)
-                        }
-                        androidx.compose.material3.OutlinedButton(
-                            shape = AppButtonShape,
-                            modifier = Modifier.weight(1f).height(48.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, com.nandivex.friday.ui.theme.AssistantOutline),
-                            onClick = onUploadPdfFile,
-                            enabled = !isSavingKnowledgeDocument && !knowledgeStoreCorrupt
-                        ) {
-                            Icon(Icons.Filled.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("Upload PDF", maxLines = 1, softWrap = false)
-                        }
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    if (isSavingKnowledgeDocument &&
-                        savingKnowledgeDocumentTarget == ADD_DOCUMENT_TARGET_ID &&
-                        knowledgePreparationStage == KnowledgePreparationStage.ANALYZING
-                    ) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                androidx.compose.material3.CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeWidth = 2.dp,
-                                    color = AssistantAccent
-                                )
-                                Spacer(Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = "Analyzing your document…",
-                                        color = AssistantTextSecondary,
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        text = "Finding and organizing the important information.",
-                                        color = AssistantTextMuted,
-                                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    } else if (isSavingKnowledgeDocument && totalChunks > 0) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "Preparing your knowledge… $uploadedChunks of $totalChunks sections",
-                                color = AssistantTextMuted,
-                                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            if (uploadedChunks == 0) {
-                                androidx.compose.material3.LinearProgressIndicator(
-                                    modifier = Modifier.fillMaxWidth(), color = AssistantAccent
-                                )
-                            } else {
-                                androidx.compose.material3.LinearProgressIndicator(
-                                    progress = { uploadedChunks.toFloat() / totalChunks.toFloat() },
-                                    modifier = Modifier.fillMaxWidth(), color = AssistantAccent
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    } else if (isSavingKnowledgeDocument) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = "Preparing your knowledge…",
-                                color = AssistantTextMuted,
-                                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = AssistantAccent)
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    }
-                    if (knowledgeStoreCorrupt) {
-                        Text(
-                            text = "The stored knowledge couldn't be read. Reset it to add documents again.",
-                            color = AssistantError,
-                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
-                        )
-                        androidx.compose.material3.OutlinedButton(shape = AppButtonShape, onClick = { confirmingResetKnowledge = true }) {
-                            Text("Reset knowledge", color = AssistantError)
-                        }
-                    } else if (knowledgeDocuments.isEmpty()) {
-                        PageCard {
-                            Text("No documents yet", color = com.nandivex.friday.ui.theme.AssistantTextPrimary, fontSize = 15.sp,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
-                            Text("Add notes or upload a PDF, then ask the assistant about them.",
-                                color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp)
-                        }
-                    } else {
-                        PageLabel("Documents (${knowledgeDocuments.size})", Modifier.padding(top = 4.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            knowledgeDocuments.forEach { doc ->
-                                KnowledgeDocumentRow(
-                                    doc = doc,
-                                    onEdit = { editingDocument = doc },
-                                    onDelete = { confirmingDeleteDocId = doc.id }
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
         if (activeBranch == 0 && developerChangesPending) {
             Spacer(Modifier.height(12.dp))
             androidx.compose.material3.Button(
                 onClick = {
-                    onSaveDeveloperChanges(
-                        keyInput,
-                        embeddingKeyInput,
-                        retrievalChunkLimitInput
-                    )
+                    onSaveDeveloperChanges(keyInput)
                 },
                 enabled = !isSavingDeveloper,
                 modifier = Modifier.fillMaxWidth(),
@@ -462,11 +230,7 @@ fun SettingsPage(
             text = { Text("You have unsaved settings. Save them before leaving?") },
             confirmButton = {
                 TextButton(enabled = !isSavingDeveloper, onClick = {
-                    onSaveDeveloperChanges(
-                        keyInput,
-                        embeddingKeyInput,
-                        retrievalChunkLimitInput
-                    )
+                    onSaveDeveloperChanges(keyInput)
                     // Stay on the page: success restarts the app, failure keeps the draft for a retry.
                     cancelUnsavedPrompt()
                 }) {
@@ -506,99 +270,6 @@ fun SettingsPage(
             },
             dismissButton = {
                 TextButton(onClick = { confirmingRemove = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (confirmingRemoveEmbeddingKey) {
-        AlertDialog(
-            onDismissRequest = { confirmingRemoveEmbeddingKey = false },
-            shape = com.nandivex.friday.ui.theme.SheetShape,
-            containerColor = AssistantSurfaceElevated,
-            tonalElevation = 6.dp,
-            title = { Text("Remove knowledge API key?") },
-            text = { Text("Knowledge features will use the main Gemini API key instead.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onClearEmbeddingApiKey()
-                    confirmingRemoveEmbeddingKey = false
-                }) {
-                    Text("Remove", color = AssistantError)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingRemoveEmbeddingKey = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showAddDocumentDialog) {
-        KnowledgeDocEditDialog(
-            existing = null,
-            isSaving = isSavingKnowledgeDocument && savingKnowledgeDocumentTarget == ADD_DOCUMENT_TARGET_ID,
-            error = if (savingKnowledgeDocumentTarget == ADD_DOCUMENT_TARGET_ID) knowledgeDocumentError else null,
-            onSave = { title, text -> onAddKnowledgeDocument(title, text) },
-            onDismiss = { showAddDocumentDialog = false },
-        )
-    }
-
-    editingDocument?.let { doc ->
-        KnowledgeDocEditDialog(
-            existing = doc,
-            isSaving = isSavingKnowledgeDocument && savingKnowledgeDocumentTarget == doc.id,
-            error = if (savingKnowledgeDocumentTarget == doc.id) knowledgeDocumentError else null,
-            onSave = { title, text -> onUpdateKnowledgeDocument(doc.id, title, text) },
-            onDismiss = { editingDocument = null },
-        )
-    }
-
-    if (confirmingResetKnowledge) {
-        AlertDialog(
-            onDismissRequest = { confirmingResetKnowledge = false },
-            shape = com.nandivex.friday.ui.theme.SheetShape,
-            containerColor = AssistantSurfaceElevated,
-            tonalElevation = 6.dp,
-            title = { Text("Reset knowledge?") },
-            text = { Text("All knowledge documents and the search index will be deleted. This can't be undone.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onResetKnowledge()
-                    confirmingResetKnowledge = false
-                }) {
-                    Text("Reset", color = AssistantError)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingResetKnowledge = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    confirmingDeleteDocId?.let { docId ->
-        val docTitle = knowledgeDocuments.firstOrNull { it.id == docId }?.title.orEmpty()
-        AlertDialog(
-            onDismissRequest = { confirmingDeleteDocId = null },
-            shape = com.nandivex.friday.ui.theme.SheetShape,
-            containerColor = AssistantSurfaceElevated,
-            tonalElevation = 6.dp,
-            title = { Text("Delete document?") },
-            text = { Text("\"$docTitle\" will no longer be searchable by the assistant.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    onDeleteKnowledgeDocument(docId)
-                    confirmingDeleteDocId = null
-                }) {
-                    Text("Delete", color = AssistantError)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmingDeleteDocId = null }) {
                     Text("Cancel")
                 }
             }
@@ -743,44 +414,5 @@ internal fun SettingsDropdown(
     }
     if (hint != null) {
         Text(text = hint, color = AssistantTextMuted, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
-    }
-}
-
-/** One knowledge document: icon tile, a one-line title with its size and date, and edit/delete actions. */
-@Composable
-private fun KnowledgeDocumentRow(doc: RagDocument, onEdit: () -> Unit, onDelete: () -> Unit) {
-    val shape = com.nandivex.friday.ui.theme.CardShape
-    val updated = remember(doc.updatedAtMillis) {
-        java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(doc.updatedAtMillis))
-    }
-    val words = remember(doc.text) { doc.text.split(Regex("\\s+")).count { it.isNotBlank() } }
-    Row(
-        modifier = Modifier.fillMaxWidth().clip(shape).background(com.nandivex.friday.ui.theme.AssistantSurface)
-            .border(androidx.compose.foundation.BorderStroke(1.dp, com.nandivex.friday.ui.theme.AssistantOutline), shape)
-            .clickable(onClick = onEdit).padding(start = 14.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-    ) {
-        Box(
-            Modifier.size(40.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                .background(com.nandivex.friday.ui.theme.AssistantSelectedBg),
-            contentAlignment = androidx.compose.ui.Alignment.Center
-        ) {
-            Icon(Icons.Outlined.Description, contentDescription = null, tint = com.nandivex.friday.ui.theme.AssistantTextPrimary, modifier = Modifier.size(22.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                doc.title.replace('_', ' '), color = com.nandivex.friday.ui.theme.AssistantTextPrimary, fontSize = 15.sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
-                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-            Text("$words words · $updated", color = AssistantTextMuted, fontSize = 12.sp, maxLines = 1)
-        }
-        IconButton(onClick = onEdit) {
-            Icon(Icons.Outlined.Edit, contentDescription = "Edit ${doc.title}", tint = AssistantTextMuted, modifier = Modifier.size(20.dp))
-        }
-        IconButton(onClick = onDelete) {
-            Icon(Icons.Outlined.Delete, contentDescription = "Delete ${doc.title}", tint = AssistantTextMuted, modifier = Modifier.size(20.dp))
-        }
     }
 }

@@ -1,3 +1,0 @@
-trafilatura>=2.0,<3
-# Keep the bundled dependency compatible with the AWS runtime's boto3/botocore SDK.
-python-dateutil>=2.9,<3

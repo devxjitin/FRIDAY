@@ -2,17 +2,11 @@ package com.nandivex.friday.viewmodel
 
 import com.nandivex.friday.data.AssistantSettings
 import com.nandivex.friday.data.MemoryItem
-import com.nandivex.friday.data.RagDocument
 import com.nandivex.friday.data.StoredTurn
 
-/** A picture the assistant is showing over the home screen. [uri] is a file or content address. */
-data class ShownImage(val uri: String, val title: String, val id: Int)
-
 /** The page on screen. Exactly one is shown at a time; HOME is the voice screen. */
-enum class AppPage { HOME, PROFILE, KNOWLEDGE, MEMORY, HISTORY, CONNECTORS, SETTINGS, USAGE, STORAGE, DEVELOPER, HELP, ABOUT }
+enum class AppPage { HOME, PROFILE, MEMORY, HISTORY, CONNECTORS, SETTINGS, USAGE, STORAGE, DEVELOPER, HELP, ABOUT }
 
-/** Where the "is there a newer build" check stands; About shows it. */
-enum class KnowledgePreparationStage { ANALYZING, PREPARING }
 
 enum class AppNotificationType { SUCCESS, ERROR, WARNING, INFO }
 
@@ -54,43 +48,12 @@ data class AssistantUiState(
     val pastConversationCount: Int = 0,
     /** Rough space the saved exchanges take; see ConversationHistoryStore.approxBytes. */
     val pastConversationBytes: Long = 0L,
-    /** Pictures the user added for the assistant to show, newest first. */
-    val images: List<com.nandivex.friday.data.StoredImage> = emptyList(),
-    val imageBytes: Long = 0L,
-    /** A picture chosen in the picker that still needs a title before it is saved. */
-    val pendingImageUri: String? = null,
-    val isSavingImage: Boolean = false,
-    /** The picture the assistant is showing right now, or null. */
-    val shownImage: ShownImage? = null,
     val errorMessage: String? = null,
     /** Name of the tool the assistant is running right now (or just ran), shown on the home screen. */
     val activeTool: String? = null,
     val hasApiKey: Boolean = false,
     val currentApiKey: String = "",
-    /** True when the stored knowledge data cannot be decoded; the admin can reset it. */
-    val knowledgeStoreCorrupt: Boolean = false,
     val settings: AssistantSettings = AssistantSettings(),
-    /** User-managed knowledge documents, searched by the search_knowledge_base tool. Starts
-     *  empty -- nothing ships bundled; the admin adds documents from Settings. */
-    val knowledgeDocuments: List<RagDocument> = emptyList(),
-    /** True while a document is being embedded (network call) after an add/edit save. */
-    val isSavingKnowledgeDocument: Boolean = false,
-    /** Human-friendly phase shown while a PDF is being read or knowledge is being prepared. */
-    val knowledgePreparationStage: KnowledgePreparationStage? = null,
-    /** Which add/edit operation [isSavingKnowledgeDocument]/[knowledgeDocumentError] belong to --
-     *  [ADD_DOCUMENT_TARGET_ID] for a new document, or the existing document's id for an update.
-     *  Lets each open editor tell "my save" apart from an unrelated concurrent one, instead of
-     *  every editor reacting to whichever operation happens to finish first. Stays set on
-     *  failure (so the right editor can show its own error) and clears on success or dismissal. */
-    val savingKnowledgeDocumentTarget: String? = null,
-    val knowledgeDocumentError: String? = null,
-    /** Chunk-embedding progress for the document currently being saved/uploaded, e.g. 3 of 10.
-     *  totalChunks is 0 until the text has been chunked, so the UI can tell "not started yet"
-     *  apart from "0 of N done". */
-    val uploadedChunks: Int = 0,
-    val totalChunks: Int = 0,
-    /** Required key for document formatting, embedding, and knowledge-base search. */
-    val currentEmbeddingApiKey: String = "",
     /** A short-lived, typed notification shown at the top of the app. */
     val toastMessage: String? = null,
     val toastType: AppNotificationType = AppNotificationType.SUCCESS,

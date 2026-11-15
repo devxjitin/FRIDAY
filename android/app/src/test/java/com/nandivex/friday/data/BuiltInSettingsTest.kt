@@ -12,6 +12,5 @@ class BuiltInSettingsTest {
     @Test fun `prompts default to the built-in text`() {
         val settings = AssistantSettings()
         assertEquals(DEFAULT_SYSTEM_PROMPT.trim(), settings.systemPrompt)
-        assertEquals(DEFAULT_DOCUMENT_FORMAT_PROMPT, settings.documentFormatPrompt)
     }
 }

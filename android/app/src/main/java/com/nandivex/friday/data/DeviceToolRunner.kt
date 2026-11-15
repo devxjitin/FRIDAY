@@ -97,9 +97,7 @@ class DeviceToolRunner(
     /** Asks the on-screen activity to show Android's permission dialog for these permissions. */
     private val requestPermissions: (List<String>) -> Unit,
     /** Describes a screenshot (JPEG bytes) following the prompt; used by look_at_screen. */
-    private val describeScreen: suspend (ByteArray, String) -> String = { _, _ -> "" },
-    /** Puts a picture on the screen (a null uri hides it). Called from the tool thread. */
-    private val showImage: (Uri?, String) -> Unit = { _, _ -> }
+    private val describeScreen: suspend (ByteArray, String) -> String = { _, _ -> "" }
 ) {
     private val http by lazy {
         HttpClients.shared.newBuilder()
@@ -181,7 +179,6 @@ class DeviceToolRunner(
             DeviceTool.SEARCH_FILES -> searchFiles(text("query"), text("kind"), (number("limit") ?: 5).coerceIn(1, 10))
             DeviceTool.OPEN_FILE -> openFile(number("number"), text("name"))
             DeviceTool.LIST_FOLDER -> listFolder(text("path"), (number("limit") ?: 30).coerceIn(1, 60))
-            DeviceTool.SHOW_IMAGE -> showPicture(text("query"), number("file_number"), text("action"))
             DeviceTool.SEARCH_CONTACT -> {
                 missingPermission(Manifest.permission.READ_CONTACTS)?.let { return it }
                 val name = text("name") ?: return MISSING
@@ -259,9 +256,6 @@ class DeviceToolRunner(
             DeviceTool.STEPS -> steps()
             DeviceTool.LIGHT -> lightLevel()
             DeviceTool.READ_NOTIFICATIONS -> readNotifications(number("limit") ?: 10)
-            // Run by the view model through ConversationHistoryTools, which needs the history store and embedding key.
-            DeviceTool.SEARCH_CONVERSATION_HISTORY, DeviceTool.RECENT_CONVERSATION ->
-                "status=unavailable\nThis memory tool is not available here."
             DeviceTool.WIFI_INFO -> wifiInfo()
             DeviceTool.READ_SCREEN -> {
                 val service = AssistantAccessibilityService.instance ?: return accessibilityDenied()
@@ -1330,7 +1324,7 @@ class DeviceToolRunner(
             shown.forEachIndexed { i, f -> append("${i + 1}. ").append(describe(f, mimeOf(f), "")).append("\n") }
             if (files.size > shown.size) append("${files.size - shown.size} more files not listed.\n")
             append("To go into a folder, call list_folder with its path, for example ")
-                .append(if (relative.isEmpty()) "Download" else "$relative/<name>").append(". open_file or show_image with a number opens a file.")
+                .append(if (relative.isEmpty()) "Download" else "$relative/<name>").append(". open_file with a number opens a file.")
         }
     }
 
@@ -1441,34 +1435,6 @@ class DeviceToolRunner(
         }
     }
 
-    private fun showPicture(query: String?, fileNumber: Int?, action: String?): String {
-        if (action == "close") {
-            showImage(null, "")
-            return "status=ok\nPicture hidden."
-        }
-        if (fileNumber != null) {
-            val file = lastFiles.getOrNull(fileNumber - 1)
-                ?: return "status=invalid\nNo file $fileNumber. Call search_files first and use a number from its list."
-            if (!file.mime.startsWith("image/")) return "status=invalid\n${file.name} is not a picture. Use open_file for it."
-            showImage(file.uri, file.name)
-            return "status=ok\nShowing ${file.name}."
-        }
-        val library = ImageLibrary.forApp(app)
-        val found = library.search(query)
-        if (found.isEmpty()) {
-            val saved = library.list().take(20)
-            return if (saved.isEmpty()) "status=empty\nNo pictures have been added to Ultron yet. The user can add some on the Images page. " +
-                "For photos on the phone, use search_files with kind image, then show_image with file_number."
-            else "status=not_found\nNo saved picture fits that. Saved pictures: " + saved.joinToString("; ") { it.title } +
-                ". Ask which one, or use search_files for photos on the phone."
-        }
-        val best = found.first()
-        showImage(Uri.fromFile(library.fileOf(best)), best.title)
-        val others = found.drop(1).take(3).joinToString("; ") { it.title }
-        return "status=ok\nShowing \"${best.title}\"." + (if (best.description.isNotBlank()) " It shows: ${best.description}" else "") +
-            (if (others.isNotEmpty()) "\nOther close matches: $others" else "")
-    }
-
     /** Matches the launcher label exactly first, then by substring. Never returns the app list. */
     private fun openApp(name: String): String {
         val pm = app.packageManager
@@ -1499,7 +1465,7 @@ class DeviceToolRunner(
             DeviceTool.READ_NOTIFICATIONS, DeviceTool.OPEN_APP,
             DeviceTool.OPEN_APP_SETTINGS, DeviceTool.CREATE_EVENT, DeviceTool.CANCEL_EVENT,
             DeviceTool.LIST_APPS, DeviceTool.NOW_PLAYING,
-            DeviceTool.SEARCH_FILES, DeviceTool.OPEN_FILE, DeviceTool.SHARE_FILE, DeviceTool.SHOW_IMAGE, DeviceTool.LIST_FOLDER
+            DeviceTool.SEARCH_FILES, DeviceTool.OPEN_FILE, DeviceTool.SHARE_FILE, DeviceTool.LIST_FOLDER
         )
         const val MISSING ="status=invalid\nA required value was missing."
     }

@@ -6,18 +6,14 @@ import subprocess
 
 
 def classify(paths):
-    result = dict(android=False, backend=False, web=False, publish=False)
+    result = dict(android=False, publish=False)
     for path in paths:
         if path.startswith("android/"):
             result.update(android=True, publish=True)
-        if (path.startswith("mcp/") and not path.endswith(".md")) or path.startswith("infra/") or path == ".python-version":
-            result["backend"] = True
-        if path.startswith("ultronapp/") or path in ("firebase.json", "firestore.rules"):
-            result["web"] = True
         if path in (".github/workflows/checks.yml", "scripts/ci_changes.py") or path.startswith("tests/ci/"):
-            result.update(android=True, backend=True, web=True)
+            result.update(android=True)
         if path == ".github/workflows/distribute.yml" or path.startswith(".github/actions/"):
-            result.update(android=True, backend=True, web=True, publish=True)
+            result.update(android=True, publish=True)
     return result
 
 
@@ -27,11 +23,11 @@ def plan(event_name, event, diff):
     elif event_name == "push" and event.get("before", "").strip("0"):
         base, head, triple = event["before"], event["after"], False
     else:
-        return dict.fromkeys(("android", "backend", "web", "publish"), True)
+        return dict.fromkeys(("android", "publish"), True)
     try:
         return classify(diff(base, head, triple))
     except subprocess.CalledProcessError:
-        return dict.fromkeys(("android", "backend", "web", "publish"), True)
+        return dict.fromkeys(("android", "publish"), True)
 
 
 def git_diff(base, head, triple):
