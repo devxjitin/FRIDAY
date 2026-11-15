@@ -2,6 +2,7 @@ package com.nandivex.friday.ui.components
 
 import android.os.Build
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,14 @@ fun AboutPage(
                     "Your personal voice assistant", color = AssistantTextSecondary, fontSize = 14.sp,
                     textAlign = TextAlign.Center, modifier = Modifier.padding(top = 2.dp)
                 )
-                Text("Version ${BuildConfig.VERSION_NAME}", color = AssistantTextMuted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                Text(
+                    "Version ${BuildConfig.VERSION_NAME}", color = AssistantTextMuted, fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 8.dp).combinedClickable(
+                        onClick = {},
+                        // Test builds only: a long press on the version crashes the app so the Crashlytics report can be checked.
+                        onLongClick = { if (BuildConfig.BUILD_TYPE != "release") throw RuntimeException("Crashlytics test crash") }
+                    )
+                )
             }
         }
 
