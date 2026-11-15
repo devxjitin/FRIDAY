@@ -86,7 +86,8 @@ class ConnectorsTest {
     @Test fun aToolIsDeclaredToTheModelOnlyWhenItsConnectorIsOn() {
         val oneConnector = AssistantSettings(enabledDeviceTools = ConnectorRegistry.get("torch").tools.toSet(), memoryEnabled = false)
         val names = com.nandivex.friday.network.liveFunctionDeclarations(oneConnector).let { a -> (0 until a.length()).map { a.getJSONObject(it).getString("name") } }
-        assertEquals(listOf(DeviceTool.FLASHLIGHT.functionName), names)
+        assertEquals(ConnectorRegistry.get("torch").tools.map { it.functionName }, names)
+        assertTrue(DeviceTool.WIFI_TOGGLE.functionName !in names)
     }
 
     @Test fun riskyConnectorsLiveInTheirOwnCategories() {

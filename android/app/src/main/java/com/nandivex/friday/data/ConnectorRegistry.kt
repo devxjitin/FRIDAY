@@ -91,28 +91,28 @@ object ConnectorRegistry {
             tools = listOf(DeviceTool.WHATSAPP_MESSAGE, DeviceTool.WHATSAPP_CALL)
         ),
         ConnectorSpec(
-            id = "wifi", name = "Wi-Fi", description = "Which Wi-Fi you are on and how strong it is.",
+            id = "wifi", name = "Wi-Fi", description = "Which Wi-Fi you are on, and turn it on or off.",
             subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
             permissions = listOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.WIFI_INFO)
+            tools = listOf(DeviceTool.WIFI_INFO, DeviceTool.WIFI_TOGGLE)
         ),
         ConnectorSpec(
-            id = "bluetooth", name = "Bluetooth", description = "Whether Bluetooth is on and what is paired.",
+            id = "bluetooth", name = "Bluetooth", description = "Bluetooth on or off, and what is paired.",
             subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
             permissions = bluetoothPermissions(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.BLUETOOTH)
+            tools = listOf(DeviceTool.BLUETOOTH, DeviceTool.BLUETOOTH_TOGGLE, DeviceTool.LIST_PAIRED_DEVICES)
         ),
         ConnectorSpec(
-            id = "network", name = "Mobile & network", description = "Online or not, and the Wi-Fi, data and NFC panels.",
+            id = "network", name = "Mobile & network", description = "Online or not, mobile data, airplane mode, hotspot and NFC.",
             subtitle = "On your phone", category = ConnectorCategory.CONNECTIVITY, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.NETWORK, DeviceTool.OPEN_PANEL)
+            tools = listOf(DeviceTool.NETWORK, DeviceTool.OPEN_PANEL, DeviceTool.MOBILE_DATA_PANEL, DeviceTool.AIRPLANE_MODE, DeviceTool.HOTSPOT_SETTINGS, DeviceTool.NFC_SETTINGS)
         ),
         ConnectorSpec(
-            id = "torch", name = "Torch", description = "Switch the flashlight on and off.",
+            id = "torch", name = "Torch", description = "Flashlight on and off, strobe and SOS.",
             subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.FLASHLIGHT)
+            tools = listOf(DeviceTool.FLASHLIGHT, DeviceTool.FLASHLIGHT_STROBE)
         ),
         ConnectorSpec(
             id = "sound", name = "Sound", description = "Volume, ringer mode, vibration and Do Not Disturb.",
@@ -121,10 +121,10 @@ object ConnectorRegistry {
             tools = listOf(DeviceTool.VOLUME, DeviceTool.GET_VOLUME, DeviceTool.GET_RINGER, DeviceTool.SET_RINGER, DeviceTool.VIBRATE, DeviceTool.SET_DND)
         ),
         ConnectorSpec(
-            id = "display", name = "Display", description = "Brightness, screen timeout and auto-rotate.",
+            id = "display", name = "Display", description = "Brightness, screen timeout, auto-rotate, dark mode and battery saver.",
             subtitle = "On your phone", category = ConnectorCategory.DEVICE_CONTROLS, kind = ConnectorKind.PHONE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
-            tools = listOf(DeviceTool.BRIGHTNESS, DeviceTool.GET_BRIGHTNESS, DeviceTool.SCREEN_TIMEOUT, DeviceTool.AUTO_ROTATE)
+            tools = listOf(DeviceTool.BRIGHTNESS, DeviceTool.GET_BRIGHTNESS, DeviceTool.SCREEN_TIMEOUT, DeviceTool.AUTO_ROTATE, DeviceTool.DARK_MODE, DeviceTool.BATTERY_SAVER)
         ),
         ConnectorSpec(
             id = "media", name = "Media", description = "Play, pause and skip in any music or video app.",
@@ -238,22 +238,22 @@ object ConnectorRegistry {
 
     private val infos: Map<String, ConnectorInfo> = mapOf(
         "wifi" to ConnectorInfo(
-            "Tells you which Wi-Fi network you are on, how strong it is and how fast the link is. It only reads.",
+            "Tells you which Wi-Fi network you are on, how strong it is and how fast the link is, and turns Wi-Fi on or off. Android 10 and newer do not let apps flip it, so the internet panel opens and F.R.I.D.A.Y. taps the switch when Screen control is on; otherwise you tap it.",
             "Location access. Android needs it to show a Wi-Fi name.",
             "Shared only when you ask."
         ),
         "bluetooth" to ConnectorInfo(
-            "Tells you whether Bluetooth is on and which devices are paired. It only reads.",
+            "Tells you whether Bluetooth is on and which devices are paired, and turns it on (Android asks you to allow) or off.",
             "Nearby devices access on Android 12 and newer.",
             "Shared only when you ask."
         ),
         "network" to ConnectorInfo(
-            "Tells you whether you are online and on Wi-Fi or mobile data, and opens the Wi-Fi, mobile data, NFC and volume panels.",
+            "Tells you whether you are online, and opens the mobile data, airplane mode, hotspot, NFC and volume panels. Android does not let apps flip these, so F.R.I.D.A.Y. taps the switch when Screen control is on; otherwise you tap it.",
             "Nothing to allow.",
             "Nothing leaves your phone."
         ),
         "torch" to ConnectorInfo(
-            "Switches the flashlight on and off.",
+            "Switches the flashlight on and off, blinks it fast (strobe) or in SOS for up to 30 seconds.",
             "Nothing to allow.",
             "Nothing leaves your phone."
         ),
@@ -263,7 +263,7 @@ object ConnectorRegistry {
             "Nothing leaves your phone."
         ),
         "display" to ConnectorInfo(
-            "Makes the screen brighter or dimmer, sets how long it stays on and turns auto-rotate on or off.",
+            "Makes the screen brighter or dimmer, sets how long it stays on, turns auto-rotate on or off, and opens the dark theme and battery saver switches. F.R.I.D.A.Y. taps them when Screen control is on; otherwise you tap them.",
             "Android asks the first time to change system settings.",
             "Nothing leaves your phone."
         ),

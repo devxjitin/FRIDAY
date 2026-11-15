@@ -66,6 +66,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import com.nandivex.friday.network.DuckDuckGoClient
@@ -190,6 +191,25 @@ class DeviceToolRunner(
                     found.joinToString("\n") { "${it.name}: ${it.number}" }
             }
             DeviceTool.MAKE_CALL -> makeCall(text("name"), text("number"))
+            DeviceTool.WIFI_TOGGLE -> wifiToggle(wanted(args))
+            DeviceTool.BLUETOOTH_TOGGLE -> bluetoothToggle(wanted(args))
+            DeviceTool.LIST_PAIRED_DEVICES -> listPairedDevices()
+            DeviceTool.MOBILE_DATA_PANEL -> openInternetPanel("The internet panel", "Mobile data", wanted(args))
+            DeviceTool.AIRPLANE_MODE -> {
+                start(Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS))
+                panelHint("The airplane mode settings", "Airplane mode", wanted(args))
+            }
+            DeviceTool.HOTSPOT_SETTINGS -> hotspotSettings(wanted(args))
+            DeviceTool.NFC_SETTINGS -> nfcSettings(wanted(args))
+            DeviceTool.FLASHLIGHT_STROBE -> flashlightStrobe(text("mode"), number("seconds"))
+            DeviceTool.DARK_MODE -> {
+                start(Intent(Settings.ACTION_DISPLAY_SETTINGS))
+                panelHint("The display settings", "Dark theme", wanted(args))
+            }
+            DeviceTool.BATTERY_SAVER -> {
+                start(Intent(Settings.ACTION_BATTERY_SAVER_SETTINGS))
+                panelHint("The battery saver settings", "Battery Saver", wanted(args))
+            }
             DeviceTool.ANSWER_CALL -> answerCall()
             DeviceTool.END_CALL -> endCall(declined = false)
             DeviceTool.REJECT_CALL -> endCall(declined = true)
@@ -1265,8 +1285,130 @@ class DeviceToolRunner(
         val id = manager.cameraIdList.firstOrNull {
             manager.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
         } ?: return "status=unavailable\nThis device has no flashlight."
+        strobeGeneration.incrementAndGet()
         manager.setTorchMode(id, state == "on")
         return "status=ok\nFlashlight is $state."
+    }
+
+    private val strobeGeneration = java.util.concurrent.atomic.AtomicInteger()
+    private val strobeScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Default)
+
+    /** Blinks the torch in the background and returns at once; it stops by itself, or when the flashlight tool is used. */
+    private fun flashlightStrobe(mode: String?, requestedSeconds: Int?): String {
+        val steps = FlashPatterns.forMode(mode) ?: return "status=invalid\nMode must be strobe or sos."
+        val seconds = FlashPatterns.seconds(requestedSeconds)
+        val manager = app.getSystemService(CameraManager::class.java)
+        val id = manager.cameraIdList.firstOrNull {
+            manager.getCameraCharacteristics(it).get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
+        } ?: return "status=unavailable\nThis device has no flashlight."
+        val mine = strobeGeneration.incrementAndGet()
+        strobeScope.launch {
+            try {
+                kotlinx.coroutines.withTimeoutOrNull(seconds * 1_000L) {
+                    while (strobeGeneration.get() == mine) {
+                        for (step in steps) {
+                            if (strobeGeneration.get() != mine) return@withTimeoutOrNull
+                            manager.setTorchMode(id, step.on)
+                            kotlinx.coroutines.delay(step.ms)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+            } finally {
+                // Only the blink that is still current switches the torch off; a newer on/off request owns it now.
+                if (strobeGeneration.get() == mine) runCatching { manager.setTorchMode(id, false) }
+            }
+        }
+        return "status=ok\n${if (mode == "sos") "SOS" else "Strobe"} blink started for $seconds seconds. It stops by itself, or say flashlight off."
+    }
+
+    /** After a system panel or settings page opened: tap the switch with Screen control when it is on, otherwise ask the user. */
+    private fun panelHint(what: String, switchName: String, wanted: String?): String {
+        val goal = wanted?.let { " to $it" }.orEmpty()
+        return if (AssistantAccessibilityService.instance != null)
+            "status=ok\n$what opened. Screen control is on: call read_screen, click the \"$switchName\" switch$goal, then read the screen again to confirm and tell the user the result."
+        else "status=ok\n$what opened. Screen control is off, so nothing was switched: tell the user to tap \"$switchName\"$goal themselves, or to turn on Screen control so you can do it."
+    }
+
+    private fun wanted(args: JSONObject) = if (args.optString("state").trim() == "off") "off" else "on"
+
+    @Suppress("DEPRECATION")
+    private fun wifiToggle(state: String): String {
+        val wifi = app.applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)
+            ?: return "status=unavailable\nThis device has no Wi-Fi."
+        val on = state == "on"
+        if (wifi.isWifiEnabled == on) return "status=ok\nWi-Fi is already $state."
+        if (Build.VERSION.SDK_INT < 29) {
+            wifi.isWifiEnabled = on
+            return "status=ok\nWi-Fi turned $state."
+        }
+        start(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY))
+        return panelHint("The internet panel", "Wi-Fi", state)
+    }
+
+    private fun bluetoothAdapterOrError(): Pair<android.bluetooth.BluetoothAdapter?, String?> {
+        val adapter = app.getSystemService(BluetoothManager::class.java)?.adapter
+            ?: return null to "status=unavailable\nThis device has no Bluetooth."
+        if (Build.VERSION.SDK_INT >= 31 &&
+            ContextCompat.checkSelfPermission(app, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
+        ) return null to missingPermission(Manifest.permission.BLUETOOTH_CONNECT).orEmpty()
+        return adapter to null
+    }
+
+    private fun bluetoothToggle(state: String): String {
+        val (adapter, error) = bluetoothAdapterOrError()
+        if (adapter == null) return error.orEmpty()
+        val on = state == "on"
+        if (adapter.isEnabled == on) return "status=ok\nBluetooth is already $state."
+        return if (on) {
+            start(Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            panelHint("Android's Bluetooth question", "Allow", null)
+        } else {
+            start(Intent(Settings.ACTION_BLUETOOTH_SETTINGS))
+            panelHint("The Bluetooth settings", "Bluetooth", "off")
+        }
+    }
+
+    @android.annotation.SuppressLint("MissingPermission") // BLUETOOTH_CONNECT is checked in bluetoothAdapterOrError
+    private fun listPairedDevices(): String {
+        val (adapter, error) = bluetoothAdapterOrError()
+        if (adapter == null) return error.orEmpty()
+        val devices = adapter.bondedDevices.orEmpty()
+        if (devices.isEmpty()) return "status=empty\nNo Bluetooth devices are paired."
+        val lines = devices.take(30).map { d ->
+            val kind = when (d.bluetoothClass?.majorDeviceClass) {
+                android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO -> "audio"
+                android.bluetooth.BluetoothClass.Device.Major.PHONE -> "phone"
+                android.bluetooth.BluetoothClass.Device.Major.COMPUTER -> "computer"
+                android.bluetooth.BluetoothClass.Device.Major.WEARABLE -> "wearable"
+                android.bluetooth.BluetoothClass.Device.Major.PERIPHERAL -> "keyboard or mouse"
+                else -> "other"
+            }
+            "${d.name ?: "unknown device"} ($kind)"
+        }
+        return "status=ok\nBluetooth is ${if (adapter.isEnabled) "on" else "off"}. Paired: ${lines.joinToString("; ")}."
+    }
+
+    private fun openInternetPanel(what: String, switchName: String, wanted: String): String {
+        start(if (Build.VERSION.SDK_INT >= 29) Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY) else Intent(Settings.ACTION_WIRELESS_SETTINGS))
+        return panelHint(what, switchName, wanted)
+    }
+
+    private fun hotspotSettings(wanted: String): String {
+        val direct = Intent().setClassName("com.android.settings", "com.android.settings.TetherSettings")
+        try {
+            start(direct)
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            start(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+        }
+        return panelHint("The hotspot settings", "Wi-Fi hotspot", wanted)
+    }
+
+    private fun nfcSettings(wanted: String): String {
+        start(if (Build.VERSION.SDK_INT >= 29) Intent(Settings.Panel.ACTION_NFC) else Intent(Settings.ACTION_NFC_SETTINGS))
+        return panelHint("The NFC panel", "NFC", wanted)
     }
 
     private fun mediaControl(command: String?): String {
