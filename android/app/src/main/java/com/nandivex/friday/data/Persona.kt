@@ -12,6 +12,9 @@ enum class ReplyStyle(val label: String, val hint: String) {
 
 const val DEFAULT_ASSISTANT_NAME = "FRIDAY"
 
+/** How the name is written on screen. The voice prompt keeps "FRIDAY" so it is spoken as a word, not spelled out. */
+const val DISPLAY_NAME = "F.R.I.D.A.Y."
+
 /** What the assistant calls the user until they type a name in Settings. */
 const val DEFAULT_ADDRESS = "Boss"
 

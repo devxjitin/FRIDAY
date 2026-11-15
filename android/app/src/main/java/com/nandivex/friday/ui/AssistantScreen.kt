@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
+import com.nandivex.friday.ui.components.HudRing
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.nandivex.friday.data.MicSensitivity
@@ -161,7 +163,7 @@ fun AssistantScreen(
         val drawerContent: @Composable (Modifier) -> Unit = { drawerModifier ->
             AppDrawerContent(
                 selected = currentTab,
-                assistantName = uiState.settings.assistantName,
+                assistantName = com.nandivex.friday.data.DISPLAY_NAME,
                 userName = license?.status?.name?.takeIf { it.isNotBlank() } ?: uiState.settings.ownerName,
                 onClose = { scope.launch { drawerState.close() } },
                 onSelect = { tab ->
@@ -197,11 +199,15 @@ fun AssistantScreen(
         ) { tab ->
         Box(Modifier.fillMaxSize()) {
             if (tab == NavTab.HOME) HomeBackground(isDarkTheme, Modifier.fillMaxSize())
+            if (tab == NavTab.HOME) HudRing(
+                uiState.voiceState, voiceLevel,
+                Modifier.align(Alignment.Center).fillMaxWidth(0.9f).widthIn(max = 380.dp).aspectRatio(1f)
+            )
             if (tab == NavTab.HOME) {
                 Column(Modifier.fillMaxSize().padding(top = topReserve, bottom = 112.dp)
                     .verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(Modifier.height(if (compact) 0.dp else availableHeight * 0.13f))
-                    Text(uiState.settings.assistantName, color = AssistantTextMuted, style = MaterialTheme.typography.labelLarge,
+                    Text(com.nandivex.friday.data.DISPLAY_NAME, color = AssistantTextMuted, style = MaterialTheme.typography.labelLarge,
                         letterSpacing = 1.2.sp)
                     Spacer(Modifier.height(if (compact) 12.dp else 28.dp))
                     when (uiState.voiceState) {
@@ -312,7 +318,7 @@ fun AssistantScreen(
                         onClearPastConversations = actions.onClearPastConversations
                     )
                     NavTab.ABOUT -> AboutPage(
-                        assistantName = uiState.settings.assistantName,
+                        assistantName = com.nandivex.friday.data.DISPLAY_NAME,
                         modifier = pageModifier
                     )
                     else -> Unit

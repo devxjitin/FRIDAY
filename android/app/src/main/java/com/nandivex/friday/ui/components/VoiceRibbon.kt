@@ -21,16 +21,16 @@ import kotlin.math.sin
 /** The ribbon's gradient end colours for a state; the mic button uses the same so they match. */
 fun ribbonColors(voiceState: VoiceState): Pair<Color, Color> =
     if (ActivePalette.current.dark) when (voiceState) {
-        VoiceState.LISTENING -> Color(0xFFC4232C) to Color(0xFFFF5A4D)
-        VoiceState.SPEAKING -> Color(0xFF5E7A99) to Color(0xFFA9B8C8)
-        VoiceState.ERROR -> Color(0xFFD9650F) to Color(0xFFFFB347)
-        else -> Color(0xFF7A1218) to Color(0xFFC4232C)
+        VoiceState.LISTENING -> Color(0xFF0E7C8C) to Color(0xFF3DD9EB)
+        VoiceState.SPEAKING -> Color(0xFF2F6FED) to Color(0xFF7DD3FC)
+        VoiceState.ERROR -> Color(0xFFB45309) to Color(0xFFF5A524)
+        else -> Color(0xFF0B4F5C) to Color(0xFF0E7C8C)
     } else when (voiceState) {
         // Deeper pairs for the pale page, where the dark-theme tints almost vanish.
-        VoiceState.LISTENING -> Color(0xFF9B1B24) to Color(0xFFD63A3A)
-        VoiceState.SPEAKING -> Color(0xFF2F4A6B) to Color(0xFF5C7FA6)
-        VoiceState.ERROR -> Color(0xFFB04F00) to Color(0xFFE08A1E)
-        else -> Color(0xFF6E1219) to Color(0xFFB3202A)
+        VoiceState.LISTENING -> Color(0xFF0A6573) to Color(0xFF14A3B5)
+        VoiceState.SPEAKING -> Color(0xFF1E4FA3) to Color(0xFF4D8BD9)
+        VoiceState.ERROR -> Color(0xFF9A4507) to Color(0xFFE08A1E)
+        else -> Color(0xFF094B56) to Color(0xFF0E7C8C)
     }
 
 /** How quickly the wave grows toward a louder level and settles back to a quieter one. */
