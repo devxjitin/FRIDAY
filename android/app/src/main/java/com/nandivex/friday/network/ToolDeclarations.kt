@@ -2,8 +2,6 @@ package com.nandivex.friday.network
 
 import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.data.MEMORY_FORGET_TOOL
-import com.nandivex.friday.data.Personalities
-import com.nandivex.friday.data.SET_PERSONALITY_TOOL
 import com.nandivex.friday.data.MEMORY_SAVE_TOOL
 import org.json.JSONArray
 import org.json.JSONObject
@@ -33,17 +31,6 @@ object ToolDeclarations {
             JSONObject().put("type", "OBJECT").put("properties", properties).put("required", required)
         )
     }
-
-    /** set_personality: switches how the assistant talks when the user asks for it by voice. */
-    fun personality(): JSONObject = JSONObject()
-        .put("name", SET_PERSONALITY_TOOL)
-        .put("description", "Changes your personality when the user asks you to, for example \"be friendly\", " +
-            "\"be professional\", \"be funny\" or \"go back to destructive\". Call it only on a clear request.")
-        .put("parameters", JSONObject().put("type", "OBJECT")
-            .put("properties", JSONObject().put("personality", JSONObject().put("type", "STRING")
-                .put("description", "The personality to switch to.")
-                .put("enum", JSONArray(Personalities.all.map { it.id }))))
-            .put("required", JSONArray().put("personality")))
 
     /** save_memory / forget_memory: the assistant's personal memory about the user. */
     fun memory(): List<JSONObject> {

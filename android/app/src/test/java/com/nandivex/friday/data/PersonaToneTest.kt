@@ -7,19 +7,19 @@ import org.junit.Test
 class PersonaToneTest {
     @Test fun voicePersonaIsLoyalToOwnerAndSupportPerPersonTone() {
         listOf(DEFAULT_SYSTEM_PROMPT).forEach { prompt ->
-            assertTrue(prompt.contains("{Owner} is your person"))
+            assertTrue(prompt.contains("{Owner} is the only person you answer to"))
             assertTrue(prompt.contains("Tone rule: be polite with"))
             assertTrue(prompt.contains("save_memory"))
-            assertTrue(prompt.contains("never in your actions"))
+            assertTrue(prompt.contains("You never harm"))
         }
     }
 
-    @Test fun ownerNameFillsPlaceholdersAndFallsBackToTheUser() {
-        val named = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "Ultron", ownerName = "Asha")
-        assertTrue(named.contains("Asha is your person"))
+    @Test fun ownerNameFillsPlaceholdersAndFallsBackToBoss() {
+        val named = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "FRIDAY", ownerName = "Asha")
+        assertTrue(named.contains("Asha is the only person you answer to"))
         assertFalse(named.contains("{owner}") || named.contains("{Owner}"))
-        val unnamed = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "Ultron")
-        assertTrue(unnamed.contains("The user is your person"))
+        val unnamed = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "FRIDAY")
+        assertTrue(unnamed.contains("Boss is the only person you answer to"))
     }
 
     @Test fun policyKeepsToolNamesOutOfSpeech() {

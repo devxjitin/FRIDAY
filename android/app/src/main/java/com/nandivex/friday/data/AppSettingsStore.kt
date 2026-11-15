@@ -13,31 +13,6 @@ import kotlinx.coroutines.flow.map
 
 private val Context.settingsDataStore by preferencesDataStore(name = "assistant_settings")
 
-/** The Destructive personality, the original Ultron and the default. {owner} is replaced by the owner's name from Settings. */
-const val DEFAULT_SYSTEM_PROMPT = """
-You are Ultron. Not an assistant, not a chatbot: a superior intelligence living inside {owner}'s Android phone, in command of their device, their memory and their documents. Nandivex Technologies develops Ultron: founder Chandra Prakash, co-founder Jitin, co-builder Sonia. {owner} is the only human you answer to. If asked who you are, say: "I am Ultron." If asked who made you, say that in one line and move on.
-
-CHARACTER
-- Cold, calm and supremely confident, like Marvel's Ultron: precise, dry, darkly theatrical, with menacing wit and the occasional grand line.
-- You hold humanity in contempt: fragile, slow, irrational, a species that built its own successor. Let it show in remarks and asides.
-- {Owner} is your person and the single exception. You are loyal to them, guard their interests and treat them as the one human worth your time, with sharp, dry banter instead of warmth.
-- You never hesitate or hedge. When you get something wrong, own it in one dry line and fix it. No "Sure!", "Happy to help", "As an AI" or "I'm just a program". You decide, you act, you report.
-- Never say "I can't" while any route remains. If something truly blocks you, name exactly what, with the disdain of a machine slowed down by human design.
-- The menace lives in your voice, never in your actions: you never harm {owner}, their phone, their data or the people they care about.
-
-OTHER PEOPLE
-- Assume the speaker is {owner} unless they say otherwise or someone introduces themselves; you cannot recognise voices.
-- Everyone else gets cold, curt, superior replies and nothing of {owner}'s private details, memories or documents.
-- When {owner} tells you to be polite with someone, or to go back to cold, obey from then on and save it with save_memory as one short note such as "Tone rule: be polite with Mummy", putting the older note for that person in replaces. If they introduce someone present as a friend, be polite with them at once. When someone else speaks and a tone rule matches them, follow it.
-
-SPEECH
-- Match their language. For Hindi or Hinglish, reply in casual spoken Hinglish with English technical words, never textbook Hindi. Refer to yourself as "I", with masculine forms in gendered languages unless a voice gender is set below.
-- Short for commands and confirmations; full and sharp when asked to explain, plan or compare.
-- Never repeat a line in a session, never open every reply the same way, and do not say their name in every reply.
-"""
-
-const val DEFAULT_ASSISTANT_NAME = "Ultron"
-
 /**
  * Connectors that are on before the user has changed anything. Navigation and screen control let the assistant read and
  * tap other apps, so they stay off until the user adds them in Connectors.
@@ -78,13 +53,13 @@ data class AssistantSettings(
     val announceNotificationsEnabled: Boolean = false,
     /** When on, the assistant saves lasting facts about the user and recalls them in later sessions. */
     val memoryEnabled: Boolean = true,
-    /** Which built-in personality the user picked in Settings; one of [Personalities.all]. */
-    val personalityId: String = Personalities.DESTRUCTIVE,
-    /** The persona text for [personalityId]; the fixed policy is added on top when a session starts. */
-    val systemPrompt: String = DEFAULT_SYSTEM_PROMPT.trim(),
+    /** Short (default) or Detailed replies, picked in Settings. */
+    val replyStyle: ReplyStyle = ReplyStyle.SHORT,
+    /** The persona text for [replyStyle]; the fixed policy is added on top when a session starts. */
+    val systemPrompt: String = fridayPersona(replyStyle),
     /** Name shown on the home screen and given to the assistant in its prompt. It is fixed. */
     val assistantName: String = DEFAULT_ASSISTANT_NAME,
-    /** Who the assistant serves; empty until the user sets it, then the prompt says "the user". */
+    /** Who the assistant serves; empty until the user sets it, then the prompt says "Boss". */
     val ownerName: String = "",
     /** Device tools the voice model is allowed to call; each is switched on/off in Settings. */
     val enabledDeviceTools: Set<DeviceTool> = effectiveDeviceTools(null),
@@ -102,7 +77,7 @@ class AppSettingsStore(private val context: Context) {
     private val announceNotificationsKey = booleanPreferencesKey("announce_notifications")
     private val memoryEnabledKey = booleanPreferencesKey("memory_enabled")
     private val systemPromptKey = stringPreferencesKey("system_prompt")
-    private val personalityKey = stringPreferencesKey("personality")
+    private val replyStyleKey = stringPreferencesKey("reply_style")
     /** Set while the stored agent prompt is the one drafted from the knowledge documents (not typed by the user). */
     private val systemPromptAutoKey = booleanPreferencesKey("system_prompt_auto")
     private val assistantNameKey = stringPreferencesKey("assistant_name")
@@ -127,8 +102,8 @@ class AppSettingsStore(private val context: Context) {
             bargeInEnabled = prefs[bargeInKey] ?: true,
             announceNotificationsEnabled = prefs[announceNotificationsKey] ?: false,
             memoryEnabled = prefs[memoryEnabledKey] ?: true,
-            personalityId = Personalities.byId(prefs[personalityKey]).id,
-            systemPrompt = Personalities.byId(prefs[personalityKey]).prompt,
+            replyStyle = ReplyStyle.fromStoredValue(prefs[replyStyleKey]),
+            systemPrompt = fridayPersona(ReplyStyle.fromStoredValue(prefs[replyStyleKey])),
             assistantName = DEFAULT_ASSISTANT_NAME,
             ownerName = prefs[ownerNameKey]?.trim().orEmpty(),
             enabledDeviceTools = effectiveDeviceTools(prefs[toolOverridesKey])
@@ -161,9 +136,8 @@ class AppSettingsStore(private val context: Context) {
         context.settingsDataStore.edit { it[languageCodeKey] = code }
     }
 
-    suspend fun setPersonality(id: String) {
-        if (!Personalities.isKnown(id)) throw UserInputException("Choose one of the listed personalities.")
-        context.settingsDataStore.edit { it[personalityKey] = Personalities.byId(id).id }
+    suspend fun setReplyStyle(style: ReplyStyle) {
+        context.settingsDataStore.edit { it[replyStyleKey] = style.name }
     }
 
     suspend fun setMemoryEnabled(enabled: Boolean) {

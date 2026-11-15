@@ -93,7 +93,7 @@ fun SettingsPage(
     onBargeInToggled: (Boolean) -> Unit,
     onAnnounceNotificationsToggled: (Boolean) -> Unit,
     onOwnerNameChanged: (String) -> Unit = {},
-    onPersonalitySelected: (String) -> Unit = {},
+    onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit = {},
     onSaveDeveloperChanges: (String) -> Unit,
     page: AppPage,
     onDismiss: () -> Unit,
@@ -188,7 +188,7 @@ fun SettingsPage(
                 0 -> Column {
                     GeneralSettingsContent(
                         settings, onLiveModelSelected, onVoiceSelected, onLanguageSelected,
-                        onMicSensitivitySelected, onBargeInToggled, onAnnounceNotificationsToggled, onOwnerNameChanged, onPersonalitySelected
+                        onMicSensitivitySelected, onBargeInToggled, onAnnounceNotificationsToggled, onOwnerNameChanged, onReplyStyleSelected
                     )
                     // The old Developer page now lives at the end of Settings.
                     Spacer(Modifier.height(24.dp))
@@ -308,7 +308,7 @@ private fun GeneralSettingsContent(
     onBargeInToggled: (Boolean) -> Unit,
     onAnnounceNotificationsToggled: (Boolean) -> Unit,
     onOwnerNameChanged: (String) -> Unit,
-    onPersonalitySelected: (String) -> Unit
+    onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit
 ) {
     val micHints = mapOf(
         MicSensitivity.LOW to "Cuts background noise",
@@ -316,8 +316,8 @@ private fun GeneralSettingsContent(
         MicSensitivity.HIGH to "Picks up quiet voices"
     )
     Column {
-        SettingsHeading("Personality")
-        PersonalityPicker(selectedId = settings.personalityId, onSelect = onPersonalitySelected)
+        SettingsHeading("Reply style")
+        ReplyStylePicker(selected = settings.replyStyle, onSelect = onReplyStyleSelected)
         SettingsHeading("Model")
         SettingsDropdown(
             value = AssistantOptions.liveModels.firstOrNull { it.id == settings.liveModel }?.label ?: settings.liveModel,

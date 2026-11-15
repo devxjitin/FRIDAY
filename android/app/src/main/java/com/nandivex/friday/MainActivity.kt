@@ -309,7 +309,7 @@ class MainActivity : ComponentActivity() {
                             onMicSensitivitySelected = { sensitivity -> viewModel.onMicSensitivitySelected(sensitivity) },
                             onBargeInToggled = { enabled -> viewModel.onBargeInToggled(enabled) },
                             onAnnounceNotificationsToggled = { enabled -> viewModel.onAnnounceNotificationsToggled(enabled) },
-                            onPersonalitySelected = { id -> viewModel.onPersonalitySelected(id) },
+                            onReplyStyleSelected = { style -> viewModel.onReplyStyleSelected(style) },
                             onOwnerNameChanged = { name -> viewModel.onOwnerNameChanged(name) },
                             onSaveDeveloperChanges = { apiKey ->
                                 viewModel.onSaveDeveloperChanges(apiKey)

@@ -22,7 +22,7 @@ import com.nandivex.friday.data.DeveloperSaveFailedException
 import com.nandivex.friday.AssistantAccessibilityService
 import com.nandivex.friday.data.DeviceTool
 import org.json.JSONObject
-import com.nandivex.friday.data.Personalities
+import com.nandivex.friday.data.ReplyStyle
 import com.nandivex.friday.data.MemoryStore
 import com.nandivex.friday.data.DeviceToolRunner
 import com.nandivex.friday.data.saveDeveloperConfiguration
@@ -599,9 +599,9 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun onPersonalitySelected(id: String) {
-        launchPersist(settingsAppliedMessage("Personality: ${Personalities.byId(id).label}")) {
-            settingsStore.setPersonality(id)
+    fun onReplyStyleSelected(style: ReplyStyle) {
+        launchPersist(settingsAppliedMessage("Replies: ${style.label}")) {
+            settingsStore.setReplyStyle(style)
             session.invalidateWarmSessionAndReprewarm()
         }
     }
@@ -652,8 +652,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         state = _uiState,
         memoryStore = memoryStore,
         settingsStore = settingsStore,
-        deviceToolRunner = deviceToolRunner,
-        onPersonalityChanged = { session.invalidateWarmSessionAndReprewarm() }
+        deviceToolRunner = deviceToolRunner
     )
 
     fun onSaveDeveloperChanges(apiKey: String) {
