@@ -9,7 +9,7 @@ import android.os.Build
  */
 enum class ConnectorCategory(val title: String, val summary: String, val advanced: Boolean = false) {
     ESSENTIALS("Essentials", "Everyday phone info and controls. Nothing here reads your personal data."),
-    SEARCH_MEDIA("Search & media", "Web search, web pages and YouTube."),
+    SEARCH_MEDIA("Search & media", "Web search and web pages."),
     PERSONAL("Personal data", "Reads private data from your phone, such as contacts, calendar, location, files and notifications. What you ask about is sent to Gemini."),
     PHONE_CONTROL("Phone control", "Lets the assistant operate other apps through Android accessibility. It can tap, type and read the screen, so turn it on only if you understand that.", advanced = true),
 }
@@ -108,18 +108,6 @@ object ConnectorRegistry {
             subtitle = "Free, no sign-in", category = ConnectorCategory.SEARCH_MEDIA, kind = ConnectorKind.ONLINE,
             permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = true,
             tools = listOf(DeviceTool.FETCH_WEBPAGE)
-        ),
-        ConnectorSpec(
-            id = "youtube", name = "YouTube Search", description = "Search YouTube videos and playlists.",
-            subtitle = "On AWS", category = ConnectorCategory.SEARCH_MEDIA, kind = ConnectorKind.ONLINE,
-            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = false,
-            tools = listOf(DeviceTool.YOUTUBE_SEARCH, DeviceTool.YOUTUBE_INFO, DeviceTool.YOUTUBE_TRANSCRIPT, DeviceTool.YOUTUBE_CHANNEL)
-        ),
-        ConnectorSpec(
-            id = "youtube_downloads", name = "YouTube Downloads", description = "Save YouTube videos or audio to your phone.",
-            subtitle = "On your phone", category = ConnectorCategory.SEARCH_MEDIA, kind = ConnectorKind.PHONE,
-            permissions = emptyList(), access = SpecialAccess.NONE, defaultOn = false,
-            tools = listOf(DeviceTool.YOUTUBE_DOWNLOAD_OPTIONS, DeviceTool.DOWNLOAD_YOUTUBE)
         ),
         ConnectorSpec(
             id = "calendar", name = "Calendar", description = "Check your schedule and add events.",
@@ -246,31 +234,19 @@ object ConnectorRegistry {
         "duckduckgo" to ConnectorInfo(
             "Searches the web and answers from the results.",
             "Nothing to allow.",
-            "Your search words go to Ultron's server, which asks search engines. If it is down, your phone asks DuckDuckGo itself.",
-            "Ultron's server"
+            "Your search words go from your phone straight to DuckDuckGo (or Bing if it is busy). Nothing goes through our servers.",
+            "Your phone"
         ),
         "web_reader" to ConnectorInfo(
             "Reads a web page and gives you the main text.",
             "Nothing to allow.",
-            "The link you ask about goes to Ultron's server. Nothing is stored.",
-            "Ultron's server"
+            "Your phone opens the page you ask about, as a browser would. Nothing goes through our servers.",
+            "Your phone"
         ),
         "weather" to ConnectorInfo(
             "Tells you the weather now and for the next few days, for where you are or any city.",
             "Location access, only for where you are.",
             "A city name or your location goes to a free weather service.",
-            "Your phone"
-        ),
-        "youtube" to ConnectorInfo(
-            "Searches videos and shows details, captions and playlists. YouTube sometimes blocks this.",
-            "Internet only.",
-            "Your search goes to Ultron's server, which asks YouTube.",
-            "Ultron's server"
-        ),
-        "youtube_downloads" to ConnectorInfo(
-            "Lets you pick a quality, then saves the video or audio to Downloads/Ultron.",
-            "Internet and free space.",
-            "Files stay on your phone. Download only what you may keep.",
             "Your phone"
         ),
         "apps_settings" to ConnectorInfo(

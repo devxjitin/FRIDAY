@@ -149,10 +149,6 @@ class MainActivity : ComponentActivity() {
         startedOnce = true
     }
 
-    private fun openStore() {
-        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BuildConfig.STORE_URL))) }
-    }
-
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -299,7 +295,7 @@ class MainActivity : ComponentActivity() {
                     when (val gate = accessState) {
                         AccessState.Checking -> { AccessCheckingScreen(); return@Surface }
                         is AccessState.NeedsKey -> {
-                            ActivationScreen(gate, storeUrl = BuildConfig.STORE_URL, onActivate = access::activate, onOpenStore = ::openStore)
+                            ActivationScreen(gate, storeUrl = "", onActivate = access::activate, onOpenStore = {})
                             return@Surface
                         }
                         is AccessState.Active -> Unit
@@ -346,14 +342,9 @@ class MainActivity : ComponentActivity() {
                             onKnowledgeTapped = { viewModel.onKnowledgeTapped() },
                             onHomeTapped = { viewModel.onHomeTapped() },
                             onConnectorsTapped = { viewModel.onConnectorsTapped() },
-                            onInstallUpdate = { viewModel.onInstallUpdate() },
-                            onDismissUpdate = { viewModel.onDismissUpdate() },
                             onDismissWhatsNew = { viewModel.onDismissWhatsNew() },
-                            onCheckForUpdates = { viewModel.checkForUpdate(manual = true) },
-                            onUpdateNow = { viewModel.onUpdateNow() },
                             onUsageTapped = { viewModel.onUsageTapped() },
                             onStorageTapped = { viewModel.onStorageTapped() },
-                            onDownloadsTapped = { viewModel.onDownloadsTapped() },
                             onClearCache = { viewModel.onClearCache() },
                             onResetUsage = { viewModel.onResetUsage() },
                             onMemoryTapped = { viewModel.onMemoryTapped() },
@@ -394,7 +385,6 @@ class MainActivity : ComponentActivity() {
                             onAboutTapped = { viewModel.onAboutTapped() },
                             onProfileTapped = { viewModel.onProfileTapped() },
                             onRefreshLicense = { access.refresh(quiet = true) },
-                            onRenewLicense = if (BuildConfig.STORE_URL.isNotBlank()) ::openStore else null,
                             onDismissSettings = { viewModel.onDismissSettings() },
                             onClearApiKey = { viewModel.onClearApiKey() },
                             onClearEmbeddingApiKey = { viewModel.onClearEmbeddingApiKey() },

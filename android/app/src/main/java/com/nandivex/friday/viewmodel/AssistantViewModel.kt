@@ -107,14 +107,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
-    private val updates = UpdateManager(
-        scope = viewModelScope,
-        state = _uiState,
-        source = AppUpdaterSource(application),
-        showToast = { message, type -> showToast(message, type) },
-        isVoiceSessionActive = { isSessionActive(_uiState.value.voiceState) }
-    )
-
     private val knowledge = KnowledgeManager(
         scope = viewModelScope,
         state = _uiState,
@@ -191,13 +183,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
         // Exchanges saved while offline or without a key become searchable as soon as the app is up.
         indexConversationHistory()
-        // An app left open (kiosk, or just never swiped away) never gets a resume event, so it asks on its own too.
-        viewModelScope.launch {
-            while (true) {
-                delay(UpdateManager.CHECK_INTERVAL_MS)
-                if (session.isForeground) checkForUpdate(manual = false)
-            }
-        }
         viewModelScope.launch {
             _uiState.map { it.isMicMuted }.distinctUntilChanged().collect {
                 AppForegroundService.setMuted(getApplication(), it)
@@ -368,8 +353,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun onStorageTapped() = openPage(AppPage.STORAGE)
 
-    fun onDownloadsTapped() = openPage(AppPage.DOWNLOADS)
-
     /** Back to the home page -- closes whichever full page is open. */
     fun onHomeTapped() {
         clearAdminDrafts()
@@ -461,24 +444,32 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun onDismissShownImage() = _uiState.update { it.copy(shownImage = null) }
 
-    /** Sends a connector request or a bug report to the developer. [onDone] gets null when sent, else a message for the user. */
+    /**
+     * Opens the email app with a connector request or bug report filled in for the developer. [onDone] gets null when
+     * the email app opened, else a message for the user. (Sending from inside the app comes with accounts in Phase 4.)
+     */
     fun onSendFeatureRequest(form: com.nandivex.friday.ui.components.FeatureRequest, onDone: (String?) -> Unit) {
-        viewModelScope.launch {
-            val error = withContext(Dispatchers.IO) {
-                try {
-                    com.nandivex.friday.network.FeatureRequestClient()
-                        .send(form.type, form.name, form.details, form.examples, form.email,
-                            com.nandivex.friday.BuildConfig.VERSION_NAME, form.device)
-                    null
-                } catch (e: com.nandivex.friday.network.FeatureRequestException) {
-                    e.message ?: "Could not send it."
-                } catch (e: Exception) {
-                    "Could not send it right now. Please try again later."
-                }
-            }
-            if (error == null) showToast(if (form.type == "bug") "Bug report sent. Thank you!" else "Request sent. Thank you!")
-            onDone(error)
+        val kind = if (form.type == "bug") "Bug report" else "Connector request"
+        val body = buildString {
+            append(form.name).append("\n\n").append(form.details)
+            if (form.examples.isNotBlank()) append("\n\nExamples: ").append(form.examples)
+            if (form.email.isNotBlank()) append("\n\nReply to: ").append(form.email)
+            append("\n\n---\nApp version: ").append(com.nandivex.friday.BuildConfig.VERSION_NAME)
+            if (form.device.isNotBlank()) append("\nPhone: ").append(form.device)
         }
+        val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:")).apply {
+            putExtra(android.content.Intent.EXTRA_EMAIL, arrayOf(com.nandivex.friday.ui.components.DEVELOPER_EMAIL))
+            putExtra(android.content.Intent.EXTRA_SUBJECT, "$kind: ${form.name.take(60)}")
+            putExtra(android.content.Intent.EXTRA_TEXT, body)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val error = try {
+            getApplication<Application>().startActivity(intent)
+            null
+        } catch (e: android.content.ActivityNotFoundException) {
+            "No email app found. Write to ${com.nandivex.friday.ui.components.DEVELOPER_EMAIL} instead."
+        }
+        onDone(error)
     }
 
     fun onMemoryEnabledToggled(enabled: Boolean) {
@@ -582,15 +573,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** Asks the AWS update server for a newer build; see [UpdateManager]. */
-    fun checkForUpdate(manual: Boolean) = updates.checkForUpdate(manual)
-
-    fun onUpdateNow() = updates.onUpdateNow()
-
-    fun onInstallUpdate() = updates.onInstallUpdate()
-
-    fun onDismissUpdate() = updates.onDismissUpdate()
-
     /** After an update, shows what changed since the version the user last saw. A fresh install shows nothing. */
     private fun loadWhatsNew() {
         viewModelScope.launch {
@@ -648,19 +630,16 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** Deletes the temporary files; a finished update download is simply fetched again when needed. */
+    /** Deletes the temporary files. */
     fun onClearCache() {
-        if (_uiState.value.updateDownloadProgress != null) return
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                val updateBusy = updates.isDownloading
                 getApplication<Application>().cacheDir.listFiles()?.forEach { entry ->
                     // Leave alone what is in use: downloads and open previews hold a lease on their files.
-                    val inUse = (updateBusy && entry.name == "updates") || com.nandivex.friday.data.CacheLeases.isLeased(entry.name)
+                    val inUse = com.nandivex.friday.data.CacheLeases.isLeased(entry.name)
                     if (!inUse) runCatching { entry.deleteRecursively() }
                 }
             }
-            updates.forgetDownload()
             refreshCacheSize()
         }
     }
@@ -923,7 +902,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     /** Resume also covers returning from dialogs without an intervening Activity stop. */
     fun onAppResumed() {
         session.prewarmIfPossible()
-        checkForUpdate(manual = false)
     }
 
     override fun onCleared() {

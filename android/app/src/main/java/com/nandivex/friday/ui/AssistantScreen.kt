@@ -63,7 +63,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nandivex.friday.ui.components.AboutPage
-import com.nandivex.friday.ui.components.DownloadsPage
 import com.nandivex.friday.ui.components.StoragePage
 import com.nandivex.friday.ui.components.UsagePage
 import com.nandivex.friday.ui.components.AssistantToastHost
@@ -176,7 +175,6 @@ fun AssistantScreen(
                         NavTab.HOME -> guardedNav(actions.onHomeTapped)
                         NavTab.USAGE -> guardedNav(actions.onUsageTapped)
                         NavTab.STORAGE -> guardedNav(actions.onStorageTapped)
-                        NavTab.DOWNLOADS -> guardedNav(actions.onDownloadsTapped)
                         NavTab.KNOWLEDGE -> guardedNav(actions.onKnowledgeTapped)
                         NavTab.CONNECTORS -> guardedNav(actions.onConnectorsTapped)
                         NavTab.MEMORY -> guardedNav(actions.onMemoryTapped)
@@ -302,11 +300,10 @@ fun AssistantScreen(
                 )
             }
 
-            if (tab in listOf(NavTab.USAGE, NavTab.STORAGE, NavTab.DOWNLOADS, NavTab.ABOUT)) {
+            if (tab in listOf(NavTab.USAGE, NavTab.STORAGE, NavTab.ABOUT)) {
                 val pageModifier = Modifier.padding(top = topReserve)
                 when (tab) {
                     NavTab.USAGE -> UsagePage(uiState.usageDays, pageModifier)
-                    NavTab.DOWNLOADS -> DownloadsPage(pageModifier)
                     NavTab.STORAGE -> StoragePage(
                         memoryCount = uiState.memories.size,
                         knowledgeCount = uiState.knowledgeDocuments.size,
@@ -327,13 +324,6 @@ fun AssistantScreen(
                     )
                     NavTab.ABOUT -> AboutPage(
                         assistantName = uiState.settings.assistantName,
-                        updateState = uiState.updateCheckState,
-                        availableUpdate = uiState.availableUpdate,
-                        lastCheckedAt = uiState.lastUpdateCheckAt,
-                        updateError = uiState.updateCheckError,
-                        downloadProgress = uiState.updateDownloadProgress,
-                        onCheckForUpdates = actions.onCheckForUpdates,
-                        onUpdateNow = actions.onUpdateNow,
                         modifier = pageModifier
                     )
                     else -> Unit
@@ -454,45 +444,6 @@ fun AssistantScreen(
         }
 
         com.nandivex.friday.ui.components.WhatsNewCard(uiState.whatsNew, actions.onDismissWhatsNew)
-
-        uiState.updateInfo?.let { update ->
-            val progress = uiState.updateDownloadProgress
-            AlertDialog(
-                onDismissRequest = { if (progress == null) actions.onDismissUpdate() },
-                title = { Text("Update available") },
-                text = {
-                    // The version and the progress bar always stay on screen; the release notes open only on request.
-                    var showNotes by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
-                    Column {
-                        Text(
-                            buildString {
-                                append("Version ${update.versionName}")
-                                if (update.sizeBytes > 0) append(" (${update.sizeBytes / (1024 * 1024)} MB)")
-                            }
-                        )
-                        if (progress != null) {
-                            Spacer(Modifier.height(16.dp))
-                            androidx.compose.material3.LinearProgressIndicator(
-                                progress = { progress.coerceIn(0f, 1f) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            Text("Downloading ${(progress * 100).toInt()}%")
-                        }
-                        if (update.notes.isNotBlank()) {
-                            TextButton(onClick = { showNotes = !showNotes }) { Text(if (showNotes) "Hide info" else "More info") }
-                            if (showNotes) {
-                                Column(Modifier.heightIn(max = 260.dp).verticalScroll(rememberScrollState())) {
-                                    Text(update.notes)
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = { TextButton(onClick = actions.onInstallUpdate, enabled = progress == null) { Text("Update") } },
-                dismissButton = { TextButton(onClick = actions.onDismissUpdate, enabled = progress == null) { Text("Later") } }
-            )
-        }
 
         // Drawn last so it sits above every page without covering the page heading.
         AssistantToastHost(

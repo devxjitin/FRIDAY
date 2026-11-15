@@ -473,55 +473,6 @@ enum class DeviceTool(
             ToolParam("days", ToolParamType.INTEGER, "How many days of forecast, 1-7. Default 3.", required = false)
         )
     ),
-    YOUTUBE_SEARCH(
-        "youtube_search", "Search YouTube", "Search YouTube videos.",
-        "Searches YouTube through the AWS search service and returns videos with title, channel, duration, views and address. Does not download media.",
-        listOf(
-            ToolParam("query", ToolParamType.STRING, "What to search for."),
-            ToolParam("limit", ToolParamType.INTEGER, "How many videos, 1-25. Default 10.", required = false)
-        )
-    ),
-    YOUTUBE_INFO(
-        "youtube_video_info", "Video details", "Get the details of a YouTube video.",
-        "Returns the title, channel, upload date, duration, views, likes and description of a YouTube video.",
-        listOf(ToolParam("video", ToolParamType.STRING, "YouTube link or 11-character video id."))
-    ),
-    YOUTUBE_TRANSCRIPT(
-        "youtube_transcript", "Video transcript", "Read the captions of a YouTube video.",
-        "Returns the timestamped captions of a YouTube video (manual ones first, then automatic), " +
-            "so it can be summarized or answered from.",
-        listOf(
-            ToolParam("video", ToolParamType.STRING, "YouTube link or 11-character video id."),
-            ToolParam("language", ToolParamType.STRING, "Caption language code, for example en or hi. Default en.", required = false)
-        )
-    ),
-    YOUTUBE_CHANNEL(
-        "youtube_list_videos", "Channel or playlist videos", "List the videos of a channel or playlist.",
-        "Lists the recent videos of a YouTube channel (@handle or address) or of a playlist (address or id).",
-        listOf(
-            ToolParam("source", ToolParamType.STRING, "@handle, channel or playlist address, or playlist id."),
-            ToolParam("limit", ToolParamType.INTEGER, "How many videos, 1-50. Default 20.", required = false)
-        )
-    ),
-    YOUTUBE_DOWNLOAD_OPTIONS(
-        "youtube_download_options", "Download options", "List the formats and qualities a video can be downloaded in.",
-        "Runs on this phone. Lists what a YouTube video can be downloaded as: audio only, or video in each picture height it offers " +
-            "(for example 360p, 720p, 1080p, 4K, 8K) with size. Always call it before a download and ask the user which " +
-            "one they want, unless they already named the format and quality.",
-        listOf(ToolParam("video", ToolParamType.STRING, "YouTube link or 11-character video id."))
-    ),
-    DOWNLOAD_YOUTUBE(
-        "download_youtube_video", "Download YouTube video", "Save a YouTube video or its audio to Downloads/Ultron.",
-        "Downloads a YouTube video (or only its audio) to the phone's Downloads/Ultron folder, in the format and quality " +
-            "the user chose from youtube_download_options. It runs in the background and a notification shows progress, so " +
-            "tell the user it has started rather than waiting. Use only when the user asks to download or save a video. " +
-            "Find the video first with youtube_search if the user gave a title.",
-        listOf(
-            ToolParam("video", ToolParamType.STRING, "YouTube link or 11-character video id."),
-            ToolParam("kind", ToolParamType.STRING, "video or audio. If left out, the available options are returned instead.", required = false, choices = listOf("video", "audio")),
-            ToolParam("height", ToolParamType.INTEGER, "Picture height for video, for example 360, 720, 1080, 1440, 2160 (4K) or 4320 (8K). The closest height the video has is used.", required = false)
-        )
-    ),
 
 
     STEPS(
@@ -723,8 +674,7 @@ enum class DeviceTool(
         /** Function names of tools that take seconds (network, screenshot upload). They are declared non-blocking, so the
          *  model keeps talking while they run, and their results wait until the user stops speaking. */
         val NON_BLOCKING_NAMES: Set<String> = setOf(
-            WEB_SEARCH, FETCH_WEBPAGE, GET_WEATHER, YOUTUBE_SEARCH, YOUTUBE_INFO, YOUTUBE_TRANSCRIPT,
-            YOUTUBE_CHANNEL, YOUTUBE_DOWNLOAD_OPTIONS, DOWNLOAD_YOUTUBE, LOOK_AT_SCREEN
+            WEB_SEARCH, FETCH_WEBPAGE, GET_WEATHER, LOOK_AT_SCREEN
         ).map { it.functionName }.toSet() + "search_knowledge_base"
     }
 }

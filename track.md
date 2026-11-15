@@ -552,3 +552,4 @@
 [2026-11-13 22:40] [Claude] [Update: Sprint 1.1 - package com.nandivex.friday, debug/beta build variants, Firebase project friday-nandivex, App Distribution workflow replaces publish-ota]
 [2026-11-14 15:20] [Claude] [Update: Sprint 1.2 - removed Skills and the Decisions API (package, toggles, tests, docs); version 0.0.4]
 [2026-11-14 20:10] [Claude] [Update: tester and debug builds skip the activation key (release keeps it); version 0.0.6]
+[2026-11-15 11:00] [Claude] [Update: Sprint 1.3 part 1 - AWS clients, YouTube, updater and licence server removed; on-phone web search and reader; version 0.0.7]

@@ -72,7 +72,6 @@ enum class NavTab(val label: String, val icon: ImageVector) {
     SETTINGS("Settings", AssistantIcons.Settings),
     USAGE("Usage", Icons.Outlined.Insights),
     STORAGE("Storage", Icons.Outlined.Inventory2),
-    DOWNLOADS("Downloads", Icons.Outlined.Download),
     DEVELOPER("Developer", Icons.Outlined.Code),
     HELP("Help & support", Icons.AutoMirrored.Outlined.HelpOutline),
     ABOUT("About", Icons.Outlined.Info)
@@ -87,7 +86,7 @@ private val RowHeight = 40.dp
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
     "Assistant" to listOf(NavTab.CONNECTORS),
-    "Your data" to listOf(NavTab.KNOWLEDGE, NavTab.MEMORY, NavTab.HISTORY, NavTab.DOWNLOADS),
+    "Your data" to listOf(NavTab.KNOWLEDGE, NavTab.MEMORY, NavTab.HISTORY),
     "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
     "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)
 )

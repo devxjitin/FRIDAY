@@ -14,8 +14,7 @@ object UntrustedContent {
     val TOOLS: Set<DeviceTool> = setOf(
         DeviceTool.READ_SCREEN, DeviceTool.LOOK_AT_SCREEN, DeviceTool.READ_NOTIFICATIONS,
         DeviceTool.GET_CLIPBOARD, DeviceTool.NOW_PLAYING, DeviceTool.SEARCH_FILES, DeviceTool.LIST_FOLDER, DeviceTool.SHOW_IMAGE,
-        DeviceTool.UPCOMING_EVENTS, DeviceTool.WEB_SEARCH, DeviceTool.FETCH_WEBPAGE, DeviceTool.YOUTUBE_SEARCH,
-        DeviceTool.YOUTUBE_INFO, DeviceTool.YOUTUBE_TRANSCRIPT, DeviceTool.YOUTUBE_CHANNEL,
+        DeviceTool.UPCOMING_EVENTS, DeviceTool.WEB_SEARCH, DeviceTool.FETCH_WEBPAGE,
         // Past replies can hold web pages, messages or notifications the assistant once read out.
         DeviceTool.SEARCH_CONVERSATION_HISTORY, DeviceTool.RECENT_CONVERSATION
     )
