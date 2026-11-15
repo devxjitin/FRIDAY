@@ -67,16 +67,28 @@ private fun allFilesPermissions(): List<String> =
 object ConnectorRegistry {
     val all: List<ConnectorSpec> = listOf(
         ConnectorSpec(
-            id = "calls", name = "Phone calls", description = "Call a contact by name.",
+            id = "calls", name = "Phone calls", description = "Call, answer, end and decline calls.",
             subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
-            permissions = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
-            tools = listOf(DeviceTool.MAKE_CALL)
+            permissions = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CONTACTS, Manifest.permission.ANSWER_PHONE_CALLS), access = SpecialAccess.NONE, defaultOn = false,
+            tools = listOf(DeviceTool.MAKE_CALL, DeviceTool.ANSWER_CALL, DeviceTool.END_CALL, DeviceTool.REJECT_CALL, DeviceTool.SPEAKERPHONE, DeviceTool.MUTE_CALL, DeviceTool.DIAL_NUMBER)
         ),
         ConnectorSpec(
             id = "contacts", name = "Contacts", description = "Find contacts, birthdays and save new contacts.",
             subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
             permissions = listOf(Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
             tools = listOf(DeviceTool.SEARCH_CONTACT, DeviceTool.CONTACT_BIRTHDAY, DeviceTool.CREATE_CONTACT)
+        ),
+        ConnectorSpec(
+            id = "sms", name = "Text messages", description = "Send a text or open a draft.",
+            subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
+            permissions = listOf(Manifest.permission.SEND_SMS, Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
+            tools = listOf(DeviceTool.SEND_SMS, DeviceTool.OPEN_SMS_DRAFT)
+        ),
+        ConnectorSpec(
+            id = "whatsapp", name = "WhatsApp", description = "Open a chat with your message typed in, or to call.",
+            subtitle = "On your phone", category = ConnectorCategory.CALLS_MESSAGES, kind = ConnectorKind.PHONE,
+            permissions = listOf(Manifest.permission.READ_CONTACTS), access = SpecialAccess.NONE, defaultOn = false,
+            tools = listOf(DeviceTool.WHATSAPP_MESSAGE, DeviceTool.WHATSAPP_CALL)
         ),
         ConnectorSpec(
             id = "wifi", name = "Wi-Fi", description = "Which Wi-Fi you are on and how strong it is.",
@@ -306,9 +318,19 @@ object ConnectorRegistry {
             "Shared only when you ask."
         ),
         "calls" to ConnectorInfo(
-            "Calls the contact you name straight away, even when it is spelled differently on your phone. If two contacts fit, it asks which.",
-            "Phone and Contacts access.",
+            "Calls the contact you name straight away, even when it is spelled differently on your phone, and answers, ends or declines a call. Speaker and mute work on most phones.",
+            "Phone, Contacts and Answer phone calls access.",
             "The call is placed on your phone and the name is matched on your phone. Nothing is sent except what you say to Gemini."
+        ),
+        "sms" to ConnectorInfo(
+            "Sends a text to a contact or number, or opens the messages app with the text ready. No more than 10 texts an hour. If the text is based on a notification, web page or screen, F.R.I.D.A.Y. asks you first and waits for your spoken yes.",
+            "Send SMS and Contacts access. If SMS is not allowed, the text opens in your messages app instead.",
+            "The text goes through your phone's own SMS. Nothing is stored by us."
+        ),
+        "whatsapp" to ConnectorInfo(
+            "Opens a WhatsApp chat with your message typed in, or the chat to start a call. WhatsApp does not allow sending without a tap, so you tap Send, or F.R.I.D.A.Y. taps it when Screen control is on.",
+            "Contacts access and WhatsApp installed.",
+            "The message goes through WhatsApp only when you send it."
         ),
         "location" to ConnectorInfo(
             "Tells you where you are and starts directions in your maps app.",

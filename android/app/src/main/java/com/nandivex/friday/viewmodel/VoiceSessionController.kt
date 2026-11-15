@@ -55,6 +55,7 @@ internal class VoiceSessionController(
     private val conversationStore: ConversationStore,
     private val memoryStore: MemoryStore,
     historyStoreProvider: () -> ConversationHistoryStore,
+    private val actionGate: com.nandivex.friday.data.ActionGate,
     private val resolveApiKey: () -> String,
     private val hasGeminiAccess: () -> Boolean,
     /** Runs one tool the model called; see [ToolRunner]. */
@@ -711,6 +712,7 @@ internal class VoiceSessionController(
         val assistantText = assistantTextBuffer.toString().trim()
         userTextBuffer.clear()
         assistantTextBuffer.clear()
+        actionGate.turnFinished()
 
         if (userText.isNotEmpty() || assistantText.isNotEmpty()) {
             val sessionId = historySessionId
@@ -758,6 +760,7 @@ internal class VoiceSessionController(
         // Discard any partial turn -- a manual stop mid-turn means it was never finalized, and
         // leaving buffered text around would otherwise bleed into whatever turn comes next.
         userTextBuffer.clear()
+        actionGate.reset()
         assistantTextBuffer.clear()
         retryQuestion = null
         silentTurnRetried = false

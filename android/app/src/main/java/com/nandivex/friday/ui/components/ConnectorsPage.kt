@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Sms
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.SignalCellularAlt
@@ -158,6 +159,8 @@ private class Connector(
 private val ConnectorIcons: Map<String, ImageVector> = mapOf(
     "calls" to Icons.Outlined.Call,
     "contacts" to Icons.Outlined.Contacts,
+    "sms" to Icons.Outlined.Sms,
+    "whatsapp" to Icons.Outlined.Forum,
     "wifi" to Icons.Outlined.Wifi,
     "bluetooth" to Icons.Outlined.Bluetooth,
     "network" to Icons.Outlined.SignalCellularAlt,

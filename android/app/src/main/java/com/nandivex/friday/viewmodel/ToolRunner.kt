@@ -2,6 +2,7 @@ package com.nandivex.friday.viewmodel
 
 import android.util.Log
 import com.nandivex.friday.data.AppSettingsStore
+import com.nandivex.friday.data.ActionGate
 import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.data.DeviceToolRunner
 import com.nandivex.friday.data.MEMORY_FORGET_TOOL
@@ -22,7 +23,11 @@ internal class ToolRunner(
     private val memoryStore: MemoryStore,
     private val settingsStore: AppSettingsStore,
     private val deviceToolRunner: DeviceToolRunner,
-    private val onMemorySaved: (String) -> Unit = {}
+    private val onMemorySaved: (String) -> Unit = {},
+    /** Stops calls, texts and shares that follow outside text until the user has said yes aloud. */
+    private val gate: ActionGate = ActionGate(),
+    /** What the user has said so far in this turn (transcribed). */
+    private val userSaid: () -> String = { "" }
 ) {
     companion object {
         /** What the home screen shows while a tool runs, e.g. "Set alarm". */
@@ -91,6 +96,29 @@ internal class ToolRunner(
         if (tool !in state.value.settings.enabledDeviceTools) {
             return "status=disabled\nThe user has turned this tool off. Tell them it is switched off in Settings."
         }
-        return UntrustedContent.track(tool, deviceToolRunner.run(tool, args))
+        gateQuestion(tool, args)?.let { return it }
+        val result = UntrustedContent.track(tool, deviceToolRunner.run(tool, args))
+        if (tool in UntrustedContent.TOOLS && result.startsWith("status=ok")) gate.noteOutsideText()
+        return result
+    }
+
+    /** Null when the action may run; otherwise the result telling the model to ask the user first. */
+    private fun gateQuestion(tool: DeviceTool, args: JSONObject): String? {
+        if (tool !in ActionGate.SENSITIVE_TOOLS) return null
+        val parts = listOf("name", "number", "contact", "app", "message", "text", "path", "file")
+            .mapNotNull { k -> args.optString(k).trim().takeIf { it.isNotEmpty() }?.let { "$k=$it" } }
+        val who = args.optString("name").ifBlank { args.optString("contact").ifBlank { args.optString("number") } }.trim()
+        val what = args.optString("message").ifBlank { args.optString("text") }.trim()
+        val question = when (tool) {
+            DeviceTool.MAKE_CALL, DeviceTool.WHATSAPP_CALL -> "Call ${who.ifBlank { "this number" }}?"
+            DeviceTool.SHARE_TEXT, DeviceTool.SHARE_FILE -> "Share this?"
+            else -> "Send \"$what\" to ${who.ifBlank { "them" }}?"
+        }
+        return when (val decision = gate.check(tool, parts.joinToString("|"), question, userSaid())) {
+            ActionGate.Decision.Allow -> null
+            is ActionGate.Decision.Ask ->
+                "status=confirm_needed\nText from another person or app was read in this turn, so nothing was done. " +
+                    "Ask the user aloud: \"${decision.question}\" Then wait for their spoken yes. Do not call this tool again until the user has answered."
+        }
     }
 }
