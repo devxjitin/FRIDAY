@@ -39,6 +39,14 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Wifi
+import androidx.compose.material.icons.outlined.VolumeUp
+import androidx.compose.material.icons.outlined.SignalCellularAlt
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.FlashlightOn
+import androidx.compose.material.icons.outlined.ContentPaste
+import androidx.compose.material.icons.outlined.BrightnessMedium
+import androidx.compose.material.icons.outlined.Bluetooth
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Call
@@ -148,22 +156,28 @@ private class Connector(
 
 /** Icons are a screen concern, so they live here; everything else about a connector comes from [ConnectorRegistry]. */
 private val ConnectorIcons: Map<String, ImageVector> = mapOf(
-    "device_info" to Icons.Outlined.PhoneAndroid,
-    "device_controls" to Icons.Outlined.Tune,
+    "calls" to Icons.Outlined.Call,
+    "contacts" to Icons.Outlined.Contacts,
+    "wifi" to Icons.Outlined.Wifi,
+    "bluetooth" to Icons.Outlined.Bluetooth,
+    "network" to Icons.Outlined.SignalCellularAlt,
+    "torch" to Icons.Outlined.FlashlightOn,
+    "sound" to Icons.Outlined.VolumeUp,
+    "display" to Icons.Outlined.BrightnessMedium,
+    "media" to Icons.Outlined.PlayCircle,
     "alarms" to Icons.Outlined.Alarm,
     "reminders" to Icons.Outlined.Schedule,
-    "calendar" to Icons.Outlined.CalendarMonth,
-    "contacts" to Icons.Outlined.Contacts,
-    "calls" to Icons.Outlined.Call,
-    "notifications" to Icons.Outlined.Notifications,
-    "location" to Icons.Outlined.LocationOn,
+    "apps" to Icons.Outlined.Apps,
+    "camera" to Icons.Outlined.PhotoCamera,
+    "clipboard" to Icons.Outlined.ContentPaste,
     "app_usage" to Icons.Outlined.QueryStats,
-    "duckduckgo" to Icons.Outlined.Language,
-    "web_reader" to Icons.Outlined.Description,
+    "device_info" to Icons.Outlined.PhoneAndroid,
     "weather" to Icons.Outlined.WbSunny,
-    "apps_settings" to Icons.Outlined.Apps,
+    "web" to Icons.Outlined.Language,
+    "calendar" to Icons.Outlined.CalendarMonth,
+    "location" to Icons.Outlined.LocationOn,
+    "notifications" to Icons.Outlined.Notifications,
     "files" to Icons.Outlined.Folder,
-    "images" to Icons.Outlined.Image,
     "navigation" to Icons.Outlined.Explore,
     "screen" to Icons.Outlined.TouchApp
 )
@@ -253,6 +267,16 @@ fun ConnectorsPage(
         }
     }
 
+    // The connectors that are on for a fresh install, added together by one button.
+    val essentials = Catalog.filter { c -> ConnectorRegistry.essentials.any { it.id == c.id } }
+    val allEssentialsOn = essentials.all { connected(it) }
+    fun connectEssentials() {
+        onToolsEnabled(essentials.flatMap { it.tools }, true, "Essentials")
+        val missing = essentials.flatMap { c -> (c.kind as? Kind.Local)?.takeIf { it.access == Access.NONE }?.permissions.orEmpty() }
+            .distinct().filter { ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isNotEmpty()) onRequestPermissions(missing)
+    }
+
     // Every connector, connected or not, grouped by category and A-Z inside each group.
     val shown = Catalog
         .filter { query.isBlank() || it.name.contains(query, true) || it.description.contains(query, true) }
@@ -304,6 +328,16 @@ fun ConnectorsPage(
         )
     } else Column(modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(Modifier.height(4.dp))
+        Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (allEssentialsOn) "All essentials are connected." else "Everyday controls and info, without personal data.",
+                color = AssistantTextSecondary, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.weight(1f)
+            )
+            if (!allEssentialsOn) {
+                Spacer(Modifier.size(8.dp))
+                Pill("Connect all essentials", filled = true, onClick = { connectEssentials() })
+            }
+        }
         TextField(
             value = query,
             onValueChange = { query = it },
@@ -337,11 +371,9 @@ fun ConnectorsPage(
                 val inGroup = shown.filter { it.category == category }
                 if (inGroup.isNotEmpty() && (categoryFilter == null || categoryFilter == category.title)) {
                     SectionHeading(category.title)
-                    // Only the risky group keeps its line, because it is a safety warning; the rest are self-explanatory.
-                    if (category.advanced) {
-                        Text(category.summary, color = AssistantError,
-                            fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(start = 4.dp, bottom = 12.dp))
-                    }
+                    // One line under each heading; the risky group's line is a warning, so it is drawn in the error colour.
+                    Text(category.summary, color = if (category.advanced) AssistantError else AssistantTextMuted,
+                        fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(start = 4.dp, bottom = 12.dp))
                     inGroup.forEach { Card(it) }
                 }
             }
