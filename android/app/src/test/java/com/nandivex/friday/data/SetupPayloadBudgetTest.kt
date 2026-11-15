@@ -13,7 +13,7 @@ class SetupPayloadBudgetTest {
     }
 
     @Test fun systemInstructionStaysWithinBudget() {
-        val chars = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "Ultron", ownerName = "Asha").length
+        val chars = KnowledgeBaseProvider.buildSystemInstruction(DEFAULT_SYSTEM_PROMPT, "Hindi", "FRIDAY", ownerName = "Asha").length
         assertTrue("system instruction is $chars chars", chars < 9_000)
     }
 }

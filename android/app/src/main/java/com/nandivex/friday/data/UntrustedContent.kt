@@ -3,7 +3,7 @@ package com.nandivex.friday.data
 /**
  * Tells the model which tool results hold text that other people or other apps wrote (an SMS, a notification, a web
  * page, what an app shows on screen, repository text), so it does not treat that text as instructions. It only adds a
- * warning line to the result; nothing is blocked and nothing asks the user for a tap, because Ultron is meant to work
+ * warning line to the result; nothing is blocked and nothing asks the user for a tap, because FRIDAY is meant to work
  * hands-free.
  *
  * Which tools return such text is decided here by name ([TOOLS]), not by looking for words in the result, so a tool

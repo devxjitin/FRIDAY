@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
         handleAssistIntent(intent)
     }
 
-    /** Starts talking when Ultron is opened as the phone's default assistant (hold home or power). */
+    /** Starts talking when FRIDAY is opened as the phone's default assistant (hold home or power). */
     private fun handleAssistIntent(intent: Intent?) {
         val action = intent?.action ?: return
         if (action != Intent.ACTION_ASSIST && action != Intent.ACTION_VOICE_COMMAND) return

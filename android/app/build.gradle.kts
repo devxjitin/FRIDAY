@@ -9,7 +9,7 @@ plugins {
 }
 
 // Firebase Auth, App Check and Crashlytics need android/app/google-services.json (gitignored). Without it the app
-// still builds, but it cannot sign in to the Ultron API.
+// still builds, but it cannot use Firebase sign-in or Crashlytics.
 if (file("google-services.json").exists()) {
     apply(plugin = "com.google.gms.google-services")
     apply(plugin = "com.google.firebase.crashlytics")
@@ -76,10 +76,10 @@ android {
         // The phone's installed app is signed with this one key. A different key makes Android refuse every update
         // ("signatures do not match"), so debug and OTA builds always use it instead of whatever key the machine
         // would pick by default (~/.android/debug.keystore). Never regenerate or replace this file.
-        val ultronKey = File(System.getProperty("user.home"), ".ultron-android/debug.keystore")
-        if (ultronKey.exists()) {
+        val fridayKey = File(System.getProperty("user.home"), ".friday-android/debug.keystore")
+        if (fridayKey.exists()) {
             getByName("debug") {
-                storeFile = ultronKey
+                storeFile = fridayKey
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
                 keyPassword = "android"

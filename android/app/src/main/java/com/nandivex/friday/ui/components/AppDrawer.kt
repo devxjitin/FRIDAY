@@ -81,7 +81,7 @@ val AppTopBarHeight = 56.dp
 
 private val RowHeight = 40.dp
 
-/** The menu in reading order: the basics, what Ultron does, what it knows about you, the numbers, then the app itself. */
+/** The menu in reading order: the basics, what FRIDAY does, what it knows about you, the numbers, then the app itself. */
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
     "Assistant" to listOf(NavTab.CONNECTORS),

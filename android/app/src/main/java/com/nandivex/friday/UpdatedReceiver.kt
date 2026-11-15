@@ -26,7 +26,7 @@ class UpdatedReceiver : BroadcastReceiver() {
         val tap = PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(context.applicationInfo.icon)
-            .setContentTitle("Ultron updated to ${BuildConfig.VERSION_NAME}")
+            .setContentTitle("F.R.I.D.A.Y. updated to ${BuildConfig.VERSION_NAME}")
             .setContentText("Tap to see what's new.")
             .setContentIntent(tap)
             .setAutoCancel(true)

@@ -186,13 +186,13 @@ object ConnectorRegistry {
             "Nothing leaves your phone."
         ),
         "alarms" to ConnectorInfo(
-            "Ultron's own alarms and timers. They ring on the alarm volume until you stop or snooze them, and you can list, change and cancel them by voice. They do not use the clock app.",
-            "Keep notifications on for Ultron. On Xiaomi, Oppo, Vivo and Realme phones also allow Autostart for Ultron, or the phone may stop it from ringing.",
+            "F.R.I.D.A.Y.'s own alarms and timers. They ring on the alarm volume until you stop or snooze them, and you can list, change and cancel them by voice. They do not use the clock app.",
+            "Keep notifications on for F.R.I.D.A.Y. On Xiaomi, Oppo, Vivo and Realme phones also allow Autostart for F.R.I.D.A.Y., or the phone may stop it from ringing.",
             "Nothing leaves your phone."
         ),
         "reminders" to ConnectorInfo(
-            "Ultron's own reminders: a message at a time or after a while, once or every day or week, with a sound and vibration.",
-            "Keep notifications on for Ultron. On Xiaomi, Oppo, Vivo and Realme phones also allow Autostart for Ultron.",
+            "F.R.I.D.A.Y.'s own reminders: a message at a time or after a while, once or every day or week, with a sound and vibration.",
+            "Keep notifications on for F.R.I.D.A.Y. On Xiaomi, Oppo, Vivo and Realme phones also allow Autostart for F.R.I.D.A.Y.",
             "Nothing leaves your phone."
         ),
         "calendar" to ConnectorInfo(
@@ -251,7 +251,7 @@ object ConnectorRegistry {
         "files" to ConnectorInfo(
             "Looks inside any folder on the phone, finds photos, videos, music, documents and any other file by name, and opens them in your own apps.",
             "All files access. A settings screen opens when you add it.",
-            "Names and folders are read on your phone. File contents are not sent anywhere unless you ask Ultron to read a file aloud."
+            "Names and folders are read on your phone. File contents are not sent anywhere unless you ask F.R.I.D.A.Y. to read a file aloud."
         ),
         "navigation" to ConnectorInfo(
             "Goes back and home, opens recents, scrolls, locks the screen and takes screenshots.",

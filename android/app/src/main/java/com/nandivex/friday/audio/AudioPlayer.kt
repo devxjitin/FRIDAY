@@ -378,7 +378,7 @@ class AudioPlayer(
         if (!playbackHasReached(audioTrack.playbackHeadPosition, targetFrames)) {
             // Not fatal: the audio was handed to the device, only the head counter stalled (audio
             // focus loss, route change, OEM quirk). Tearing down the live session over this is
-            // what made Ultron Live stop working -- log it and carry on to idle instead.
+            // what made FRIDAY Live stop working -- log it and carry on to idle instead.
             latency?.event("playback_drain_timeout", mapOf(
                 "waited_ms" to (System.currentTimeMillis() - startedAt)))
         }

@@ -4,7 +4,7 @@ Status: planned, not started (written 2026-11-07).
 
 ## Goal
 
-Personal data, screenshots included, should not reach the cloud model (Gemini). Ultron should still do the same work it does today.
+Personal data, screenshots included, should not reach the cloud model (Gemini). FRIDAY should still do the same work it does today.
 
 ## The limit
 

@@ -3,6 +3,13 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.14 - 2026-11-15
+
+### Changed
+- Every screen, notification and help text now says F.R.I.D.A.Y. instead of the old name. The notification channel, the ongoing "Live with F.R.I.D.A.Y." notification and the update notice are renamed too.
+- The home ring is gone: the voice wave alone is shown, as before.
+- Android's assistant settings now list the app under its new name.
+
 ## 0.0.13 - 2026-11-15
 
 ### Fixed

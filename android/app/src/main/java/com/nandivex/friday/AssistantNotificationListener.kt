@@ -24,7 +24,7 @@ class AssistantNotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val handler = onNotification ?: return
         val n = sbn.notification
-        // Ongoing media/timer/service entries, group headers, silent progress bars and Ultron's own are noise.
+        // Ongoing media/timer/service entries, group headers, silent progress bars and FRIDAY's own are noise.
         if (sbn.packageName == packageName || !sbn.isClearable || sbn.isOngoing) return
         if (n.flags and Notification.FLAG_GROUP_SUMMARY != 0) return
         if (n.category == Notification.CATEGORY_PROGRESS || n.category == Notification.CATEGORY_TRANSPORT) return

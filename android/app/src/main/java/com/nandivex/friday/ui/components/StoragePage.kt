@@ -99,9 +99,9 @@ fun StoragePage(
     val total = items.sumOf { it.bytes ?: 0L }
 
     PageColumn(modifier) {
-        // One number: how much room Ultron takes on this phone. No bars, since nothing here has a limit to fill.
+        // One number: how much room FRIDAY takes on this phone. No bars, since nothing here has a limit to fill.
         PageCard {
-            Text("Used by Ultron", color = AssistantTextSecondary, fontSize = 13.sp)
+            Text("Used by F.R.I.D.A.Y.", color = AssistantTextSecondary, fontSize = 13.sp)
             Spacer(Modifier.height(4.dp))
             Text(formatBytes(total), color = AssistantTextPrimary, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(4.dp))

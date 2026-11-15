@@ -28,7 +28,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.nandivex.friday.ui.theme.AppButtonShape
 import com.nandivex.friday.ui.theme.AssistantTextMuted
 
-/** Lets the user make Ultron the phone's digital assistant, so holding home or power opens it talking. */
+/** Lets the user make FRIDAY the phone's digital assistant, so holding home or power opens it talking. */
 @Composable
 fun DefaultAssistantSection() {
     val context = LocalContext.current
@@ -46,7 +46,7 @@ fun DefaultAssistantSection() {
         SettingsHeading("Default assistant")
         Text(
             if (isDefault) "Hold the home or power button to talk."
-            else "Open Ultron by holding the home or power button.",
+            else "Open F.R.I.D.A.Y. by holding the home or power button.",
             color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(start = 4.dp)
         )
         if (!isDefault) {
