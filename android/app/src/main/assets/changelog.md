@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.9 - 2026-11-15
+
+### Fixed
+- The History page stayed empty and conversations were not saved on phones that had an earlier test build installed. FRIDAY now starts a fresh history store when the old one cannot be opened.
+
 ## 0.0.8 - 2026-11-15
 
 ### Removed
