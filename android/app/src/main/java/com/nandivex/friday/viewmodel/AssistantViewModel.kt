@@ -58,6 +58,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         private const val PAST_CONVERSATION_PAGE = 50
     }
 
+    private val actionGate = com.nandivex.friday.data.ActionGate()
     private val conversationStore = ConversationStore(application)
     /** Every finished exchange, kept for long-term memory. Opened on first use, off the main thread. */
     private val conversationHistoryStore by lazy {
@@ -90,6 +91,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         conversationStore = conversationStore,
         memoryStore = memoryStore,
         historyStoreProvider = { conversationHistoryStore },
+        actionGate = actionGate,
         resolveApiKey = { resolveApiKey() },
         hasGeminiAccess = { hasGeminiAccess() },
         execute = { call, trace -> toolRunner.run(call, trace) },
@@ -652,7 +654,9 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         state = _uiState,
         memoryStore = memoryStore,
         settingsStore = settingsStore,
-        deviceToolRunner = deviceToolRunner
+        deviceToolRunner = deviceToolRunner,
+        gate = actionGate,
+        userSaid = { session.currentUserRequest() }
     )
 
     fun onSaveDeveloperChanges(apiKey: String) {

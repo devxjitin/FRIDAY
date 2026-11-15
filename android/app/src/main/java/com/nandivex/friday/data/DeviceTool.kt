@@ -369,6 +369,73 @@ enum class DeviceTool(
             ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false)
         )
     ),
+    ANSWER_CALL(
+        "answer_call", "Answer a call", "Pick up the ringing call.",
+        "Answers the phone call that is ringing right now. Use it when the user says answer, pick up or receive the call."
+    ),
+    END_CALL(
+        "end_call", "End a call", "Hang up the current call.",
+        "Ends the phone call in progress. Use it when the user says end the call, hang up or cut the call."
+    ),
+    REJECT_CALL(
+        "reject_call", "Reject a call", "Decline the ringing call.",
+        "Declines the call that is ringing right now without answering it. Use it when the user says reject, decline or cut the incoming call."
+    ),
+    SPEAKERPHONE(
+        "set_speakerphone", "Speakerphone", "Switch the speaker on or off during a call.",
+        "Turns the speakerphone on or off for the call in progress. Some phones ignore this; if the user says it did not change, tell them to tap the speaker button.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Desired speaker state.", choices = listOf("on", "off")))
+    ),
+    MUTE_CALL(
+        "mute_call", "Mute a call", "Mute or unmute the microphone during a call.",
+        "Mutes or unmutes the microphone for the call in progress. Some phones ignore this; if the user says it did not change, tell them to tap the mute button.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Desired microphone state.", choices = listOf("mute", "unmute")))
+    ),
+    DIAL_NUMBER(
+        "dial_number", "Open the dialer", "Open the dialer with a number filled in.",
+        "Opens the phone dialer with the number typed in, without calling. Use it when the user wants to check or edit the number first.",
+        listOf(ToolParam("number", ToolParamType.STRING, "The digits to put in the dialer."))
+    ),
+    SEND_SMS(
+        "send_sms", "Send a text", "Send an SMS to a contact or number.",
+        "Sends a text message (SMS) right away to a contact (name as heard) or a number the user said. Use the words the user asked for. " +
+            "If the app has no permission to send, the message is opened in the messages app for the user to send. If a result says to ask the user first, " +
+            "ask exactly that question aloud and wait for their yes. Tell the user who it went to in one short sentence.",
+        listOf(
+            ToolParam("name", ToolParamType.STRING, "Contact name as heard.", required = false),
+            ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false),
+            ToolParam("message", ToolParamType.STRING, "The text to send.")
+        )
+    ),
+    OPEN_SMS_DRAFT(
+        "open_sms_draft", "Draft a text", "Open the messages app with a text ready to send.",
+        "Opens the messages app with the recipient and text filled in, without sending. Use it when the user wants to review before sending.",
+        listOf(
+            ToolParam("name", ToolParamType.STRING, "Contact name as heard.", required = false),
+            ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false),
+            ToolParam("message", ToolParamType.STRING, "The draft text.", required = false)
+        )
+    ),
+    WHATSAPP_MESSAGE(
+        "whatsapp_message", "WhatsApp message", "Open a WhatsApp chat with the message typed in.",
+        "Opens the WhatsApp chat with a contact (name as heard) or number, with the message typed in. WhatsApp does not allow sending without a tap: " +
+            "afterwards, if the screen controls are on, find the Send button with read_screen and click it; otherwise tell the user to tap Send. " +
+            "If a result says to ask the user first, ask that question aloud and wait for their yes.",
+        listOf(
+            ToolParam("name", ToolParamType.STRING, "Contact name as heard.", required = false),
+            ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false),
+            ToolParam("message", ToolParamType.STRING, "The message text.")
+        )
+    ),
+    WHATSAPP_CALL(
+        "whatsapp_call", "WhatsApp call", "Open a WhatsApp chat so you can call from it.",
+        "Opens the WhatsApp chat with a contact (name as heard) or number. If the screen controls are on, tap the call icon with read_screen and click; " +
+            "otherwise tell the user to tap the call icon. If a result says to ask the user first, ask aloud and wait for their yes.",
+        listOf(
+            ToolParam("name", ToolParamType.STRING, "Contact name as heard.", required = false),
+            ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false)
+        )
+    ),
     CREATE_CONTACT(
         "create_contact", "Add a contact", "Open a new-contact form (you press save).",
         "Opens the new contact form with the name and number filled in. The user saves it.",

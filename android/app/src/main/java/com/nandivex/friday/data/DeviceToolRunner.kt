@@ -53,6 +53,8 @@ import android.provider.AlarmClock
 import android.provider.CalendarContract
 import android.provider.MediaStore
 import android.provider.ContactsContract
+import android.telephony.SmsManager
+import android.telecom.TelecomManager
 import android.provider.Settings
 import android.view.KeyEvent
 import androidx.core.app.NotificationManagerCompat
@@ -188,6 +190,20 @@ class DeviceToolRunner(
                     found.joinToString("\n") { "${it.name}: ${it.number}" }
             }
             DeviceTool.MAKE_CALL -> makeCall(text("name"), text("number"))
+            DeviceTool.ANSWER_CALL -> answerCall()
+            DeviceTool.END_CALL -> endCall(declined = false)
+            DeviceTool.REJECT_CALL -> endCall(declined = true)
+            DeviceTool.SPEAKERPHONE -> speakerphone(text("state") != "off")
+            DeviceTool.MUTE_CALL -> muteCall(text("state") != "unmute")
+            DeviceTool.DIAL_NUMBER -> {
+                val digits = PhoneNumbers.clean(text("number")) ?: return "status=invalid\nGive the digits to put in the dialer."
+                start(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", digits, null)))
+                "status=ok\nThe dialer is open with the number typed in. The user must press call."
+            }
+            DeviceTool.SEND_SMS -> sendSms(text("name"), text("number"), text("message"))
+            DeviceTool.OPEN_SMS_DRAFT -> smsDraft(text("name"), text("number"), text("message"))
+            DeviceTool.WHATSAPP_MESSAGE -> whatsApp(text("name"), text("number"), text("message") ?: return MISSING, call = false)
+            DeviceTool.WHATSAPP_CALL -> whatsApp(text("name"), text("number"), null, call = true)
             DeviceTool.FETCH_WEBPAGE ->
                 WebPageReader.read(text("url") ?: return MISSING, (number("max_chars") ?: 12_000).coerceIn(1_000, 50_000))
             DeviceTool.GET_WEATHER -> weather(text("place"), (number("days") ?: 3).coerceIn(1, 7))
@@ -505,25 +521,103 @@ class DeviceToolRunner(
     }
 
     /** Calls a saved contact by name, or a number, straight away. Needs the Calls connector's phone permission. */
+    private sealed interface Recipient {
+        data class Found(val label: String, val number: String) : Recipient
+        data class Failed(val message: String) : Recipient
+    }
+
+    /** A number the user said, or the contact whose name sounds closest; shared by calls, texts and WhatsApp. */
+    private fun resolveRecipient(name: String?, number: String?, toolName: String): Recipient {
+        PhoneNumbers.clean(number)?.let { return Recipient.Found(number.orEmpty(), it) }
+        val spoken = name ?: return Recipient.Failed(MISSING)
+        missingPermission(Manifest.permission.READ_CONTACTS)?.let { return Recipient.Failed(it) }
+        return when (val match = ContactMatcher.match(spoken, loadContacts())) {
+            ContactMatch.None -> Recipient.Failed("status=not_found\nNo contact sounds like \"$spoken\". Ask the user to say the name again, or for the number.")
+            is ContactMatch.Many -> Recipient.Failed("status=ambiguous\nSeveral contacts fit: " + match.names.joinToString("; ") +
+                ". Ask the user which one, then call $toolName again with that exact name. Nothing was done.")
+            is ContactMatch.One -> Recipient.Found(match.name, match.numbers.first().number.filter { it.isDigit() || it == '+' })
+        }
+    }
+
     private fun makeCall(name: String?, number: String?): String {
-        var target = number?.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }?.takeIf { it.count { c -> c.isDigit() } >= 3 }
-        var label = number.orEmpty()
-        if (target == null) {
-            val spoken = name ?: return MISSING
-            missingPermission(Manifest.permission.READ_CONTACTS)?.let { return it }
-            when (val match = ContactMatcher.match(spoken, loadContacts())) {
-                ContactMatch.None -> return "status=not_found\nNo contact sounds like \"$spoken\". Ask the user to say the name again, or for the number."
-                is ContactMatch.Many -> return "status=ambiguous\nSeveral contacts fit: " + match.names.joinToString("; ") +
-                    ". Ask the user which one, then call make_call again with that exact name. Nothing was dialled."
-                is ContactMatch.One -> {
-                    label = match.name
-                    target = match.numbers.first().number.filter { it.isDigit() || it == '+' }
-                }
-            }
+        val to = when (val r = resolveRecipient(name, number, "make_call")) {
+            is Recipient.Failed -> return r.message
+            is Recipient.Found -> r
         }
         missingPermission(Manifest.permission.CALL_PHONE)?.let { return it }
-        start(Intent(Intent.ACTION_CALL, Uri.fromParts("tel", target, null)))
-        return "status=ok\nCalling $label."
+        start(Intent(Intent.ACTION_CALL, Uri.fromParts("tel", to.number, null)))
+        return "status=ok\nCalling ${to.label}."
+    }
+
+    private fun answerCall(): String {
+        missingPermission(Manifest.permission.ANSWER_PHONE_CALLS)?.let { return it }
+        app.getSystemService(TelecomManager::class.java).acceptRingingCall()
+        return "status=ok\nAsked the phone to answer the ringing call."
+    }
+
+    @Suppress("DEPRECATION")
+    private fun endCall(declined: Boolean): String {
+        if (Build.VERSION.SDK_INT < 28) return "status=unavailable\nEnding a call by voice needs Android 9 or newer."
+        missingPermission(Manifest.permission.ANSWER_PHONE_CALLS)?.let { return it }
+        val ended = app.getSystemService(TelecomManager::class.java).endCall()
+        return if (ended) "status=ok\n" + (if (declined) "Call declined." else "Call ended.")
+        else "status=empty\nThere is no call to end."
+    }
+
+    @Suppress("DEPRECATION")
+    private fun speakerphone(on: Boolean): String {
+        audioManager.isSpeakerphoneOn = on
+        return "status=ok\nSpeaker ${if (on) "on" else "off"} was requested. If the user says it did not change, ask them to tap the speaker button on the call screen."
+    }
+
+    private fun muteCall(mute: Boolean): String {
+        audioManager.isMicrophoneMute = mute
+        return "status=ok\n" + if (mute) "Microphone muted. The assistant cannot hear the user until it is unmuted; the user can tap the mute button on the call screen."
+        else "Microphone unmuted."
+    }
+
+    private fun smsDraft(name: String?, number: String?, message: String?): String {
+        val to = when (val r = resolveRecipient(name, number, "open_sms_draft")) {
+            is Recipient.Failed -> return r.message
+            is Recipient.Found -> r
+        }
+        start(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(to.number))).putExtra("sms_body", message.orEmpty()))
+        return "status=ok\nThe messages app is open with the text for ${to.label}. The user must tap Send."
+    }
+
+    private val smsLimit = SmsRateLimit()
+
+    private fun sendSms(name: String?, number: String?, message: String?): String {
+        val body = message?.take(1_000) ?: return MISSING
+        val to = when (val r = resolveRecipient(name, number, "send_sms")) {
+            is Recipient.Failed -> return r.message
+            is Recipient.Found -> r
+        }
+        if (ContextCompat.checkSelfPermission(app, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            // Not allowed to send directly (the permission is restricted on Google Play): hand the text to the messages app.
+            start(Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + Uri.encode(to.number))).putExtra("sms_body", body))
+            return "status=ok\nSending texts directly is not allowed on this phone, so the messages app was opened with the text for ${to.label}. The user must tap Send."
+        }
+        if (!smsLimit.tryAcquire(System.currentTimeMillis())) {
+            return "status=limited\nMore than 10 texts were sent in the last hour, so nothing was sent. Tell the user and offer open_sms_draft instead."
+        }
+        @Suppress("DEPRECATION")
+        val manager = if (Build.VERSION.SDK_INT >= 31) app.getSystemService(SmsManager::class.java) else SmsManager.getDefault()
+        manager.sendMultipartTextMessage(to.number, null, manager.divideMessage(body), null, null)
+        return "status=ok\nText sent to ${to.label}."
+    }
+
+    private fun whatsApp(name: String?, number: String?, message: String?, call: Boolean): String {
+        val to = when (val r = resolveRecipient(name, number, if (call) "whatsapp_call" else "whatsapp_message")) {
+            is Recipient.Failed -> return r.message
+            is Recipient.Found -> r
+        }
+        val link = PhoneNumbers.whatsAppLink(to.number, message) ?: return "status=invalid\nThat number is too short to open on WhatsApp."
+        val pkg = listOf("com.whatsapp", "com.whatsapp.w4b").firstOrNull { app.packageManager.getLaunchIntentForPackage(it) != null }
+            ?: return "status=unavailable\nWhatsApp is not installed on this phone."
+        start(Intent(Intent.ACTION_VIEW, Uri.parse(link)).setPackage(pkg))
+        return if (call) "status=ok\nThe WhatsApp chat with ${to.label} is open. The call is not started yet: tap the call icon at the top, or click it if the screen controls are on."
+        else "status=ok\nThe WhatsApp chat with ${to.label} is open with the message typed in. It is NOT sent yet: tap the send arrow, or click it if the screen controls are on."
     }
 
     private fun upcomingEvents(days: Int): String {
@@ -1461,6 +1555,7 @@ class DeviceToolRunner(
         /** Tools that query contacts, calendar, files, usage stats, notifications or apps. */
         val BLOCKING_TOOLS = setOf(
             DeviceTool.SEARCH_CONTACT, DeviceTool.CONTACT_BIRTHDAY, DeviceTool.MAKE_CALL, DeviceTool.UPCOMING_EVENTS,
+            DeviceTool.SEND_SMS, DeviceTool.OPEN_SMS_DRAFT, DeviceTool.WHATSAPP_MESSAGE, DeviceTool.WHATSAPP_CALL,
             DeviceTool.CALENDAR_CONFLICTS, DeviceTool.MOST_USED_APPS, DeviceTool.APP_USAGE, DeviceTool.STORAGE_MEMORY,
             DeviceTool.READ_NOTIFICATIONS, DeviceTool.OPEN_APP,
             DeviceTool.OPEN_APP_SETTINGS, DeviceTool.CREATE_EVENT, DeviceTool.CANCEL_EVENT,

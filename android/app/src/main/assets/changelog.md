@@ -3,6 +3,17 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.16 - 2026-11-15
+
+### Added
+- Phone calls: "answer the call", "end the call", "reject the call", "speaker on", "mute", and "open the dialer with 98765 43210".
+- Text messages: "message Rahul on my way" sends an SMS straight away, up to 10 an hour. If SMS is not allowed on the phone, the text opens in your messages app instead. "Draft a text to Rahul" opens it without sending.
+- WhatsApp: "WhatsApp Rahul I'm late" opens the chat with the message typed in, and "WhatsApp call Rahul" opens the chat to call. WhatsApp needs a tap on Send or the call icon, or F.R.I.D.A.Y. taps it when Screen control is on.
+- New Text messages and WhatsApp connectors, both off until you add them.
+
+### Safety
+- If F.R.I.D.A.Y. has just read a notification, a web page, the screen or the clipboard, it will not call, text, WhatsApp, reply or share until you say yes aloud. For example: "Send OK to Rahul?" Any answer other than yes cancels it.
+
 ## 0.0.15 - 2026-11-15
 
 ### Changed
