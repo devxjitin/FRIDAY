@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Rings one of Ultron's own alarms or timers. The sound is played by this service on the alarm volume, so it does not
+ * Rings one of FRIDAY's own alarms or timers. The sound is played by this service on the alarm volume, so it does not
  * depend on the phone's clock app or on how notification sounds are set up, and it keeps ringing until it is stopped,
  * snoozed, or [MAX_RING_MS] has passed. The notification carries Stop and Snooze and opens [AlarmActivity] over the
  * lock screen.
@@ -87,7 +87,7 @@ class AlarmRingService : Service() {
         if (player != null) return
         if (wakeLock == null) {
             wakeLock = getSystemService(PowerManager::class.java)
-                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "ultron:alarm").apply { acquire(MAX_RING_MS + 10_000L) }
+                .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "friday:alarm").apply { acquire(MAX_RING_MS + 10_000L) }
         }
         startSound()
         startVibration()

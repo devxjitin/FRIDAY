@@ -28,7 +28,7 @@ object LicenseKey {
 
 /**
  * What the license Lambda says about a key on this device. [expiresAt] and [activatedAt] are in epoch seconds, 0 for a key
- * that never expires or has no activation yet. [name], [email] and [phone] are the buyer details entered in Ultronapp and
+ * that never expires or has no activation yet. [name], [email] and [phone] are the buyer details entered in the admin panel and
  * are empty when none were set; [durationDays] is the length of the plan, 0 for a lifetime key.
  */
 data class LicenseStatus(

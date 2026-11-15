@@ -473,7 +473,7 @@ class DeviceToolRunner(
         // Asked before and still missing: Android shows no second dialog after "don't allow", so send them to the app's settings page.
         if (absent.all { it in askedPermissions }) {
             start(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + app.packageName)))
-            return "status=permission_needed\nThe permission was denied earlier, so Android will not ask again. Ultron's App info page " +
+            return "status=permission_needed\nThe permission was denied earlier, so Android will not ask again. FRIDAY's App info page " +
                 "was opened; the user must open Permissions there and allow it, then ask again."
         }
         askedPermissions.addAll(absent)
@@ -791,15 +791,15 @@ class DeviceToolRunner(
     private fun accessibilityDenied(): String {
         if (AccessChecks.accessibility(app) == AccessState.ENABLED_NOT_CONNECTED) {
             // Switched on but Android has not (re)started the service, common right after an update or an OEM kill.
-            return "status=permission_needed\nThe Ultron accessibility service is switched on but not running yet. " +
+            return "status=permission_needed\nThe FRIDAY accessibility service is switched on but not running yet. " +
                 "Ask the user to switch it off and on again in Accessibility settings, then try again."
         }
         start(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         val restricted = if (Build.VERSION.SDK_INT >= 33) {
-            " If the switch is greyed out, open Ultron's App info, tap the three dots and choose Allow restricted settings first."
+            " If the switch is greyed out, open FRIDAY's App info, tap the three dots and choose Allow restricted settings first."
         } else ""
         return "status=permission_needed\nThe accessibility service is not enabled. The Accessibility settings were opened; " +
-            "the user must turn on Ultron there, then ask again.$restricted"
+            "the user must turn on FRIDAY there, then ask again.$restricted"
     }
 
     private fun globalAction(action: Int, label: String): String {
@@ -1008,10 +1008,10 @@ class DeviceToolRunner(
         }
         start(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
         val restricted = if (Build.VERSION.SDK_INT >= 33) {
-            " If the switch is greyed out, open Ultron's App info, tap the three dots and choose Allow restricted settings first."
+            " If the switch is greyed out, open FRIDAY's App info, tap the three dots and choose Allow restricted settings first."
         } else ""
         return "status=permission_needed\nNotification access is not granted. The access screen was opened; " +
-            "the user must allow Ultron there, then ask again.$restricted"
+            "the user must allow FRIDAY there, then ask again.$restricted"
     }
 
     private fun readNotifications(limit: Int): String {
@@ -1046,7 +1046,7 @@ class DeviceToolRunner(
             }.joinToString("\n")
     }
 
-    /** Sets screen brightness for the whole phone when Modify system settings is allowed, otherwise only inside Ultron. */
+    /** Sets screen brightness for the whole phone when Modify system settings is allowed, otherwise only inside FRIDAY. */
     private fun setBrightness(percent: Int) {
         if (Settings.System.canWrite(app)) {
             val ok = runCatching {
@@ -1152,15 +1152,15 @@ class DeviceToolRunner(
         else "status=unavailable\nNotifications are turned off for this app."
 
     /**
-     * Alarms, timers and reminders need Ultron's notifications: that is where they show and where Stop is. Returns a tool
+     * Alarms, timers and reminders need FRIDAY's notifications: that is where they show and where Stop is. Returns a tool
      * result asking for them (Android 13+ shows its own dialog), or null when they are on.
      */
     private fun notificationsMissing(): String? {
         if (NotificationManagerCompat.from(app).areNotificationsEnabled()) return null
         if (Build.VERSION.SDK_INT >= 33) missingPermission(Manifest.permission.POST_NOTIFICATIONS)?.let { return it }
         start(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, app.packageName))
-        return "status=permission_needed\nNotifications are turned off for Ultron, so nothing was set: it could not ring or show. " +
-            "Ultron's notification settings were opened; the user must turn them on, then ask again."
+        return "status=permission_needed\nNotifications are turned off for FRIDAY, so nothing was set: it could not ring or show. " +
+            "FRIDAY's notification settings were opened; the user must turn them on, then ask again."
     }
 
     private fun flashlight(state: String?): String {

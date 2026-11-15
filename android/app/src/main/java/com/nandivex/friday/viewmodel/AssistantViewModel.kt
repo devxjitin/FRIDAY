@@ -104,15 +104,15 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private fun notificationStatus(state: VoiceState, tool: String?, last: ConversationTurn?): Pair<String, String> {
         fun clip(t: String) = t.trim().replace(Regex("""\s+"""), " ").let { if (it.length > 140) it.take(140) + "…" else it }
         val lastUser = last?.userText?.takeIf { it.isNotBlank() }?.let { "You: " + clip(it) }
-        val lastReply = last?.assistantText?.takeIf { it.isNotBlank() }?.let { "Ultron: " + clip(it) }
+        val lastReply = last?.assistantText?.takeIf { it.isNotBlank() }?.let { "F.R.I.D.A.Y.: " + clip(it) }
         return when {
-            tool != null -> "Ultron: Working" to "Using tool: " + tool.replace('_', ' ')
-            state == VoiceState.CONNECTING || state == VoiceState.RESETTING -> "Ultron: Connecting" to "Opening a voice session…"
-            state == VoiceState.LISTENING -> "Ultron: Listening" to (lastReply ?: "Waiting for your command.")
-            state == VoiceState.PROCESSING -> "Ultron: Thinking" to (lastUser ?: "Working on your request…")
-            state == VoiceState.SPEAKING -> "Ultron: Speaking" to (lastReply ?: lastUser ?: "Replying…")
-            state == VoiceState.ERROR -> "Ultron: Error" to (_uiState.value.errorMessage ?: "Something went wrong.")
-            else -> "Ultron: Idle" to (lastReply ?: lastUser ?: "Standing by.")
+            tool != null -> "F.R.I.D.A.Y.: Working" to "Using tool: " + tool.replace('_', ' ')
+            state == VoiceState.CONNECTING || state == VoiceState.RESETTING -> "F.R.I.D.A.Y.: Connecting" to "Opening a voice session…"
+            state == VoiceState.LISTENING -> "F.R.I.D.A.Y.: Listening" to (lastReply ?: "Waiting for your command.")
+            state == VoiceState.PROCESSING -> "F.R.I.D.A.Y.: Thinking" to (lastUser ?: "Working on your request…")
+            state == VoiceState.SPEAKING -> "F.R.I.D.A.Y.: Speaking" to (lastReply ?: lastUser ?: "Replying…")
+            state == VoiceState.ERROR -> "F.R.I.D.A.Y.: Error" to (_uiState.value.errorMessage ?: "Something went wrong.")
+            else -> "F.R.I.D.A.Y.: Idle" to (lastReply ?: lastUser ?: "Standing by.")
         }
     }
 
@@ -131,7 +131,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         AppForegroundService.onStopRequested = stopFromNotification
         AppForegroundService.onMuteRequested = muteFromNotification
         com.nandivex.friday.AssistantNotificationListener.onNotification = notificationAnnouncer
-        // Held notifications are spoken as soon as Ultron is quiet and listening again.
+        // Held notifications are spoken as soon as FRIDAY is quiet and listening again.
         viewModelScope.launch {
             _uiState.map { it.voiceState }.distinctUntilChanged().collect { if (it == VoiceState.LISTENING) flushAnnouncements() }
         }
@@ -219,7 +219,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    /** The phone's assistant gesture opened Ultron: start a voice session unless one is already running. */
+    /** The phone's assistant gesture opened FRIDAY: start a voice session unless one is already running. */
     fun onAssistInvoked() {
         assistPending = true
         startPendingAssist()
@@ -235,7 +235,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         if (!isSessionActive(_uiState.value.voiceState)) session.startSession()
     }
 
-    /** Phone notifications waiting until Ultron is quiet and listening, oldest first. */
+    /** Phone notifications waiting until FRIDAY is quiet and listening, oldest first. */
     private val pendingAnnouncements = ArrayDeque<String>()
 
     /**

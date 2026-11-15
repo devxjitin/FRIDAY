@@ -70,7 +70,7 @@ fun AccessCheckingScreen() {
 fun ActivationScreen(state: AccessState.NeedsKey, storeUrl: String, onActivate: (String) -> Unit, onOpenStore: () -> Unit) {
     var input by rememberSaveable { mutableStateOf("") }
     AccessFrame {
-        Heading("Activate Ultron", "Enter your activation key. It works on one phone at a time.")
+        Heading("Activate F.R.I.D.A.Y.", "Enter your activation key. It works on one phone at a time.")
         Spacer(Modifier.height(24.dp))
         TextField(
             value = input,

@@ -104,9 +104,9 @@ private class FormText(
 private val ConnectorText = FormText(
     icon = Icons.Outlined.Extension,
     title = "Request a connector",
-    intro = "A connector lets Ultron use another app or service, such as music, notes or a smart home.",
+    intro = "A connector lets F.R.I.D.A.Y. use another app or service, such as music, notes or a smart home.",
     nameLabel = "App or service", nameHint = "For example: Spotify",
-    detailsLabel = "What should Ultron do with it?", detailsHint = "Say what you want to do in that app: play, read, add, control. The more detail, the better.",
+    detailsLabel = "What should F.R.I.D.A.Y. do with it?", detailsHint = "Say what you want to do in that app: play, read, add, control. The more detail, the better.",
     examplesHint = "For example: play my liked songs on Spotify"
 )
 
@@ -115,7 +115,7 @@ private val BugText = FormText(
     title = "Report a bug",
     intro = "Tell the developer what went wrong. Clear steps make a bug much quicker to fix.",
     nameLabel = "What went wrong?", nameHint = "For example: The mic stops after two replies",
-    detailsLabel = "What happened?", detailsHint = "What you did, what Ultron did, and whether it happens every time.",
+    detailsLabel = "What happened?", detailsHint = "What you did, what F.R.I.D.A.Y. did, and whether it happens every time.",
     examplesHint = "For example: it should keep listening until I stop",
     examplesLabel = "What did you expect?",
     sendLabel = "Send report"

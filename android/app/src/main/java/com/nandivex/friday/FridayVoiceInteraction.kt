@@ -10,16 +10,16 @@ import android.speech.RecognitionService
 import android.speech.SpeechRecognizer
 
 /**
- * What Android needs before it lists Ultron as a digital assistant: a voice interaction service with a session service.
+ * What Android needs before it lists FRIDAY as a digital assistant: a voice interaction service with a session service.
  * Holding home or power starts a session, which only opens [MainActivity] with the ASSIST action, and the app takes over.
  */
-class UltronVoiceInteractionService : VoiceInteractionService()
+class FridayVoiceInteractionService : VoiceInteractionService()
 
-class UltronVoiceSessionService : VoiceInteractionSessionService() {
-    override fun onNewSession(args: Bundle?): VoiceInteractionSession = UltronVoiceSession(this)
+class FridayVoiceSessionService : VoiceInteractionSessionService() {
+    override fun onNewSession(args: Bundle?): VoiceInteractionSession = FridayVoiceSession(this)
 }
 
-private class UltronVoiceSession(context: Context) : VoiceInteractionSession(context) {
+private class FridayVoiceSession(context: Context) : VoiceInteractionSession(context) {
     override fun onShow(args: Bundle?, showFlags: Int) {
         super.onShow(args, showFlags)
         startAssistantActivity(Intent(context, MainActivity::class.java).setAction(Intent.ACTION_ASSIST))
@@ -27,8 +27,8 @@ private class UltronVoiceSession(context: Context) : VoiceInteractionSession(con
     }
 }
 
-/** Declared only because the assistant role expects a recognition service next to the interaction service; Ultron listens through its own Live session. */
-class UltronRecognitionService : RecognitionService() {
+/** Declared only because the assistant role expects a recognition service next to the interaction service; FRIDAY listens through its own Live session. */
+class FridayRecognitionService : RecognitionService() {
     override fun onStartListening(recognizerIntent: Intent?, listener: Callback?) {
         runCatching { listener?.error(SpeechRecognizer.ERROR_CLIENT) }
     }

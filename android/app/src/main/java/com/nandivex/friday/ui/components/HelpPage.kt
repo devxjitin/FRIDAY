@@ -84,13 +84,13 @@ fun HelpPage(onRequest: (String) -> Unit, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(24.dp))
         PageLabel("Request a feature")
         Text(
-            "Need something Ultron cannot do yet? Tell the developer what you need. It is sent from inside the app, and you can add your email to get a reply.",
+            "Need something F.R.I.D.A.Y. cannot do yet? Tell the developer what you need. It is sent from inside the app, and you can add your email to get a reply.",
             color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.padding(horizontal = 4.dp)
         )
         Spacer(Modifier.height(14.dp))
         HelpAction(
             Icons.Outlined.Extension, "Request a connector",
-            "A connector lets Ultron use another app or service, such as music, notes or a smart home."
+            "A connector lets F.R.I.D.A.Y. use another app or service, such as music, notes or a smart home."
         ) { onRequest("connector") }
     }
 }
@@ -124,7 +124,7 @@ private fun HelpAction(icon: ImageVector, title: String, text: String, onClick: 
 
 /** Opens the phone's email app with a support email to the developer; copies the address when there is no email app. */
 private fun emailDeveloper(context: Context) {
-    val subject = "Ultron support (v${BuildConfig.VERSION_NAME})"
+    val subject = "F.R.I.D.A.Y. support (v${BuildConfig.VERSION_NAME})"
     val body = "\n\n\n---\nApp version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\nPhone: ${deviceSummary()}"
     val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")).apply {
         putExtra(Intent.EXTRA_EMAIL, arrayOf(DEVELOPER_EMAIL))

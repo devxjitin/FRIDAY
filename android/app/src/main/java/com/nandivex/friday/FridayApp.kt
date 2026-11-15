@@ -10,7 +10,7 @@ import com.google.firebase.auth.FirebaseAuth
  * anonymous sign-in (a stable user id without asking for an account). Without a Firebase config the app skips both.
  * Gemini never goes through Firebase; it always uses the key the user saved.
  */
-class UltronApp : Application() {
+class FridayApp : Application() {
     override fun onCreate() {
         super.onCreate()
         // The Schedule feature is gone; clear what an earlier version left behind.
@@ -27,6 +27,6 @@ class UltronApp : Application() {
     }
 
     private companion object {
-        const val TAG = "UltronApp"
+        const val TAG = "FridayApp"
     }
 }

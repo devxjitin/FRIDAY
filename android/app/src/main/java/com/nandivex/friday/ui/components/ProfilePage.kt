@@ -52,7 +52,7 @@ private const val EXPIRING_SOON_DAYS = 7
 
 /**
  * Profile: who the activation key belongs to, the key and its plan, and this phone. The buyer details are the ones the
- * admin entered in Ultronapp. [ownerName] (Settings > Your name) fills in when the admin left the name empty.
+ * admin entered in the admin panel. [ownerName] (Settings > Your name) fills in when the admin left the name empty.
  * [onRenew] is null when this build has no store link.
  */
 @Composable
@@ -152,7 +152,7 @@ fun ProfilePage(
         AlertDialog(
             onDismissRequest = { confirmingRemove = false },
             title = { Text("Remove activation key?") },
-            text = { Text("Ultron locks on this phone until a key is entered again. The key itself stays valid.") },
+            text = { Text("F.R.I.D.A.Y. locks on this phone until a key is entered again. The key itself stays valid.") },
             confirmButton = {
                 TextButton(onClick = { confirmingRemove = false; onRemoveKey() }) { Text("Remove", color = AssistantError) }
             },

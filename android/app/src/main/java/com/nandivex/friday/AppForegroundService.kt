@@ -105,10 +105,10 @@ class AppForegroundService : Service() {
     private fun createNotificationChannel() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Ultron status",
+            "F.R.I.D.A.Y. status",
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shows what Ultron is doing while it runs in the background."
+            description = "Shows what F.R.I.D.A.Y. is doing while it runs in the background."
             setShowBadge(false)
         }
         val manager = getSystemService(NotificationManager::class.java)
@@ -154,11 +154,11 @@ class AppForegroundService : Service() {
             .setWhen(sessionStartMs)
             .setUsesChronometer(true)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            val person = android.app.Person.Builder().setName("Live with Ultron").setImportant(true).build()
+            val person = android.app.Person.Builder().setName("Live with F.R.I.D.A.Y.").setImportant(true).build()
             builder.setStyle(Notification.CallStyle.forOngoingCall(person, serviceIntent(1, ACTION_STOP_SESSION)))
                 .addAction(muteAction)
         } else {
-            builder.setContentTitle("Live with Ultron")
+            builder.setContentTitle("Live with F.R.I.D.A.Y.")
                 .addAction(muteAction)
                 .addAction(Notification.Action.Builder(null, "End", serviceIntent(1, ACTION_STOP_SESSION)).build())
         }
@@ -175,7 +175,7 @@ class AppForegroundService : Service() {
 
         @Volatile private var instance: AppForegroundService? = null
 
-        @Volatile private var statusTitle = "Ultron"
+        @Volatile private var statusTitle = "F.R.I.D.A.Y."
         @Volatile private var statusText = "Standing by"
         @Volatile private var statusTimeMillis = System.currentTimeMillis()
 

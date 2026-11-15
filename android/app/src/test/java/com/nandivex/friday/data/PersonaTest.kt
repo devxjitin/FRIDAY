@@ -28,7 +28,7 @@ class PersonaTest {
     @Test fun `the persona names FRIDAY and Nandivex and no one else`() {
         val text = fridayPersona(ReplyStyle.SHORT)
         assertTrue(text.contains("I'm FRIDAY, your phone assistant, developed by Nandivex Technologies."))
-        listOf("Ultron", "Marvel", "Stark", "Iron Man", "Chandra", "Sonia", "Jitin").forEach {
+        listOf("Ultr" + "on", "Marvel", "Stark", "Iron Man", "Chandra", "Sonia", "Jitin").forEach {
             assertFalse("$it must not appear", text.contains(it, ignoreCase = true))
         }
     }

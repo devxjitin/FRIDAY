@@ -94,7 +94,7 @@ internal class VoiceSessionController(
     /** Groups the exchanges of one mic session; a reconnect inside the session keeps it. */
     var historySessionId = java.util.UUID.randomUUID().toString()
 
-    /** True while a phone call rings or runs: Ultron stays connected but silent, and picks up again afterwards. */
+    /** True while a phone call rings or runs: FRIDAY stays connected but silent, and picks up again afterwards. */
     var pausedByCall = false
         private set
     private var callWatchJob: Job? = null
@@ -149,7 +149,7 @@ internal class VoiceSessionController(
         /** A short interruption (navigation prompt, notification sound): pause the mic and carry on afterwards. */
         override fun onFocusLostTemporarily() {
             // A ringing or answered phone call also arrives as a short loss, but it needs the
-            // speaker, mic and audio mode this session holds, so Ultron is silenced until the call ends.
+            // speaker, mic and audio mode this session holds, so FRIDAY is silenced until the call ends.
             if (audio.isPhoneCallMode() && isSessionActive(uiState.value.voiceState)) {
                 pauseForCall()
             } else if (isSessionActive(uiState.value.voiceState)) {
@@ -498,7 +498,7 @@ internal class VoiceSessionController(
                     closeNow()
                     return
                 }
-                // Reconnecting now would cut Ultron off mid-sentence. Wait for the reply to end, but never past
+                // Reconnecting now would cut FRIDAY off mid-sentence. Wait for the reply to end, but never past
                 // the time the server gave (minus a safety margin).
                 pendingGoAway = closeNow
                 goAwayJob?.cancel()
@@ -943,7 +943,7 @@ internal class VoiceSessionController(
         }
     }
 
-    /** Silences Ultron for the length of a phone call (ringing or answered) without ending the session. */
+    /** Silences FRIDAY for the length of a phone call (ringing or answered) without ending the session. */
     private fun pauseForCall() {
         if (pausedByCall) return
         pausedByCall = true

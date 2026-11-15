@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.widthIn
-import com.nandivex.friday.ui.components.HudRing
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.nandivex.friday.data.MicSensitivity
@@ -225,13 +224,9 @@ fun AssistantScreen(
                         VoiceState.LISTENING, VoiceState.PROCESSING, VoiceState.SPEAKING ->
                             SessionTimer(sessionStartTimeMs = sessionStartMs, compact = compact)
                     }
-                    // The ring frames the voice ribbon: both are centred on each other, and the status line sits below the ring.
-                    val ribbonHeight = if (compact) 80.dp else (availableHeight * 0.28f).coerceIn(160.dp, 270.dp)
-                    val ringSize = if (compact) 150.dp else ribbonHeight.coerceAtLeast(220.dp)
-                    Box(Modifier.fillMaxWidth().height(ringSize), contentAlignment = Alignment.Center) {
-                        HudRing(uiState.voiceState, voiceLevel, Modifier.size(ringSize))
-                        VoiceRibbon(uiState.voiceState, voiceLevel, Modifier.widthIn(max = 900.dp).fillMaxWidth().height(ribbonHeight))
-                    }
+                    VoiceRibbon(uiState.voiceState, voiceLevel,
+                        Modifier.widthIn(max = 900.dp).fillMaxWidth()
+                            .height(if (compact) 80.dp else (availableHeight * 0.28f).coerceIn(160.dp, 270.dp)))
                     StatusLine(uiState, strings, hasMicPermission, micPermissionPermanentlyDenied)
                     uiState.activeTool?.takeIf { uiState.voiceState != VoiceState.SPEAKING }?.let { ToolChip(it) }
                     Spacer(Modifier.height(if (compact) 12.dp else 28.dp))
