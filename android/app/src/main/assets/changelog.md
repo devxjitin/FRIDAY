@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.13 - 2026-11-15
+
+### Fixed
+- The home ring is smaller and centred on the voice wave, so it no longer cuts through the greeting or the status line. Its amber dot is brighter.
+
 ## 0.0.12 - 2026-11-15
 
 ### Changed
