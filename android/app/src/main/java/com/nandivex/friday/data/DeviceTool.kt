@@ -369,6 +369,58 @@ enum class DeviceTool(
             ToolParam("number", ToolParamType.STRING, "Phone number, only when the user said digits.", required = false)
         )
     ),
+    WIFI_TOGGLE(
+        "wifi_toggle", "Wi-Fi on or off", "Turn Wi-Fi on or off (opens the panel).",
+        "Turns Wi-Fi on or off. Android 10 and newer do not let apps flip it directly, so the internet panel opens; the result then says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    BLUETOOTH_TOGGLE(
+        "bluetooth_toggle", "Bluetooth on or off", "Turn Bluetooth on or off (Android asks to allow).",
+        "Turns Bluetooth on (Android shows an Allow question) or off (the Bluetooth settings open). The result says whether to tap the control yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    LIST_PAIRED_DEVICES(
+        "list_paired_devices", "Paired Bluetooth devices", "List the Bluetooth devices paired with the phone.",
+        "Lists the paired Bluetooth devices by name and kind, such as headphones, car or watch. Works even when Bluetooth is off."
+    ),
+    MOBILE_DATA_PANEL(
+        "mobile_data_panel", "Mobile data panel", "Open the mobile data and internet panel.",
+        "Opens the internet panel where mobile data can be switched. Android does not let apps switch mobile data directly, so the result says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    AIRPLANE_MODE(
+        "airplane_mode", "Airplane mode", "Turn airplane mode on or off (opens its settings).",
+        "Opens the airplane mode settings so it can be turned on or off. Warn the user that turning it on cuts calls and data, and turning it on while a voice session needs the internet will end this conversation.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    HOTSPOT_SETTINGS(
+        "hotspot_settings", "Hotspot settings", "Open the hotspot and tethering settings.",
+        "Opens the hotspot and tethering settings so the hotspot can be switched on or off. The result says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    NFC_SETTINGS(
+        "nfc_settings", "NFC settings", "Open the NFC panel.",
+        "Opens the NFC settings or panel so NFC can be switched on or off. The result says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    FLASHLIGHT_STROBE(
+        "flashlight_strobe", "Flashlight strobe or SOS", "Blink the flashlight fast, or in SOS.",
+        "Blinks the flashlight for a few seconds: strobe is a fast blink, sos is three short, three long, three short. It stops by itself, or when the flashlight is switched on or off.",
+        listOf(
+            ToolParam("mode", ToolParamType.STRING, "Blink pattern.", choices = listOf("strobe", "sos")),
+            ToolParam("seconds", ToolParamType.INTEGER, "How long, 2-30. Default 10.", required = false)
+        )
+    ),
+    DARK_MODE(
+        "dark_mode", "Dark mode", "Turn the phone's dark theme on or off (opens display settings).",
+        "Opens the display settings where the dark theme switch is. The result says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
+    BATTERY_SAVER(
+        "battery_saver", "Battery saver", "Turn battery saver on or off (opens its settings).",
+        "Opens the battery saver settings so it can be switched on or off. The result says whether to tap the switch yourself or ask the user.",
+        listOf(ToolParam("state", ToolParamType.STRING, "Wanted state.", choices = listOf("on", "off")))
+    ),
     ANSWER_CALL(
         "answer_call", "Answer a call", "Pick up the ringing call.",
         "Answers the phone call that is ringing right now. Use it when the user says answer, pick up or receive the call."

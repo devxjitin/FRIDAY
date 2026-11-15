@@ -556,3 +556,4 @@
 [2026-11-15 15:00] [Claude] [Update: Sprint 1.3 part 2 - removed Knowledge base, embeddings, Images and history-search tools; deleted mcp/infra/ultronapp; version 0.0.8]
 [2026-11-15] [Claude] [Sprint 3.1: connectors regrouped into 8 categories, split/merged into 24 connectors, Connect all essentials button, registry tests; version 0.0.15]
 [2026-11-15] [Claude] [Sprint 3.2: answer/end/reject call, speaker, mute, dial, send_sms (10/hour, draft fallback), open_sms_draft, whatsapp_message/call, ActionGate spoken-yes rule, SMS + ANSWER_PHONE_CALLS permissions; version 0.0.16]
+[2026-11-15] [Claude] [Sprint 3.3: wifi_toggle, bluetooth_toggle, list_paired_devices, mobile_data_panel, airplane_mode, hotspot_settings, nfc_settings, flashlight_strobe/SOS, dark_mode, battery_saver (panel + self-tap hint); version 0.0.17]

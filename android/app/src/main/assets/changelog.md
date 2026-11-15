@@ -3,6 +3,14 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.17 - 2026-11-15
+
+### Added
+- Wi-Fi: "turn Wi-Fi off". Bluetooth: "Bluetooth on", and "which Bluetooth devices are paired". Mobile data, airplane mode, hotspot and NFC: F.R.I.D.A.Y. opens the right panel.
+- "Dark mode on" and "battery saver on" open the right settings switch.
+- Android does not let apps flip these switches, so when Screen control is on, F.R.I.D.A.Y. taps the switch and checks the screen. When it is off, F.R.I.D.A.Y. tells you which switch to tap.
+- "SOS flashlight" and "strobe the torch" blink the flashlight for up to 30 seconds. Saying "flashlight off" stops it.
+
 ## 0.0.16 - 2026-11-15
 
 ### Added
