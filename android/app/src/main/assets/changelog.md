@@ -3,6 +3,14 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.12 - 2026-11-15
+
+### Changed
+- New look: a deep navy and cyan theme with an amber highlight replaces the red one, in both light and dark mode.
+- New F.R.I.D.A.Y. logo: a ring of three broken arcs around an F whose middle bar is a voice waveform. It is the app icon (including the Android 13 themed icon), the splash screen and the icon in About.
+- The home screen shows a slowly turning ring that brightens and speeds up with your voice.
+- The name is written F.R.I.D.A.Y. on screen.
+
 ## 0.0.11 - 2026-11-15
 
 ### Changed
