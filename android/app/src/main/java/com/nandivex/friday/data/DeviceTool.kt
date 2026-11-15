@@ -234,22 +234,11 @@ enum class DeviceTool(
 
     LIST_FOLDER(
         "list_folder", "Browse a folder", "Look inside a folder on the phone.",
-        "Lists what is inside a folder of the phone's storage: sub-folders and files, each file with a number for open_file or show_image. " +
+        "Lists what is inside a folder of the phone's storage: sub-folders and files, each file with a number for open_file. " +
             "Give a path such as Download or Documents/Bills, or only part of a folder name. Leave the path empty for the top level. Needs All files access.",
         listOf(
             ToolParam("path", ToolParamType.STRING, "Folder path or part of its name. Empty for the top level.", required = false),
             ToolParam("limit", ToolParamType.INTEGER, "How many files to list, 1-60. Default 30.", required = false)
-        )
-    ),
-    SHOW_IMAGE(
-        "show_image", "Show a picture", "Show a picture on the screen.",
-        "Shows a picture over the home screen. By default it looks in the pictures the user added to Ultron, by what they said about it " +
-            "(a name, a person, a place, a thing in it). To show a photo found with search_files, pass its number as file_number. " +
-            "Use action close to hide the picture again. Use it whenever the user asks to see, show or look at a picture.",
-        listOf(
-            ToolParam("query", ToolParamType.STRING, "What the user said about the picture, as they said it.", required = false),
-            ToolParam("file_number", ToolParamType.INTEGER, "Number from the latest search_files list, to show that photo instead.", required = false),
-            ToolParam("action", ToolParamType.STRING, "show (default) or close.", required = false, choices = listOf("show", "close"))
         )
     ),
 
@@ -645,37 +634,16 @@ enum class DeviceTool(
         "read_notifications", "Read notifications", "Read the phone's current notifications (sends their text to Gemini).",
         "Lists the current notifications with app, title and text. Needs notification access; if missing, the access screen opens.",
         listOf(ToolParam("limit", ToolParamType.INTEGER, "How many, 1-20. Default 10.", required = false))
-    ),
-
-    SEARCH_CONVERSATION_HISTORY(
-        "search_conversation_history", "Search past conversations", "Look up what you and the assistant said before.",
-        "Searches every earlier conversation with the user, by meaning and by exact words, and returns the matching exchanges " +
-            "with their date and time. Call it whenever the user refers to something from before (yesterday, last week, " +
-            "\"what did I ask\", \"that restaurant you told me\") or you are unsure what was said. Never guess about past talk.",
-        listOf(
-            ToolParam("query", ToolParamType.STRING, "What to look for, in the user's own words."),
-            ToolParam("from_date", ToolParamType.STRING, "Only from this day, YYYY-MM-DD.", required = false),
-            ToolParam("to_date", ToolParamType.STRING, "Only up to this day, YYYY-MM-DD.", required = false)
-        )
-    ),
-    RECENT_CONVERSATION(
-        "recent_conversation", "Recall last conversation", "Read the last few things you and the assistant said.",
-        "Returns the most recent exchanges from earlier sessions, newest last, with their date and time. Call it when the " +
-            "user continues something from just before (\"make that 7 o'clock\", \"and the other one?\") and you do not know what \"that\" is.",
-        listOf(ToolParam("count", ToolParamType.INTEGER, "How many exchanges, 1-20. Default 6.", required = false))
     );
 
     companion object {
         fun fromFunctionName(name: String): DeviceTool? = entries.firstOrNull { it.functionName == name }
 
-        /** Recalling past conversations is a feature of the assistant itself, always on and not part of any connector. */
-        val ASSISTANT_OWN = setOf(SEARCH_CONVERSATION_HISTORY, RECENT_CONVERSATION)
-
         /** Function names of tools that take seconds (network, screenshot upload). They are declared non-blocking, so the
          *  model keeps talking while they run, and their results wait until the user stops speaking. */
         val NON_BLOCKING_NAMES: Set<String> = setOf(
             WEB_SEARCH, FETCH_WEBPAGE, GET_WEATHER, LOOK_AT_SCREEN
-        ).map { it.functionName }.toSet() + "search_knowledge_base"
+        ).map { it.functionName }.toSet()
     }
 }
 

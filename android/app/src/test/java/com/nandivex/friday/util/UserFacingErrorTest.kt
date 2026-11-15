@@ -1,6 +1,6 @@
 package com.nandivex.friday.util
 
-import com.nandivex.friday.network.GeminiEmbeddingClient
+import com.nandivex.friday.network.HttpFailure
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -100,28 +100,11 @@ class UserFacingErrorTest {
     fun `embedding http failures use their status message, not the generic connection one`() {
         assertEquals(
             "There's a problem with the app setup. Please contact support.",
-            UserFacingError.forThrowable("ctx", GeminiEmbeddingClient.HttpFailure(401, "bad key"))
+            UserFacingError.forThrowable("ctx", HttpFailure(401, "bad key"))
         )
         assertEquals(
             "Too many requests right now. Please wait a moment and try again.",
-            UserFacingError.forThrowable("ctx", GeminiEmbeddingClient.HttpFailure(429, "slow down"))
-        )
-    }
-
-    @Test
-    fun `exhausted retries describe the underlying failure`() {
-        assertEquals(
-            "The service is temporarily unavailable. Please try again shortly.",
-            UserFacingError.forThrowable(
-                "ctx",
-                GeminiEmbeddingClient.DocumentEmbeddingRetryExhausted(GeminiEmbeddingClient.HttpFailure(503, "down"))
-            )
-        )
-        assertEquals(
-            "No internet connection. Please check Wi-Fi and try again.",
-            UserFacingError.forThrowable(
-                "ctx", GeminiEmbeddingClient.DocumentEmbeddingRetryExhausted(UnknownHostException())
-            )
+            UserFacingError.forThrowable("ctx", HttpFailure(429, "slow down"))
         )
     }
 

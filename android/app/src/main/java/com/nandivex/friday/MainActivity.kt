@@ -53,18 +53,7 @@ import com.nandivex.friday.ui.LicenseSummary
 import com.nandivex.friday.viewmodel.AccessState
 import com.nandivex.friday.viewmodel.AccessViewModel
 
-/** A missing declared size passes here; the streaming read enforces the limit in that case. */
-internal fun isPdfWithinLimit(declaredSizeBytes: Long?, maxBytes: Int = 10 * 1024 * 1024): Boolean =
-    declaredSizeBytes == null || declaredSizeBytes <= maxBytes
-
 class MainActivity : ComponentActivity() {
-
-    companion object {
-        /** Inline base64 PDF requests must stay well under Gemini's ~20 MB request limit. */
-        const val MAX_PDF_BYTES = 10 * 1024 * 1024
-    }
-
-    private class PdfTooLargeException : IOException("PDF exceeds 10 MB")
 
     // Held at Activity scope (not just inside the Compose tree) so onStart/onStop below can
     // reach the same instance Compose is observing.
@@ -86,37 +75,6 @@ class MainActivity : ComponentActivity() {
         }
         startActivity(launchIntent)
         finishAffinity()
-    }
-
-    /** Reads a bounded PDF intact so Gemini can process its visual document context directly. */
-    private fun readKnowledgePdf(uri: Uri): Pair<String, ByteArray>? {
-        var declaredSize: Long? = null
-        val displayName = contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-            if (cursor.moveToFirst()) {
-                if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) declaredSize = cursor.getLong(sizeIndex)
-                if (nameIndex >= 0) cursor.getString(nameIndex) else null
-            } else null
-        }
-        if (displayName?.substringAfterLast('.', "")?.lowercase() != "pdf") return null
-        // Reject early from the declared size so an oversized file is never read into memory.
-        if (!isPdfWithinLimit(declaredSize, MAX_PDF_BYTES)) throw PdfTooLargeException()
-        val bytes = contentResolver.openInputStream(uri)?.use { stream ->
-            val output = java.io.ByteArrayOutputStream()
-            val buffer = ByteArray(8192)
-            while (true) {
-                val count = stream.read(buffer)
-                if (count < 0) break
-                if (output.size() + count > MAX_PDF_BYTES) throw PdfTooLargeException()
-                output.write(buffer, 0, count)
-            }
-            output.toByteArray()
-        }
-        val pdfBytes = bytes ?: return null
-        if (pdfBytes.isEmpty()) return null
-        val title = displayName?.substringBeforeLast('.')?.takeIf { it.isNotBlank() } ?: "Untitled document"
-        return title to pdfBytes
     }
 
     /** Kiosk tablet: hide the status bar (clock/battery/network) and nav bar, swipe brings them
@@ -248,40 +206,6 @@ class MainActivity : ComponentActivity() {
                 onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
 
-            val imagePickerLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.GetContent()
-            ) { uri -> viewModel.onImagePicked(uri) }
-
-            val pdfPickerLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.OpenDocument()
-            ) { uri ->
-                if (uri == null) return@rememberLauncherForActivityResult
-                lifecycleScope.launch {
-                    var tooLarge = false
-                    val parsed = withContext(Dispatchers.IO) {
-                        try {
-                            readKnowledgePdf(uri)
-                        } catch (_: PdfTooLargeException) {
-                            tooLarge = true
-                            null
-                        } catch (_: IOException) {
-                            null
-                        } catch (_: SecurityException) {
-                            null
-                        } catch (_: IllegalArgumentException) {
-                            null
-                        }
-                    }
-                    if (parsed != null) {
-                        viewModel.onKnowledgePdfPicked(parsed.first, parsed.second)
-                    } else if (tooLarge) {
-                        viewModel.onKnowledgePdfTooLarge()
-                    } else {
-                        viewModel.onPdfFileUploadFailed()
-                    }
-                }
-            }
-
             var themeMode by remember { mutableStateOf(ThemePrefs.load(this@MainActivity)) }
             AssistantTheme(themeMode) {
                 Surface(
@@ -339,7 +263,6 @@ class MainActivity : ComponentActivity() {
                                     android.content.res.Configuration.UI_MODE_NIGHT_YES
                                 ActivePalette.current = paletteFor(mode, night)
                             },
-                            onKnowledgeTapped = { viewModel.onKnowledgeTapped() },
                             onHomeTapped = { viewModel.onHomeTapped() },
                             onConnectorsTapped = { viewModel.onConnectorsTapped() },
                             onDismissWhatsNew = { viewModel.onDismissWhatsNew() },
@@ -356,13 +279,6 @@ class MainActivity : ComponentActivity() {
                             onRestoreMemory = { viewModel.onRestoreMemory(it) },
                             onHistoryTapped = { viewModel.onHistoryTapped() },
                             onHelpTapped = { viewModel.onHelpTapped() },
-                            onPickImage = { imagePickerLauncher.launch("image/*") },
-                            onSaveImage = { title, description -> viewModel.onSaveImage(title, description) },
-                            onCancelPendingImage = { viewModel.onCancelPendingImage() },
-                            onUpdateImage = { id, title, description -> viewModel.onUpdateImage(id, title, description) },
-                            onDeleteImage = { viewModel.onDeleteImage(it) },
-                            onClearImages = { viewModel.onClearImages() },
-                            onDismissShownImage = { viewModel.onDismissShownImage() },
                             onSendFeatureRequest = { form, done ->
                                 viewModel.onSendFeatureRequest(form, done)
                             },
@@ -387,7 +303,6 @@ class MainActivity : ComponentActivity() {
                             onRefreshLicense = { access.refresh(quiet = true) },
                             onDismissSettings = { viewModel.onDismissSettings() },
                             onClearApiKey = { viewModel.onClearApiKey() },
-                            onClearEmbeddingApiKey = { viewModel.onClearEmbeddingApiKey() },
                             onLiveModelSelected = { id -> viewModel.onLiveModelSelected(id) },
                             onVoiceSelected = { voice -> viewModel.onVoiceSelected(voice) },
                             onLanguageSelected = { code -> viewModel.onLanguageSelected(code) },
@@ -396,21 +311,9 @@ class MainActivity : ComponentActivity() {
                             onAnnounceNotificationsToggled = { enabled -> viewModel.onAnnounceNotificationsToggled(enabled) },
                             onPersonalitySelected = { id -> viewModel.onPersonalitySelected(id) },
                             onOwnerNameChanged = { name -> viewModel.onOwnerNameChanged(name) },
-                            onSaveDeveloperChanges = { apiKey, embeddingApiKey, retrievalLimit ->
-                                viewModel.onSaveDeveloperChanges(
-                                    apiKey,
-                                    embeddingApiKey,
-                                    retrievalLimit
-                                )
+                            onSaveDeveloperChanges = { apiKey ->
+                                viewModel.onSaveDeveloperChanges(apiKey)
                             },
-                            onAddKnowledgeDocument = { title, text -> viewModel.onAddKnowledgeDocument(title, text) },
-                            onUpdateKnowledgeDocument = { id, title, text -> viewModel.onUpdateKnowledgeDocument(id, title, text) },
-                            onDeleteKnowledgeDocument = { id -> viewModel.onDeleteKnowledgeDocument(id) },
-                            onResetKnowledge = { viewModel.onResetKnowledge() },
-                            onUploadPdfFile = {
-                                pdfPickerLauncher.launch(arrayOf("application/pdf"))
-                            },
-                            onDismissKnowledgeDocumentError = { viewModel.onDismissKnowledgeDocumentError() },
                             onDismissToast = { viewModel.onDismissToast() },
                             onRemoveLicense = { access.removeKey() },
                         ),

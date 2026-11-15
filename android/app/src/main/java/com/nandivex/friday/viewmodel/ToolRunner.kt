@@ -2,7 +2,6 @@ package com.nandivex.friday.viewmodel
 
 import android.util.Log
 import com.nandivex.friday.data.AppSettingsStore
-import com.nandivex.friday.data.ConversationHistoryTools
 import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.data.DeviceToolRunner
 import com.nandivex.friday.data.MEMORY_FORGET_TOOL
@@ -25,8 +24,6 @@ internal class ToolRunner(
     private val memoryStore: MemoryStore,
     private val settingsStore: AppSettingsStore,
     private val deviceToolRunner: DeviceToolRunner,
-    private val knowledge: KnowledgeManager,
-    private val historyTools: () -> ConversationHistoryTools,
     /** A running or warm session was built with the old personality; discard it. */
     private val onPersonalityChanged: () -> Unit,
     private val onMemorySaved: (String) -> Unit = {}
@@ -34,7 +31,6 @@ internal class ToolRunner(
     companion object {
         /** What the home screen shows while a tool runs, e.g. "Set alarm". */
         fun displayName(functionName: String): String = when {
-            functionName == "search_knowledge_base" -> "Searching knowledge"
             functionName == MEMORY_SAVE_TOOL -> "Saving to memory"
             functionName == MEMORY_FORGET_TOOL -> "Forgetting a memory"
             functionName == SET_PERSONALITY_TOOL -> "Changing personality"
@@ -50,10 +46,8 @@ internal class ToolRunner(
             runToolSafely(call.name) { runMemoryTool(call.name, call.args) }
         } else if (call.name == SET_PERSONALITY_TOOL) {
             runToolSafely(call.name) { runPersonalityTool(call.args) }
-        } else if (call.name != "search_knowledge_base") {
-            "status=unknown_tool\nThere is no tool named ${call.name}. Do not call it again; tell the user you cannot do that with the tools you have."
         } else {
-            knowledge.runSearchTool(call.args.optString("query"), call.id, trace)
+            "status=unknown_tool\nThere is no tool named ${call.name}. Do not call it again; tell the user you cannot do that with the tools you have."
         }
     }
 
@@ -115,16 +109,9 @@ internal class ToolRunner(
 
     /** Runs a device tool and returns the text handed back to the voice model. */
     private suspend fun runDeviceTool(tool: DeviceTool, args: JSONObject): String {
-        if (tool !in state.value.settings.enabledDeviceTools && tool !in DeviceTool.ASSISTANT_OWN) {
+        if (tool !in state.value.settings.enabledDeviceTools) {
             return "status=disabled\nThe user has turned this tool off. Tell them it is switched off in Settings."
         }
-        if (tool == DeviceTool.SEARCH_CONVERSATION_HISTORY || tool == DeviceTool.RECENT_CONVERSATION) {
-            return UntrustedContent.track(tool, runToolSafely(tool.functionName) { runHistoryTool(tool, args) })
-        }
-        return UntrustedContent.track(tool, deviceToolRunner.run(tool, args))
-    }
-
-    private suspend fun runHistoryTool(tool: DeviceTool, args: JSONObject): String = withContext(Dispatchers.IO) {
-        historyTools().run(tool, args)
+        return UntrustedContent.track(tool, deviceToolRunner.run(tool, args))
     }
 }

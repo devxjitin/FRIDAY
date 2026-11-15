@@ -17,7 +17,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun slowToolsAreDeclaredNonBlocking() {
-        listOf("web_search", "fetch_webpage", "get_weather", "look_at_screen", "search_knowledge_base")
+        listOf("web_search", "fetch_webpage", "get_weather", "look_at_screen")
             .forEach { assertEquals(it, "NON_BLOCKING", declaration(it).optString("behavior")) }
     }
 
@@ -27,7 +27,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun everyNonBlockingNameIsARealTool() {
-        val known = DeviceTool.entries.map { it.functionName } + "search_knowledge_base"
+        val known = DeviceTool.entries.map { it.functionName }
         assertTrue(DeviceTool.NON_BLOCKING_NAMES.all { it in known })
     }
 

@@ -34,24 +34,16 @@ class PastConversationManagementTest {
         store.clearAll()
         assertEquals(0L, store.count())
         assertTrue(store.recent(10).isEmpty())
-        assertTrue(store.pendingEmbedding(10).isEmpty())
         store.append("s", "again", "ok", at(2))
         assertEquals(1L, store.count())
     }
 
-    @Test fun `a deleted exchange is no longer found by search`() = withStore { store ->
-        val id = store.append("s", "my locker code is 4821", "Saved", at(1))!!
-        store.delete(id)
-        assertEquals(0L, store.termCount("locker", null, null))
-    }
-
-    @Test fun `size estimate grows with exchanges and more with embeddings`() = withStore { store ->
+    @Test fun `size estimate grows with the number of exchanges`() = withStore { store ->
         assertEquals(0L, store.approxBytes())
-        val a = store.append("s", "one", "a", at(1))!!
+        store.append("s", "one", "a", at(1))
+        val one = store.approxBytes()
+        assertTrue(one > 0)
         store.append("s", "two", "b", at(2))
-        val withoutEmbeddings = store.approxBytes()
-        assertTrue(withoutEmbeddings > 0)
-        store.setEmbedding(a, FloatArray(768).also { it[0] = 1f })
-        assertTrue(store.approxBytes() > withoutEmbeddings)
+        assertTrue(store.approxBytes() > one)
     }
 }

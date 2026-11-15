@@ -3,6 +3,14 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.8 - 2026-11-15
+
+### Removed
+- The Knowledge base (documents and PDFs), the Images page and the show-picture command. FRIDAY no longer reads your own documents; photos can still be opened through Files.
+- The tools that searched past conversations. The History page stays and still shows what you and FRIDAY said before.
+- The separate Knowledge API key and the search-sections setting in Settings. The app is smaller and starts faster without them.
+- Old cloud servers, their tests and website are gone from the project.
+
 ## 0.0.7 - 2026-11-15
 
 ### Changed

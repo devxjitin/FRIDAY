@@ -8,8 +8,7 @@ import org.junit.Test
 class ConnectorsTest {
     @Test fun everyDeviceToolBelongsToExactlyOneConnector() {
         val owners = PhoneConnectors.all.flatMap { c -> c.tools.map { it to c.id } }.groupBy({ it.first }, { it.second })
-        DeviceTool.entries.filter { it !in DeviceTool.ASSISTANT_OWN }.forEach { assertEquals("$it", 1, owners[it]?.size ?: 0) }
-        DeviceTool.ASSISTANT_OWN.forEach { assertEquals("$it", 0, owners[it]?.size ?: 0) }
+        DeviceTool.entries.forEach { assertEquals("$it", 1, owners[it]?.size ?: 0) }
     }
 
     @Test fun functionNamesAreUnique() {

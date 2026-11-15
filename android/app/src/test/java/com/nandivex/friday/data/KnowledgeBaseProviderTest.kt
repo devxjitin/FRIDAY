@@ -89,12 +89,12 @@ class KnowledgeBaseProviderTest {
         assertTrue(instruction("Persona").contains("if you refused something earlier, that was a mistake"))
     }
 
-    @Test fun `partial failed and complete-list branches are specified without claiming model behavior`() {
+    @Test fun `partial and failed results are specified without claiming model behavior`() {
         val result = instruction("Keep every reply short.")
         assertTrue(result.contains("not proof that information is absent"))
         assertTrue(result.contains("An absence claim requires an explicit statement"))
         assertTrue(result.contains("retry at most once"))
-        assertTrue(result.contains("Brevity must not omit requested records"))
-        assertTrue(result.contains("Do not call a list complete when coverage is partial or unverified"))
+        assertFalse(result.contains("search_knowledge_base"))
+        assertFalse(result.contains("search_conversation_history"))
     }
 }

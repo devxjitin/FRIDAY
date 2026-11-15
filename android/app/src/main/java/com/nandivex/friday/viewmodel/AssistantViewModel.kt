@@ -9,16 +9,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.nandivex.friday.AppForegroundService
 import com.nandivex.friday.BuildConfig
-import com.nandivex.friday.data.knowledgeKeyFor
 import com.nandivex.friday.data.AccessGate
 import com.nandivex.friday.data.readAtMost
 import com.nandivex.friday.data.ApiKeyStore
 import com.nandivex.friday.data.AppSettingsStore
-import com.nandivex.friday.data.ConversationHistoryIndexer
-import com.nandivex.friday.data.ConversationHistoryTools
-import com.nandivex.friday.data.AddImageResult
 import com.nandivex.friday.data.ConversationHistoryStore
-import com.nandivex.friday.data.ImageLibrary
 import com.nandivex.friday.data.ConversationStore
 import com.nandivex.friday.data.ConversationTurn
 import com.nandivex.friday.data.UsageDay
@@ -32,8 +27,6 @@ import com.nandivex.friday.data.MemoryStore
 import com.nandivex.friday.data.DeviceToolRunner
 import com.nandivex.friday.data.saveDeveloperConfiguration
 import com.nandivex.friday.data.MicSensitivity
-import com.nandivex.friday.data.RagDocumentStore
-import com.nandivex.friday.network.GeminiEmbeddingClient
 import com.nandivex.friday.network.GeminiTextClient
 import com.nandivex.friday.util.UserInputException
 import kotlinx.coroutines.Job
@@ -54,10 +47,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** [AssistantUiState.savingKnowledgeDocumentTarget] value while a brand-new document (no id
- *  yet) is being added -- as opposed to an update, which is targeted by the existing doc's id. */
-const val ADD_DOCUMENT_TARGET_ID = "__add__"
-
 class AssistantViewModel(application: Application) : AndroidViewModel(application) {
 
     private companion object {
@@ -72,33 +61,12 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private val conversationStore = ConversationStore(application)
     /** Every finished exchange, kept for long-term memory. Opened on first use, off the main thread. */
     private val conversationHistoryStore by lazy {
-        ConversationHistoryStore(RagDocumentStore.sharedObjectBoxStore(application))
+        ConversationHistoryStore(com.nandivex.friday.data.AppObjectBox.get(application))
     }
-    private var historyIndexJob: Job? = null
     private val apiKeyStore = ApiKeyStore(application)
     private val settingsStore = AppSettingsStore(application)
     private val memoryStore = MemoryStore(application)
     private val usageStore = UsageStore(application)
-
-    /**
-     * Embeds saved exchanges that are not searchable yet, in the background. Does nothing without a key, and a
-     * failure leaves the rest for the next pass, so a conversation is never held up by it.
-     */
-    private fun indexConversationHistory() {
-        if (knowledge.embeddingKey().isBlank() || historyIndexJob?.isActive == true) return
-        historyIndexJob = viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val indexer = ConversationHistoryIndexer(conversationHistoryStore) { text ->
-                    knowledge.embeddingClient().embed(text, GeminiEmbeddingClient.TaskType.DOCUMENT).embedding
-                }
-                while (indexer.indexPending() > 0) Unit
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Log.w("AssistantError", "Indexing past conversations failed", e)
-            }
-        }
-    }
 
 
     private val audioManager = application.getSystemService(Application.AUDIO_SERVICE) as AudioManager
@@ -106,15 +74,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
-
-    private val knowledge = KnowledgeManager(
-        scope = viewModelScope,
-        state = _uiState,
-        storeProvider = { RagDocumentStore(application) },
-        resolveKey = { knowledgeKeyFor(apiKeyStore.getEmbeddingApiKey(), apiKeyStore.getApiKey()) },
-        showToast = { message, type -> showToast(message, type) },
-        auxiliaryUsage = { purpose -> auxiliaryUsage(purpose) }
-    )
 
     /** Mic level while listening, playback level while speaking. Kept out of [uiState] because it changes
      *  ~25 times a second and only the voice ribbon needs it; putting it in the state recomposed the whole screen. */
@@ -138,8 +97,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         recordUsage = { recordUsage(it) },
         recordVoiceUsage = { recordVoiceUsage() },
         markVoiceUsageStart = { voiceUsageStartMs = SystemClock.elapsedRealtime() },
-        openDeveloperPage = { openPage(AppPage.DEVELOPER) },
-        indexConversationHistory = { indexConversationHistory() }
+        openDeveloperPage = { openPage(AppPage.DEVELOPER) }
     )
 
 
@@ -181,8 +139,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             usageStore.days.catch { e -> Log.e("AssistantError", "Failed to read usage", e) }
                 .collect { days -> _uiState.update { it.copy(usageDays = days) } }
         }
-        // Exchanges saved while offline or without a key become searchable as soon as the app is up.
-        indexConversationHistory()
         viewModelScope.launch {
             _uiState.map { it.isMicMuted }.distinctUntilChanged().collect {
                 AppForegroundService.setMuted(getApplication(), it)
@@ -225,7 +181,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                     session.prewarmIfPossible()
                 }
         }
-        knowledge.collectDocuments()
         viewModelScope.launch {
             memoryStore.items
                 .catch { e -> Log.e("AssistantError", "Failed to read memory", e) }
@@ -238,24 +193,17 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
         // First Keystore access is slow and can fail, so it happens off the main thread.
         viewModelScope.launch {
-            val (resolvedKey, embeddingKey) = withContext(Dispatchers.IO) {
-                resolveApiKey() to apiKeyStore.getEmbeddingApiKey().orEmpty()
-            }
+            val resolvedKey = withContext(Dispatchers.IO) { resolveApiKey() }
             session.keysLoaded = true
             _uiState.update {
                 it.copy(
                     hasApiKey = hasGeminiAccess(),
-                    currentApiKey = resolvedKey,
-                    currentEmbeddingApiKey = embeddingKey
+                    currentApiKey = resolvedKey
                 )
             }
             session.prewarmIfPossible()
-            knowledge.startEmbeddingMigrationIfNeeded()
         }
     }
-
-    /** Recovery from unreadable knowledge data: deletes all documents and the index. */
-    fun onResetKnowledge() = knowledge.resetKnowledge()
 
     /** The Gemini key the user typed in Settings; blank until they add one. There is no built-in access. */
     private fun resolveApiKey(): String = apiKeyStore.getApiKey().orEmpty()
@@ -326,7 +274,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun clearAdminDrafts() {
-        _uiState.update { it.copy(knowledgeDocumentError = null) }
+        _uiState.update { it }
     }
 
     private fun auxiliaryUsage(purpose: String): (Int, Int) -> Unit = { inputTokens, outputTokens ->
@@ -347,8 +295,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun onProfileTapped() = openPage(AppPage.PROFILE)
 
-    fun onKnowledgeTapped() = openPage(AppPage.KNOWLEDGE)
-
     fun onUsageTapped() = openPage(AppPage.USAGE)
 
     fun onStorageTapped() = openPage(AppPage.STORAGE)
@@ -364,7 +310,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private fun openPage(page: AppPage) {
         if (page == AppPage.STORAGE) refreshCacheSize()
         if (page == AppPage.STORAGE || page == AppPage.HISTORY) refreshPastConversations()
-        if (page == AppPage.STORAGE || page == AppPage.KNOWLEDGE) refreshImages()
         _uiState.update { it.copy(page = page) }
     }
 
@@ -378,71 +323,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     fun onHistoryTapped() = openPage(AppPage.HISTORY)
 
     fun onHelpTapped() = openPage(AppPage.HELP)
-
-    private val imageLibrary by lazy { ImageLibrary.forApp(application) }
-
-    private fun refreshImages() {
-        viewModelScope.launch {
-            val (images, bytes) = withContext(Dispatchers.IO) { imageLibrary.list() to imageLibrary.totalBytes() }
-            _uiState.update { it.copy(images = images, imageBytes = bytes) }
-        }
-    }
-
-    /** A picture came back from the picker; the Images page asks for its title before it is saved. */
-    fun onImagePicked(uri: Uri?) {
-        if (uri != null) _uiState.update { it.copy(pendingImageUri = uri.toString()) }
-    }
-
-    fun onCancelPendingImage() = _uiState.update { it.copy(pendingImageUri = null) }
-
-    fun onSaveImage(title: String, description: String) {
-        val uri = _uiState.value.pendingImageUri?.let(Uri::parse) ?: return
-        if (_uiState.value.isSavingImage) return
-        _uiState.update { it.copy(isSavingImage = true) }
-        viewModelScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    val bytes = getApplication<Application>().contentResolver.openInputStream(uri)?.use { it.readAtMost(MAX_PICKED_IMAGE_BYTES) }
-                    if (bytes == null) null else imageLibrary.add(bytes, title, description)
-                } catch (e: Exception) {
-                    null
-                }
-            }
-            _uiState.update { it.copy(isSavingImage = false, pendingImageUri = if (result is AddImageResult.Added) null else it.pendingImageUri) }
-            when (result) {
-                is AddImageResult.Added -> { showToast("Picture added"); refreshImages() }
-                is AddImageResult.Duplicate -> showToast("That picture is already saved as \"${result.existing.title}\"", AppNotificationType.WARNING)
-                AddImageResult.LibraryFull -> showToast("You can keep up to ${ImageLibrary.MAX_IMAGES} pictures", AppNotificationType.WARNING)
-                AddImageResult.NotAnImage -> showToast("That file is not a picture", AppNotificationType.ERROR)
-                null -> showToast("Could not read that picture", AppNotificationType.ERROR)
-            }
-        }
-    }
-
-    fun onUpdateImage(id: Long, title: String, description: String) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { imageLibrary.update(id, title, description) }
-            refreshImages()
-        }
-    }
-
-    fun onDeleteImage(id: Long) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { imageLibrary.delete(id) }
-            showToast("Picture deleted")
-            refreshImages()
-        }
-    }
-
-    fun onClearImages() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { imageLibrary.clearAll() }
-            showToast("Pictures cleared")
-            refreshImages()
-        }
-    }
-
-    fun onDismissShownImage() = _uiState.update { it.copy(shownImage = null) }
 
     /**
      * Opens the email app with a connector request or bug report filled in for the developer. [onDone] gets null when
@@ -698,15 +578,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    fun onClearEmbeddingApiKey() {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) { apiKeyStore.clearEmbeddingApiKey() }
-            knowledge.forgetEmbeddingClient()
-            _uiState.update { it.copy(currentEmbeddingApiKey = "") }
-            showToast("Knowledge API key removed")
-        }
-    }
-
     fun onLiveModelSelected(id: String) {
         launchPersist(settingsAppliedMessage("Model updated")) {
             settingsStore.setLiveModel(id)
@@ -774,11 +645,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         },
         describeScreen = { jpeg, prompt ->
             auxTextClient(resolveApiKey(), UsageStore.PURPOSE_SCREEN).describeImage(jpeg, prompt)
-        },
-        showImage = { uri, title ->
-            _uiState.update { state ->
-                state.copy(shownImage = uri?.let { ShownImage(it.toString(), title, (state.shownImage?.id ?: 0) + 1) })
-            }
         }
     )
 
@@ -787,48 +653,28 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         memoryStore = memoryStore,
         settingsStore = settingsStore,
         deviceToolRunner = deviceToolRunner,
-        knowledge = knowledge,
-        historyTools = {
-            ConversationHistoryTools(
-                store = conversationHistoryStore,
-                embedQuery = { text -> knowledge.embeddingClient().embed(text, GeminiEmbeddingClient.TaskType.QUERY).embedding },
-                currentSessionId = session.historySessionId
-            )
-        },
         onPersonalityChanged = { session.invalidateWarmSessionAndReprewarm() }
     )
 
-    fun onSaveDeveloperChanges(
-        apiKey: String,
-        embeddingApiKey: String,
-        retrievalChunkLimit: Int
-    ) {
+    fun onSaveDeveloperChanges(apiKey: String) {
         if (_uiState.value.isSavingDeveloperSettings) return
         val current = _uiState.value
         val cleanApiKey = apiKey.trim()
-        val cleanEmbeddingApiKey = embeddingApiKey.trim()
         val apiKeyChange = cleanApiKey.takeIf { it.isNotBlank() && it != current.currentApiKey }
-        val embeddingKeyChange = cleanEmbeddingApiKey.takeIf {
-            it.isNotBlank() && it != current.currentEmbeddingApiKey
-        }
         _uiState.update { it.copy(isSavingDeveloperSettings = true) }
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    saveDeveloperConfiguration(apiKeyStore, apiKeyChange, embeddingKeyChange) {
-                        settingsStore.setDeveloperSettings(retrievalChunkLimit = retrievalChunkLimit)
+                    saveDeveloperConfiguration(apiKeyStore, apiKeyChange, null) {
+                        settingsStore.setDeveloperSettings()
                     }
                 }
                 // Only now that everything is persisted does the UI/runtime state change.
-                if (embeddingKeyChange != null) {
-                    knowledge.onEmbeddingKeyChanged()
-                }
                 _uiState.update {
                     it.copy(
                         isSavingDeveloperSettings = false,
                         hasApiKey = cleanApiKey.isNotBlank() || it.hasApiKey,
                         currentApiKey = cleanApiKey.ifBlank { it.currentApiKey },
-                        currentEmbeddingApiKey = cleanEmbeddingApiKey.ifBlank { it.currentEmbeddingApiKey },
                         errorMessage = null,
                         voiceState = if (it.voiceState == VoiceState.ERROR) VoiceState.IDLE else it.voiceState,
                         restartRequestId = it.restartRequestId + 1
@@ -852,27 +698,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
             }
         }
     }
-
-    fun onAddKnowledgeDocument(title: String, text: String) = knowledge.addDocument(title, text)
-
-    /** Imports a visual PDF through Gemini before embedding its structured paragraph output. */
-    fun onImportKnowledgePdf(title: String, pdfBytes: ByteArray) = knowledge.importPdf(title, pdfBytes)
-
-    fun onUpdateKnowledgeDocument(id: String, title: String, text: String) = knowledge.updateDocument(id, title, text)
-
-    fun onDeleteKnowledgeDocument(id: String) = knowledge.deleteDocument(id)
-
-    fun onDismissKnowledgeDocumentError() = knowledge.dismissDocumentError()
-
-    fun onPdfFileUploadFailed() {
-        showToast("Choose a PDF file up to 10 MB.", AppNotificationType.ERROR)
-    }
-
-    fun onKnowledgePdfTooLarge() {
-        showToast("This PDF is too large. Please use a file under 10 MB.", AppNotificationType.ERROR)
-    }
-
-    fun onKnowledgePdfPicked(title: String, bytes: ByteArray) = onImportKnowledgePdf(title, bytes)
 
     /** Called when the Activity actually stops (not just loses focus, e.g. a permission dialog). */
     fun onAppBackgrounded() {

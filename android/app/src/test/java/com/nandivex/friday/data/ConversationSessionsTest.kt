@@ -5,7 +5,7 @@ import org.junit.Test
 
 class ConversationSessionsTest {
     private fun turn(id: Long, session: String, user: String, assistant: String, at: Long) =
-        StoredTurn(id, session, user, assistant, at, embedded = true)
+        StoredTurn(id, session, user, assistant, at)
 
     private val turns = listOf(
         turn(1, "a", "what is the weather", "Sunny.", 1_000),

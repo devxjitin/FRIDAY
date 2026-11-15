@@ -1,7 +1,7 @@
 package com.nandivex.friday.util
 
 import android.util.Log
-import com.nandivex.friday.network.GeminiEmbeddingClient
+import com.nandivex.friday.network.HttpFailure
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -32,10 +32,7 @@ object UserFacingError {
         return when (t) {
             is UserMessageException, is UserInputException ->
                 t.message?.takeIf { it.isNotBlank() } ?: "Something went wrong. Please try again."
-            // Retries ran out: describe the failure that kept recurring, not the retry itself.
-            is GeminiEmbeddingClient.DocumentEmbeddingRetryExhausted ->
-                t.cause?.let(::messageFor) ?: "Something went wrong. Please try again."
-            is GeminiEmbeddingClient.HttpFailure -> httpMessage(t.statusCode)
+            is HttpFailure -> httpMessage(t.statusCode)
             is UnknownHostException, is ConnectException ->
                 "No internet connection. Please check Wi-Fi and try again."
             is SocketTimeoutException ->

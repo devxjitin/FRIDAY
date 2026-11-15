@@ -72,8 +72,6 @@ import com.nandivex.friday.ui.components.FeatureRequest
 import com.nandivex.friday.ui.components.FeatureRequestPage
 import com.nandivex.friday.ui.components.HelpPage
 import com.nandivex.friday.ui.components.ProfilePage
-import com.nandivex.friday.ui.components.ImageOverlay
-import com.nandivex.friday.ui.components.ImagesPage
 import com.nandivex.friday.ui.components.AppDrawerContainerColor
 import com.nandivex.friday.ui.components.AppDrawerContent
 import com.nandivex.friday.ui.theme.ThemeMode
@@ -102,7 +100,7 @@ import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.viewmodel.AssistantUiState
 import com.nandivex.friday.viewmodel.VoiceState
 
-private val SETTINGS_PAGES = setOf(AppPage.SETTINGS, AppPage.KNOWLEDGE, AppPage.DEVELOPER)
+private val SETTINGS_PAGES = setOf(AppPage.SETTINGS, AppPage.DEVELOPER)
 
 @Composable
 fun AssistantScreen(
@@ -124,9 +122,7 @@ fun AssistantScreen(
         val currentTab = NavTab.valueOf(uiState.page.name).let {
             when (it) { NavTab.DEVELOPER -> NavTab.SETTINGS; else -> it }
         }
-        // Knowledge has two parts: the documents and the pictures Ultron can show.
-        var knowledgeSection by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
-        // Settings, Knowledge and Developer are one page. While it fades out the state already points elsewhere,
+        // Settings and Developer are one page. While it fades out the state already points elsewhere,
         // so it keeps showing the sub-page it was last on instead of jumping to another one mid-animation.
         val lastSettingsPage = remember { arrayOf(AppPage.SETTINGS) }
         if (uiState.page in SETTINGS_PAGES) lastSettingsPage[0] = uiState.page
@@ -146,7 +142,6 @@ fun AssistantScreen(
             sessionStartMs = if (sessionActive) System.currentTimeMillis() else null
         }
         // Exits that would drop an unsaved Developer draft wait for Save/Discard first.
-        // Settings <-> Knowledge keeps the same page (and draft), so it isn't guarded.
         var settingsDirty by remember { mutableStateOf(false) }
         var pendingNav by remember { mutableStateOf<(() -> Unit)?>(null) }
         val guardedNav: (() -> Unit) -> Unit = { action ->
@@ -175,7 +170,6 @@ fun AssistantScreen(
                         NavTab.HOME -> guardedNav(actions.onHomeTapped)
                         NavTab.USAGE -> guardedNav(actions.onUsageTapped)
                         NavTab.STORAGE -> guardedNav(actions.onStorageTapped)
-                        NavTab.KNOWLEDGE -> guardedNav(actions.onKnowledgeTapped)
                         NavTab.CONNECTORS -> guardedNav(actions.onConnectorsTapped)
                         NavTab.MEMORY -> guardedNav(actions.onMemoryTapped)
                         NavTab.HISTORY -> guardedNav(actions.onHistoryTapped)
@@ -193,8 +187,8 @@ fun AssistantScreen(
         Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout)) {
         AnimatedContent(
             targetState = currentTab,
-            // Settings, Knowledge and Developer share one page, so switching between them keeps an unsaved draft.
-            contentKey = { if (it == NavTab.KNOWLEDGE || it == NavTab.DEVELOPER) NavTab.SETTINGS else it },
+            // Settings and Developer share one page, so switching between them keeps an unsaved draft.
+            contentKey = { if (it == NavTab.DEVELOPER) NavTab.SETTINGS else it },
             transitionSpec = {
                 (fadeIn(tween(240, delayMillis = 70)) + slideInVertically(tween(280)) { it / 30 }) togetherWith fadeOut(tween(110))
             },
@@ -306,7 +300,6 @@ fun AssistantScreen(
                     NavTab.USAGE -> UsagePage(uiState.usageDays, pageModifier)
                     NavTab.STORAGE -> StoragePage(
                         memoryCount = uiState.memories.size,
-                        knowledgeCount = uiState.knowledgeDocuments.size,
                         cacheBytes = uiState.cacheBytes,
                         hasUsage = uiState.usageDays.isNotEmpty(),
                         onClearCache = actions.onClearCache,
@@ -316,11 +309,7 @@ fun AssistantScreen(
                         pastConversationCount = uiState.pastConversationCount,
                         pastConversationBytes = uiState.pastConversationBytes,
                         memoryBytes = uiState.memories.sumOf { it.text.length.toLong() },
-                        knowledgeBytes = uiState.knowledgeDocuments.sumOf { it.text.length.toLong() },
-                        onClearPastConversations = actions.onClearPastConversations,
-                        imageCount = uiState.images.size,
-                        imageBytes = uiState.imageBytes,
-                        onClearImages = actions.onClearImages
+                        onClearPastConversations = actions.onClearPastConversations
                     )
                     NavTab.ABOUT -> AboutPage(
                         assistantName = uiState.settings.assistantName,
@@ -330,30 +319,12 @@ fun AssistantScreen(
                 }
             }
 
-            if (tab in listOf(NavTab.SETTINGS, NavTab.KNOWLEDGE, NavTab.DEVELOPER)) {
-              val onKnowledge = lastSettingsPage[0] == AppPage.KNOWLEDGE
+            if (tab in listOf(NavTab.SETTINGS, NavTab.DEVELOPER)) {
               Column(Modifier.fillMaxSize().padding(top = topReserve)) {
-                if (onKnowledge) KnowledgeSectionSwitch(knowledgeSection) { knowledgeSection = it }
-                if (onKnowledge && knowledgeSection == 1) {
-                val filesDir = androidx.compose.ui.platform.LocalContext.current.filesDir
-                ImagesPage(
-                    images = uiState.images,
-                    pendingUri = uiState.pendingImageUri,
-                    isSaving = uiState.isSavingImage,
-                    imageFile = { com.nandivex.friday.data.ImageLibrary.fileIn(filesDir, it) },
-                    onPick = actions.onPickImage,
-                    onSave = actions.onSaveImage,
-                    onCancelPending = actions.onCancelPendingImage,
-                    onUpdate = actions.onUpdateImage,
-                    onDelete = actions.onDeleteImage,
-                    modifier = Modifier.weight(1f)
-                )
-                } else
                 SettingsPage(
                     modifier = Modifier.weight(1f),
                     page = lastSettingsPage[0],
                     currentApiKey = uiState.currentApiKey,
-                    currentEmbeddingApiKey = uiState.currentEmbeddingApiKey,
                     settings = uiState.settings,
                     onLiveModelSelected = actions.onLiveModelSelected,
                     onVoiceSelected = actions.onVoiceSelected,
@@ -364,23 +335,8 @@ fun AssistantScreen(
                     onOwnerNameChanged = actions.onOwnerNameChanged,
                     onPersonalitySelected = actions.onPersonalitySelected,
                     onClearApiKey = actions.onClearApiKey,
-                    onClearEmbeddingApiKey = actions.onClearEmbeddingApiKey,
                     onSaveDeveloperChanges = actions.onSaveDeveloperChanges,
                     isSavingDeveloper = uiState.isSavingDeveloperSettings,
-                    knowledgeDocuments = uiState.knowledgeDocuments,
-                    isSavingKnowledgeDocument = uiState.isSavingKnowledgeDocument,
-                    knowledgePreparationStage = uiState.knowledgePreparationStage,
-                    savingKnowledgeDocumentTarget = uiState.savingKnowledgeDocumentTarget,
-                    uploadedChunks = uiState.uploadedChunks,
-                    totalChunks = uiState.totalChunks,
-                    knowledgeDocumentError = uiState.knowledgeDocumentError,
-                    onAddKnowledgeDocument = actions.onAddKnowledgeDocument,
-                    onUpdateKnowledgeDocument = actions.onUpdateKnowledgeDocument,
-                    onDeleteKnowledgeDocument = actions.onDeleteKnowledgeDocument,
-                    knowledgeStoreCorrupt = uiState.knowledgeStoreCorrupt,
-                    onResetKnowledge = actions.onResetKnowledge,
-                    onUploadPdfFile = actions.onUploadPdfFile,
-                    onDismissKnowledgeDocumentError = actions.onDismissKnowledgeDocumentError,
                     onDismiss = actions.onDismissSettings,
                     onDirtyChanged = { settingsDirty = it },
                     pendingNavigation = pendingNav,
@@ -422,11 +378,6 @@ fun AssistantScreen(
             isDarkTheme = isDarkTheme,
             modifier = Modifier.align(Alignment.TopCenter)
         )
-
-        // Above the top bar, so the picture's close button is never covered by the bar's buttons.
-        uiState.shownImage?.let { shown ->
-            androidx.compose.runtime.key(shown.id) { ImageOverlay(shown.uri, shown.title, actions.onDismissShownImage) }
-        }
 
         requestType?.let { kind ->
             FeatureRequestPage(
@@ -488,31 +439,6 @@ fun AssistantScreen(
                     }
                 }
             ) { main() }
-        }
-    }
-}
-
-/** Two pills at the top of Knowledge: the documents Ultron can search, and the pictures it can show. */
-@Composable
-private fun KnowledgeSectionSwitch(selected: Int, onSelect: (Int) -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf("Documents", "Pictures").forEachIndexed { index, label ->
-            val on = index == selected
-            Box(
-                Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
-                    .background(if (on) com.nandivex.friday.ui.theme.AssistantSelectedBg else androidx.compose.ui.graphics.Color.Transparent)
-                    .border(
-                        androidx.compose.foundation.BorderStroke(1.dp, com.nandivex.friday.ui.theme.AssistantOutline),
-                        androidx.compose.foundation.shape.RoundedCornerShape(50)
-                    )
-                    .clickable { onSelect(index) }
-                    .padding(horizontal = 18.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    label, fontSize = 14.sp, fontWeight = if (on) FontWeight.Medium else FontWeight.Normal,
-                    color = if (on) com.nandivex.friday.ui.theme.AssistantTextPrimary else AssistantTextSecondary
-                )
-            }
         }
     }
 }
