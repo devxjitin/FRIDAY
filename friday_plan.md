@@ -216,8 +216,8 @@ the plan screen opens when it ends. The trial is app-managed through Firebase.
 **What we build**
 - **The site:** a Firebase Hosting site in `friday-nandivex` (free, automatic HTTPS), served on a **Nandivex domain
   bought at GoDaddy**: `nandivex.in`. I propose the subdomain `friday.nandivex.in`, so the main `nandivex.in` site is not
-  touched. The app's support address is still `support@nandivex.com`, which is the wrong domain; it moves to the `.in`
-  address in Sprint 6.1 (see section 14).
+  touched. The contact address is `contact@nandivex.in`; the app used the wrong domain (`support@nandivex.com`) until
+  it was corrected (see section 14).
   Pages: landing, **Download**, sideloading guide with pictures (including "Allow restricted settings"), privacy
   policy, terms, support contact.
 - **The domain steps:** I add the custom domain in Firebase Hosting, which gives the DNS records to create. **You** add
@@ -269,8 +269,8 @@ launcher apps instead). **To add in Sprint 6.1:** `REQUEST_INSTALL_PACKAGES`, fo
 Done in Sprint 2.3 (README, strings, channels, help page). Still open:
 - `git grep -i ultron` should only hit `track.md` history and `docs/ultron-changelog.md`. Check `docs/`, and delete the
   empty folders left under `mcp/` on the dev PC (git does not track them).
-- **Support email:** `support@nandivex.com` is hard-coded in `HelpPage.kt`, `AboutPage.kt`, `README.md` and an old
-  changelog line. The domain is `nandivex.in`, so change them to the real support mailbox on it (it must exist first).
+- **Contact email:** `contact@nandivex.in`. The app, README and an old changelog line said `support@nandivex.com`, the
+  wrong domain; fixed in the contact-email change. The website's support page and the privacy policy use it too.
 - `docs/CI_CD.md` still describes the AWS OTA release and is rewritten with the new release workflow (Sprint 6.2).
 - Update `docs/PRIVACY_PLAN.md` and the privacy policy: the app no longer touches contacts, calls, files or location
   beyond the Wi-Fi name, and screen text goes to Gemini.
