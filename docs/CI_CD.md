@@ -43,10 +43,14 @@ To release:
    - checks the APK is signed (and, if the repository variable `RELEASE_CERT_SHA256` is set, with that exact key);
    - reads the **live** `latest.json`. If it cannot be read, or it is newer or equal, the release stops. A 404 on both
      addresses means this is the first release;
-   - builds the website files (`scripts/release_files.py build`): `FRIDAY.apk`, `FRIDAY-<versionCode>.apk`, then
-     `latest.json` last;
-   - deploys `site/` to Firebase Hosting, and checks the live site serves the new version and the right APK size;
-   - saves the APK in a GitHub release, so every version stays available (Hosting only keeps the current one).
+   - builds the release files (`scripts/release_files.py build`): `release-assets/FRIDAY.apk` and `site/latest.json`, whose
+     `apkUrl` is `https://github.com/devxjitin/FRIDAY/releases/download/<tag>/FRIDAY.apk`;
+   - publishes the APK in a GitHub release (a re-run replaces the asset), then downloads it back and checks the SHA-256;
+   - only then deploys `site/` to Firebase Hosting (so `latest.json` never points at a file that is not there), and checks
+     the live site serves the new version.
+
+The APK is a GitHub release asset, not a Hosting file, because Firebase's free Spark plan refuses executable files
+("Executable files are forbidden on the Spark billing plan"). Every version stays available in the releases.
 
 `latest.json` holds `versionCode`, `versionName`, `apkUrl`, `sha256`, `sizeBytes`, `minAndroid`, `rollout` and `notes`. The
 app (`UpdateRules.kt`) offers an update only for a newer version code, a host in its allow-list, a matching SHA-256 and a
@@ -57,10 +61,12 @@ a fixed bucket from 0 to 99 and offers the update only when the bucket is lower 
 
 - `site/` is the whole website (home, download, install guide, privacy, terms). It is static HTML, one stylesheet, one script
   and no outside resources; the Content Security Policy in `firebase.json` blocks everything else.
-- `latest.json`, `FRIDAY.apk`, `FRIDAY-*.apk` and `release-notes.txt` are written into `site/` by the workflow and are
-  gitignored.
-- Cache rules (`firebase.json`): `latest.json` is never cached, `FRIDAY.apk` for five minutes, and each versioned APK is
-  immutable.
+- `latest.json` and `release-notes.txt` are written into `site/` by the workflow and are gitignored. No APK may be in `site/`.
+- `/FRIDAY.apk` on the site is a redirect (`firebase.json`) to the newest release asset on GitHub, so the download button and
+  old links keep working.
+- Cache rules (`firebase.json`): `latest.json` is never cached.
+- The app downloads from github.com only for this repository's releases, and accepts GitHub's redirect to
+  `release-assets.githubusercontent.com` / `objects.githubusercontent.com` (`UpdateRules.kt`).
 
 ## Secrets and variables
 

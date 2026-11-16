@@ -65,6 +65,28 @@ class UpdateRulesTest {
 
     @Test fun aManifestPointingAtAnotherHostIsRefused() {
         assertNull(UpdateRules.parse(json(url = "\"https://evil.example/FRIDAY.apk\"")))
+        assertNull(UpdateRules.parse(json(url = "\"https://github.com/someone-else/FRIDAY/releases/download/v1/FRIDAY.apk\"")))
+    }
+
+    @Test fun theApkMayBeOurOwnGitHubReleaseAsset() {
+        val release = "https://github.com/devxjitin/FRIDAY/releases/download/v0.0.22/FRIDAY.apk"
+        assertTrue(UpdateRules.isAllowedApkUrl(release))
+        assertTrue(UpdateRules.isAllowedApkUrl("https://friday.nandivex.in/FRIDAY.apk"))
+        assertEquals(release, UpdateRules.parse(json(url = "\"$release\""))!!.apkUrl)
+        assertFalse(UpdateRules.isAllowedApkUrl("https://github.com/devxjitin/FRIDAY/raw/main/FRIDAY.apk"))
+        assertFalse(UpdateRules.isAllowedApkUrl("https://github.com/devxjitin/other/releases/download/v1/FRIDAY.apk"))
+        assertFalse(UpdateRules.isAllowedApkUrl("https://github.com.evil.example/devxjitin/FRIDAY/releases/download/v1/a.apk"))
+        assertFalse(UpdateRules.isAllowedApkUrl("http://github.com/devxjitin/FRIDAY/releases/download/v0.0.22/FRIDAY.apk"))
+        assertFalse(UpdateRules.isAllowedApkUrl("https://github.com@evil.example/devxjitin/FRIDAY/releases/download/v1/a.apk"))
+    }
+
+    @Test fun aGitHubDownloadMayEndInItsAssetStoreButManifestsMayNotComeFromThere() {
+        assertTrue(UpdateRules.isAllowedDownloadUrl("https://release-assets.githubusercontent.com/github-production-release-asset/1/a?x=1"))
+        assertTrue(UpdateRules.isAllowedDownloadUrl("https://objects.githubusercontent.com/github-production-release-asset/1/a"))
+        assertFalse(UpdateRules.isAllowedDownloadUrl("https://evil.example/a.apk"))
+        assertFalse(UpdateRules.isAllowedDownloadUrl("http://release-assets.githubusercontent.com/a"))
+        assertFalse(UpdateRules.isAllowedUrl("https://github.com/devxjitin/FRIDAY/releases/download/v1/latest.json"))
+        assertNull(UpdateRules.parse(json(url = "\"https://release-assets.githubusercontent.com/a.apk\"")))
     }
 
     @Test fun aPhoneIsOfferedOnlyANewerBuild() {

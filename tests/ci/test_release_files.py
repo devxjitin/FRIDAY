@@ -57,9 +57,9 @@ class ChangelogTests(unittest.TestCase):
 
 
 class ManifestTests(unittest.TestCase):
-    def test_a_good_manifest_points_at_the_versioned_apk_on_our_host(self):
-        m = rf.manifest("0.0.21", 100, "FRIDAY-100.apk", SHA, 1000, "notes")
-        self.assertEqual("https://friday.nandivex.in/FRIDAY-100.apk", m["apkUrl"])
+    def test_a_good_manifest_points_at_the_apk_in_this_tags_github_release(self):
+        m = rf.manifest("0.0.21", 100, rf.release_apk_url("v0.0.21"), SHA, 1000, "notes")
+        self.assertEqual("https://github.com/devxjitin/FRIDAY/releases/download/v0.0.21/FRIDAY.apk", m["apkUrl"])
         self.assertEqual(100, m["rollout"])
         self.assertEqual(26, m["minAndroid"])
 
@@ -69,10 +69,17 @@ class ManifestTests(unittest.TestCase):
             dict(size=rf.MAX_APK_BYTES + 1), dict(rollout=101), dict(rollout=-1),
         ]
         for case in cases:
-            args = dict(version_name="0.0.21", version_code=100, apk_name="FRIDAY-100.apk", sha256=SHA, size=1000, notes="n", rollout=100)
+            args = dict(version_name="0.0.21", version_code=100, apk_url=rf.release_apk_url("v0.0.21"), sha256=SHA, size=1000, notes="n", rollout=100)
             args.update(case)
             with self.subTest(case=case), self.assertRaises(rf.ReleaseError):
                 rf.manifest(**args)
+
+    def test_a_manifest_for_another_repository_or_host_is_refused(self):
+        for url in ("https://evil.example/FRIDAY.apk", "https://github.com/other/FRIDAY/releases/download/v1/FRIDAY.apk",
+                    "http://github.com/devxjitin/FRIDAY/releases/download/v1/FRIDAY.apk",
+                    "https://github.com/devxjitin/FRIDAY/raw/main/FRIDAY.apk"):
+            with self.subTest(url=url), self.assertRaises(rf.ReleaseError):
+                rf.manifest("0.0.21", 100, url, SHA, 1000, "n")
 
     def test_only_our_https_hosts_are_allowed(self):
         self.assertTrue(rf.host_allowed("https://friday.nandivex.in/FRIDAY.apk"))
@@ -115,22 +122,23 @@ class BuildTests(unittest.TestCase):
         rf.CHANGELOG = self.log
         self.addCleanup(lambda: setattr(rf, "CHANGELOG", self.original))
 
-    def test_build_writes_the_apk_twice_and_latest_json_with_the_checksum(self):
-        out = self.dir / "site"
-        data = rf.build(self.apk, 200, out, "", "v0.0.21", 100)
+    def test_build_puts_the_apk_in_assets_never_in_the_site_and_writes_latest_json_with_the_checksum(self):
+        out, assets = self.dir / "site", self.dir / "assets"
+        data = rf.build(self.apk, 200, out, assets, "", "v0.0.21", 100)
         self.assertEqual(rf.sha256_file(self.apk), data["sha256"])
-        self.assertEqual(b"fake apk bytes", (out / "FRIDAY.apk").read_bytes())
-        self.assertEqual(b"fake apk bytes", (out / "FRIDAY-200.apk").read_bytes())
+        self.assertEqual("https://github.com/devxjitin/FRIDAY/releases/download/v0.0.21/FRIDAY.apk", data["apkUrl"])
+        self.assertEqual(b"fake apk bytes", (assets / "FRIDAY.apk").read_bytes())
+        self.assertEqual([], list(out.glob("*.apk")))
         written = json.loads((out / "latest.json").read_text(encoding="utf-8"))
         self.assertEqual(data, written)
         self.assertEqual("0.0.21", written["versionName"])
         self.assertTrue((out / "release-notes.txt").read_text(encoding="utf-8").startswith("FRIDAY 0.0.21"))
 
-    def test_older_apks_are_removed_so_only_the_current_one_is_deployed(self):
-        out = self.dir / "site"
+    def test_stray_apks_are_removed_because_hosting_refuses_them_on_the_free_plan(self):
+        out, assets = self.dir / "site", self.dir / "assets"
         out.mkdir()
         (out / "FRIDAY-100.apk").write_bytes(b"old")
-        rf.build(self.apk, 200, out, "", "", 100)
+        rf.build(self.apk, 200, out, assets, "", "v0.0.21", 100)
         self.assertFalse((out / "FRIDAY-100.apk").exists())
 
     def test_build_refuses_a_wrong_tag_and_an_older_version_and_writes_nothing(self):
@@ -138,9 +146,11 @@ class BuildTests(unittest.TestCase):
         live = self.dir / "live.json"
         live.write_text(json.dumps({"versionCode": 300}), encoding="utf-8")
         with self.assertRaises(rf.ReleaseError):
-            rf.build(self.apk, 200, out, str(live), "v0.0.21", 100)
+            rf.build(self.apk, 200, out, self.dir / "assets", str(live), "v0.0.21", 100)
         with self.assertRaises(rf.ReleaseError):
-            rf.build(self.apk, 400, out, "", "v9.9.9", 100)
+            rf.build(self.apk, 400, out, self.dir / "assets", "", "v9.9.9", 100)
+        with self.assertRaises(rf.ReleaseError):
+            rf.build(self.apk, 400, out, self.dir / "assets", "", "", 100)
         self.assertFalse((out / "latest.json").exists())
 
 
@@ -152,6 +162,11 @@ class AppAndScriptAgreeTests(unittest.TestCase):
     def test_allowed_hosts_match_the_app(self):
         block = re.search(r"ALLOWED_HOSTS: Set<String> = setOf\(([^)]*)\)", self.kotlin).group(1)
         self.assertEqual(set(re.findall(r'"([^"]+)"', block)), set(rf.ALLOWED_HOSTS))
+
+    def test_release_download_rules_match_the_app(self):
+        host = re.search(r'RELEASE_HOST = "([^"]+)"', self.kotlin).group(1)
+        prefix = re.search(r'RELEASE_PATH_PREFIX = "([^"]+)"', self.kotlin).group(1)
+        self.assertEqual((rf.RELEASE_HOST, rf.RELEASE_PATH_PREFIX), (host, prefix))
 
     def test_size_limit_matches_the_app(self):
         match = re.search(r"MAX_APK_BYTES: Long = (\d+)L \* 1024 \* 1024", self.kotlin)
@@ -165,11 +180,13 @@ class AppAndScriptAgreeTests(unittest.TestCase):
         gradle = (ROOT / "android/app/build.gradle.kts").read_text(encoding="utf-8")
         self.assertIn(f"{rf.BASE_URL}/latest.json", gradle)
 
-    def test_the_hosting_config_serves_the_files_the_script_writes(self):
+    def test_the_hosting_config_serves_latest_json_and_sends_the_old_apk_address_to_github(self):
         hosting = json.loads((ROOT / "firebase.json").read_text(encoding="utf-8"))["hosting"]
         sources = {h["source"] for h in hosting["headers"]}
-        self.assertTrue({"/latest.json", "/FRIDAY.apk", "/FRIDAY-*.apk"} <= sources)
+        self.assertIn("/latest.json", sources)
         self.assertEqual("site", hosting["public"])
+        redirect = next(r for r in hosting["redirects"] if r["source"] == "/FRIDAY.apk")
+        self.assertEqual(f"https://{rf.RELEASE_HOST}/devxjitin/FRIDAY/releases/latest/download/{rf.APK_ASSET}", redirect["destination"])
 
 
 if __name__ == "__main__":

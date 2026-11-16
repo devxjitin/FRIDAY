@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.22 - 2026-11-16
+
+### Changed
+- Updates are now downloaded from F.R.I.D.A.Y.'s GitHub releases instead of the website, because the website's free hosting plan does not allow app files. The update check itself still reads the Nandivex site, and the checksum, signing key and newer-version checks are unchanged.
+
 ## 0.0.21 - 2026-11-16
 
 ### Added

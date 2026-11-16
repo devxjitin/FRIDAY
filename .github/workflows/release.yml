@@ -1,7 +1,7 @@
 name: Release to website
 
-# Pushing a tag such as v0.0.21 builds the signed release APK and publishes it, with latest.json, to the website
-# (Firebase Hosting, friday.nandivex.in). The tag must match the newest version in changelog.md. latest.json is written last
+# Pushing a tag such as v0.0.21 builds the signed release APK, publishes it as a GitHub release asset, and publishes
+# latest.json to the website (Firebase Hosting, friday.nandivex.in). The tag must match the newest version in changelog.md. latest.json is written last
 # and an older or equal version can never replace a newer live one. Every APK is also kept in a GitHub release.
 on:
   push:
@@ -114,8 +114,32 @@ jobs:
             echo "::error::Could not read the live latest.json, so it is not safe to publish"; exit 1
           fi
 
-      - name: Build the website files
-        run: python scripts/release_files.py build --apk android/app/build/outputs/apk/release/app-release.apk --version-code "$VERSION_CODE" --out site --live live.json --tag "$GITHUB_REF_NAME"
+      - name: Build the release files
+        run: python scripts/release_files.py build --apk android/app/build/outputs/apk/release/app-release.apk --version-code "$VERSION_CODE" --out site --assets release-assets --live live.json --tag "$GITHUB_REF_NAME"
+
+      # The APK lives in the GitHub release (Firebase Hosting's free plan refuses APK files). It is published before
+      # latest.json, so no phone is ever pointed at a file that is not there yet. A re-run replaces the asset.
+      - name: Publish the APK in a GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/FRIDAY.apk --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "FRIDAY ${GITHUB_REF_NAME#v}" --notes-file site/release-notes.txt
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/FRIDAY.apk \
+              --title "FRIDAY ${GITHUB_REF_NAME#v}" --notes-file site/release-notes.txt
+          fi
+
+      - name: Check the release download serves this APK
+        run: |
+          set -euo pipefail
+          url=$(python -c 'import json; print(json.load(open("site/latest.json"))["apkUrl"])')
+          expected=$(python -c 'import json; print(json.load(open("site/latest.json"))["sha256"])')
+          curl -fsSL --retry 3 --max-time 180 -o downloaded.apk "$url"
+          test "$(sha256sum downloaded.apk | cut -d' ' -f1)" = "$expected" \
+            || { echo "::error::The release download does not match the built APK"; exit 1; }
 
       - name: Deploy to Firebase Hosting
         run: npx --yes firebase-tools@15 deploy --only hosting --project "$FIREBASE_PROJECT" --non-interactive
@@ -127,13 +151,3 @@ jobs:
           live=$(curl -fsS --max-time 30 -H 'Cache-Control: no-cache' "https://$FIREBASE_PROJECT.web.app/latest.json")
           echo "$live"
           test "$(echo "$live" | python -c 'import json,sys; print(json.load(sys.stdin)["versionCode"])')" = "$VERSION_CODE"
-          size=$(stat -c %s "site/FRIDAY-$VERSION_CODE.apk")
-          served=$(curl -fsSI --max-time 30 "https://$FIREBASE_PROJECT.web.app/FRIDAY-$VERSION_CODE.apk" | tr -d '\r' | sed -n 's/^[Cc]ontent-[Ll]ength: //p' | tail -1)
-          test "$served" = "$size" || { echo "::error::Served APK is $served bytes, expected $size"; exit 1; }
-
-      - name: Keep the APK in a GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "$GITHUB_REF_NAME" "site/FRIDAY-$VERSION_CODE.apk#FRIDAY-$GITHUB_REF_NAME.apk" \
-            --title "FRIDAY ${GITHUB_REF_NAME#v}" --notes-file site/release-notes.txt

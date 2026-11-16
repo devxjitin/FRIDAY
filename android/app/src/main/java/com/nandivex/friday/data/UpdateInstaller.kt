@@ -27,7 +27,7 @@ class UpdateException(message: String) : Exception(message)
 enum class InstallStep { STARTED, NEEDS_PERMISSION }
 
 /**
- * Finds, downloads, checks and hands over an update from the Nandivex website. Nothing is installed without the user
+ * Finds, downloads, checks and hands over an update: `latest.json` comes from the Nandivex website and the APK from our GitHub release. Nothing is installed without the user
  * tapping Install and then confirming in Android's own installer. The download must come from an allowed host, match the
  * checksum in `latest.json`, be our own package and be a newer version, before Android is asked to install it.
  */
@@ -72,7 +72,7 @@ class UpdateInstaller(
         try {
             client.newCall(Request.Builder().url(manifest.apkUrl).build()).execute().use { response ->
                 if (!response.isSuccessful) throw UpdateException("The download failed (error ${response.code}).")
-                if (!UpdateRules.isAllowedUrl(response.request.url.toString())) {
+                if (!UpdateRules.isAllowedDownloadUrl(response.request.url.toString())) {
                     throw UpdateException("The download moved to an address that is not allowed.")
                 }
                 val body = response.body ?: throw UpdateException("The download was empty.")

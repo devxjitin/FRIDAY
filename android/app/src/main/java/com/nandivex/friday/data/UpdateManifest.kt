@@ -20,21 +20,41 @@ class UpdateManifest(
 
 /** The pure rules of the in-app updater, free of Android types so they are unit tested. */
 object UpdateRules {
-    /** The only hosts an update may be downloaded from: our site and its Firebase backup address. */
+    /** Where `latest.json` may be read from: our site and its Firebase backup addresses. */
     val ALLOWED_HOSTS: Set<String> = setOf("friday.nandivex.in", "friday-nandivex.web.app", "friday-nandivex.firebaseapp.com")
+
+    /** The APK itself is a GitHub release asset (Firebase Hosting's free plan refuses APK files), from this repository only. */
+    const val RELEASE_HOST = "github.com"
+    const val RELEASE_PATH_PREFIX = "/devxjitin/FRIDAY/releases/download/"
+
+    /** GitHub sends a release download on to its asset store, so the final address may be on one of these hosts. */
+    val RELEASE_STORE_HOSTS: Set<String> = setOf("release-assets.githubusercontent.com", "objects.githubusercontent.com")
 
     /** No FRIDAY release comes close to this, so a larger download is refused. */
     const val MAX_APK_BYTES: Long = 150L * 1024 * 1024
 
     private val SHA256 = Regex("^[0-9a-fA-F]{64}$")
 
-    /** True for an https address on one of [ALLOWED_HOSTS], with no user info or odd port. */
-    fun isAllowedUrl(url: String): Boolean {
-        val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return false
-        if (!uri.scheme.equals("https", ignoreCase = true)) return false
-        if (uri.userInfo != null || (uri.port != -1 && uri.port != 443)) return false
-        return uri.host?.lowercase() in ALLOWED_HOSTS
+    private fun plainHttps(url: String): URI? {
+        val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return null
+        if (!uri.scheme.equals("https", ignoreCase = true)) return null
+        if (uri.userInfo != null || (uri.port != -1 && uri.port != 443)) return null
+        return uri
     }
+
+    /** True for an https address on one of [ALLOWED_HOSTS], with no user info or odd port. Used for `latest.json`. */
+    fun isAllowedUrl(url: String): Boolean = plainHttps(url)?.host?.lowercase() in ALLOWED_HOSTS
+
+    /** True for an APK address the manifest may name: our site, or a download of this repository's GitHub releases. */
+    fun isAllowedApkUrl(url: String): Boolean {
+        val uri = plainHttps(url) ?: return false
+        val host = uri.host?.lowercase() ?: return false
+        return host in ALLOWED_HOSTS || (host == RELEASE_HOST && uri.rawPath.orEmpty().startsWith(RELEASE_PATH_PREFIX))
+    }
+
+    /** True for the address a download ended up at, after GitHub's redirect to its asset store. */
+    fun isAllowedDownloadUrl(url: String): Boolean =
+        isAllowedApkUrl(url) || plainHttps(url)?.host?.lowercase() in RELEASE_STORE_HOSTS
 
     /** Reads `latest.json`. Returns null when a needed field is missing or unsafe, so a broken file is never offered. */
     fun parse(json: String): UpdateManifest? {
@@ -43,7 +63,7 @@ object UpdateRules {
         val name = obj.optString("versionName").trim()
         val url = obj.optString("apkUrl").trim()
         val sha = obj.optString("sha256").trim()
-        if (code <= 0 || name.isEmpty() || !isAllowedUrl(url) || !SHA256.matches(sha)) return null
+        if (code <= 0 || name.isEmpty() || !isAllowedApkUrl(url) || !SHA256.matches(sha)) return null
         val size = obj.optLong("sizeBytes", 0L)
         if (size < 0 || size > MAX_APK_BYTES) return null
         return UpdateManifest(

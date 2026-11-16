@@ -52,3 +52,4 @@ android/app/objectbox-models/*.bak
 # Files the release workflow writes into the website folder
 site/latest.json
 site/release-notes.txt
+release-assets/

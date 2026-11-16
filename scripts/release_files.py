@@ -1,11 +1,13 @@
 """Builds the files the website serves for a FRIDAY release, and refuses releases that must not go live.
 
     python scripts/release_files.py check-tag v0.0.21
-    python scripts/release_files.py build --apk app-release.apk --version-code 29400000 --out site --live live.json --tag v0.0.21
+    python scripts/release_files.py build --apk app-release.apk --version-code 29400000 --out site --assets release-assets --live live.json --tag v0.0.21
 
-`build` copies the APK into the site folder (as FRIDAY.apk and as an immutable FRIDAY-<versionCode>.apk), and writes
-`latest.json` last. It refuses a version that is not newer than the one that is live, so an old or broken build can never
-replace a newer `latest.json`. The in-app updater (UpdateRules.kt) reads `latest.json` and applies the same host rules.
+`build` copies the APK into the assets folder as FRIDAY.apk, which the workflow attaches to the GitHub release (Firebase
+Hosting on the free plan refuses APK files, so the site only serves `latest.json` and the web pages). `latest.json` points
+at that release asset and is written last. It refuses a version that is not newer than the one that is live, so an old or
+broken build can never replace a newer `latest.json`. The in-app updater (UpdateRules.kt) reads `latest.json` and applies
+the same host rules.
 """
 import argparse
 import hashlib
@@ -20,6 +22,10 @@ CHANGELOG = ROOT / "android/app/src/main/assets/changelog.md"
 BASE_URL = "https://friday.nandivex.in"
 # Must match UpdateRules.ALLOWED_HOSTS in the app; a test keeps the two in step.
 ALLOWED_HOSTS = ("friday.nandivex.in", "friday-nandivex.web.app", "friday-nandivex.firebaseapp.com")
+# The APK is a GitHub release asset. Must match UpdateRules.RELEASE_HOST and RELEASE_PATH_PREFIX in the app.
+RELEASE_HOST = "github.com"
+RELEASE_PATH_PREFIX = "/devxjitin/FRIDAY/releases/download/"
+APK_ASSET = "FRIDAY.apk"
 MAX_APK_BYTES = 150 * 1024 * 1024
 MAX_NOTES = 2000
 MIN_ANDROID = 26  # minSdk of the app
@@ -72,11 +78,24 @@ def sha256_file(path):
 
 
 def host_allowed(url):
+    """True for an https address on one of our site hosts (where latest.json lives)."""
     match = re.match(r"^https://([^/:@?#]+)(/|$)", url)
     return bool(match) and match.group(1).lower() in ALLOWED_HOSTS
 
 
-def manifest(version_name, version_code, apk_name, sha256, size, notes, rollout=100):
+def apk_url_allowed(url):
+    """True for an APK address the app will download from: our site, or a download in this repository's releases."""
+    if host_allowed(url):
+        return True
+    match = re.match(r"^https://([^/:@?#]+)(/[^?#]*)$", url)
+    return bool(match) and match.group(1).lower() == RELEASE_HOST and match.group(2).startswith(RELEASE_PATH_PREFIX)
+
+
+def release_apk_url(tag):
+    return f"https://{RELEASE_HOST}{RELEASE_PATH_PREFIX}{tag}/{APK_ASSET}"
+
+
+def manifest(version_name, version_code, apk_url, sha256, size, notes, rollout=100):
     if not re.fullmatch(r"[0-9a-f]{64}", sha256):
         raise ReleaseError("sha256 must be 64 lower-case hex characters")
     if version_code <= 0:
@@ -85,13 +104,12 @@ def manifest(version_name, version_code, apk_name, sha256, size, notes, rollout=
         raise ReleaseError("APK size is outside the allowed range")
     if not 0 <= rollout <= 100:
         raise ReleaseError("rollout must be 0 to 100")
-    url = f"{BASE_URL}/{apk_name}"
-    if not host_allowed(url):
-        raise ReleaseError("apkUrl host is not allowed")
+    if not apk_url_allowed(apk_url):
+        raise ReleaseError("apkUrl is not an allowed address")
     return {
         "versionCode": version_code,
         "versionName": version_name,
-        "apkUrl": url,
+        "apkUrl": apk_url,
         "sha256": sha256,
         "sizeBytes": size,
         "minAndroid": MIN_ANDROID,
@@ -121,21 +139,24 @@ def load_live(path):
         return None  # a missing or broken live file must not block the very first release
 
 
-def build(apk, version_code, out, live_path, tag, rollout):
-    apk, out = Path(apk), Path(out)
+def build(apk, version_code, out, assets, live_path, tag, rollout):
+    apk, out, assets = Path(apk), Path(out), Path(assets)
     if not apk.is_file():
         raise ReleaseError(f"APK not found: {apk}")
     version, notes = changelog_top(CHANGELOG.read_text(encoding="utf-8"))
-    if tag:
-        check_tag(tag, CHANGELOG.read_text(encoding="utf-8"))
+    if not tag:
+        raise ReleaseError("a tag is required: the APK address contains it")
+    check_tag(tag, CHANGELOG.read_text(encoding="utf-8"))
     require_newer(load_live(live_path), version_code)
-    versioned = f"FRIDAY-{version_code}.apk"
-    data = manifest(version, version_code, versioned, sha256_file(apk), apk.stat().st_size, notes, rollout)
+    data = manifest(version, version_code, release_apk_url(tag), sha256_file(apk), apk.stat().st_size, notes, rollout)
     out.mkdir(parents=True, exist_ok=True)
-    for old in out.glob("FRIDAY*.apk"):
+    assets.mkdir(parents=True, exist_ok=True)
+    # Hosting refuses APK files on the free plan, so none may be left in the site folder.
+    for old in out.glob("*.apk"):
         old.unlink()
-    shutil.copyfile(apk, out / versioned)
-    shutil.copyfile(apk, out / "FRIDAY.apk")
+    for old in assets.glob("*.apk"):
+        old.unlink()
+    shutil.copyfile(apk, assets / APK_ASSET)
     # latest.json is written last, so a half-copied release is never offered.
     (out / "latest.json").write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "release-notes.txt").write_text(f"FRIDAY {version}\n\n{notes}\n", encoding="utf-8")
@@ -151,15 +172,16 @@ def main(argv=None):
     b.add_argument("--apk", required=True)
     b.add_argument("--version-code", type=int, required=True)
     b.add_argument("--out", default="site")
+    b.add_argument("--assets", default="release-assets")
     b.add_argument("--live", default="")
-    b.add_argument("--tag", default="")
+    b.add_argument("--tag", required=True)
     b.add_argument("--rollout", type=int, default=100)
     args = parser.parse_args(argv)
     try:
         if args.command == "check-tag":
             print(check_tag(args.tag, CHANGELOG.read_text(encoding="utf-8")))
         else:
-            data = build(args.apk, args.version_code, args.out, args.live, args.tag, args.rollout)
+            data = build(args.apk, args.version_code, args.out, args.assets, args.live, args.tag, args.rollout)
             print(json.dumps(data, indent=2))
     except ReleaseError as error:
         print(f"error: {error}", file=sys.stderr)
