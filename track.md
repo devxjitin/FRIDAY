@@ -567,3 +567,6 @@
 [2026-11-16] [Claude] [Sprint 4.2: README rewritten to what exists; docs/DATA_FLOWS.md replaces PRIVACY_PLAN.md; Idea.md and VIEWMODEL_SPLIT_PLAN.md deleted; LATENCY.md fixed; unused jsoup removed; version 0.0.24]
 [2026-11-16] [Claude] [Sprint 4.3: removed Firebase Analytics, Authentication and App Check (FridayApp, AppCheckInstaller); Crashlytics only; privacy page, README, DATA_FLOWS updated; version 0.0.25]
 [2026-11-16] [Claude] [Sprint 5.1: first-run setup (welcome, agreement with terms version, name and language, Gemini key checked with Google, voice, permissions, all-set screen); setup gates the voice session; SetupLogic and GeminiKeyCheck tests; docs updated; version 0.0.26]
+[2026-11-16] [Claude] [Plan: your app review (13 points) added; new Phase 6 brand and UI overhaul, Phase 7 accounts, age, plans and trial; accessibility, launch and extras renumbered 8-10; decisions D8-D11; Gemini 18+ and unpaid-tier terms found (R9, R10)]
+[2026-11-16] [Claude] [Plan: D9 decided, the user's own Gemini key with billing enabled]
+[2026-11-16] [Claude] [Plan: D4 decided by owner, keep the name F.R.I.D.A.Y.; IP risk and mitigations recorded]
