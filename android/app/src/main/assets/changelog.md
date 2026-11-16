@@ -9,7 +9,7 @@ notes and the About page all read it from here. A date after the version is opti
 - Button text, such as "Got it" in the update notice, was hard to read on the dark theme. It now uses the button's own text colour.
 
 ### Changed
-- The menu keeps its layout, now in the purple theme, with softer and evenly spaced lines between the groups.
+- The menu keeps its layout in the purple theme. The lines between groups are gone, and the groups are ordered by purpose: History before Memory, Settings on its own under App, and Help and support with About under Support. "What F.R.I.D.A.Y. can do" is shortened to "What it can do".
 
 ## 0.0.27 - 2026-11-16
 

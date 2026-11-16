@@ -67,12 +67,12 @@ enum class NavTab(val label: String, val icon: ImageVector) {
     PROFILE("Profile", Icons.Outlined.AccountCircle),
     MEMORY("Memory", Icons.Outlined.Psychology),
     HISTORY("History", Icons.Outlined.History),
-    ABILITIES("What F.R.I.D.A.Y. can do", Icons.Outlined.Bolt),
+    ABILITIES("What it can do", Icons.Outlined.Bolt),
     SETTINGS("Settings", AssistantIcons.Settings),
     USAGE("Usage", Icons.Outlined.Insights),
     STORAGE("Storage", Icons.Outlined.Inventory2),
     DEVELOPER("Developer", Icons.Outlined.Code),
-    HELP("Help & support", Icons.AutoMirrored.Outlined.HelpOutline),
+    HELP("Help and support", Icons.AutoMirrored.Outlined.HelpOutline),
     ABOUT("About", Icons.Outlined.Info)
 }
 
@@ -85,9 +85,10 @@ private val RowHeight = 40.dp
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
     "Assistant" to listOf(NavTab.ABILITIES),
-    "Your data" to listOf(NavTab.MEMORY, NavTab.HISTORY),
+    "Your data" to listOf(NavTab.HISTORY, NavTab.MEMORY),
     "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
-    "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)
+    "App" to listOf(NavTab.SETTINGS),
+    "Support" to listOf(NavTab.HELP, NavTab.ABOUT)
 )
 
 @Composable
@@ -104,7 +105,7 @@ fun AppDrawerContent(
         DrawerHeader(assistantName, onClose)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp)) {
             Spacer(Modifier.height(4.dp))
-            // A hairline and a plain caption start each group. Settings sits in the footer.
+            // A plain caption starts each group. Settings sits in the footer.
             DrawerGroups.forEach { (title, tabs) ->
                 if (title != null) NavSection(title)
                 tabs.forEach { tab -> NavRow(tab, tab == selected) { onSelect(tab) } }
@@ -117,15 +118,13 @@ fun AppDrawerContent(
 
 @Composable
 private fun NavSection(title: String) {
-    // A short, soft rule inset from the edges, then the caption; the same gaps above and below for every group.
-    Spacer(Modifier.height(8.dp))
-    Box(Modifier.fillMaxWidth().padding(horizontal = 12.dp).height(1.dp).background(AssistantOutline.copy(alpha = 0.6f)))
+    // No rule: the caption and the space above it separate the groups.
     Text(
         text = title,
         color = AssistantTextMuted,
         fontSize = 13.sp,
         fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 12.dp, top = 14.dp, bottom = 6.dp)
+        modifier = Modifier.padding(start = 12.dp, top = 22.dp, bottom = 6.dp)
     )
 }
 
