@@ -1,6 +1,6 @@
 # Data flows
 
-What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.29). This is the working source for the
+What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.32). This is the working source for the
 public privacy policy (`site/privacy.html`) and for the Google Play **Data safety** form (Sprint 8.1). If the code changes,
 change this file in the same pull request.
 
@@ -39,10 +39,13 @@ Drive or a new phone.
 | Service | What it receives | Why |
 |---|---|---|
 | Crashlytics | Crash stack traces, app version, phone model, Android version, an installation identifier | Fixing crashes. Crashlytics' own library (Firebase Installations) assigns the identifier. |
+| Authentication | The Google account the user picks in Profile: user id, email, display name, and the sign-in token | Sign-in. Starts only when the user taps "Sign in with Google". |
+| Firestore `users/{uid}` | Name, year of birth, email, a verified flag, language, created and updated times | The user's account profile. `firestore.rules` lets only that user read, write and delete it, and checks the email against the sign-in and the 18+ rule. Deleted by "Delete account" in Profile. |
+| Firestore `entitlements/{uid}` | Nothing yet (written only by the server, from Phase 7.3) | The plan a user has paid for. |
 
-Firebase is used for **crash reports only**. Analytics, Authentication (the anonymous user) and App Check were removed in
-0.0.25 because nothing used them (decision D7). Add them back only with a feature that needs them, and update this file,
-the privacy policy and the Data safety form in the same change.
+Analytics and App Check were removed in 0.0.25 because nothing used them (decision D7). Add them back only with a feature that
+needs them, and update this file, the privacy policy and the Data safety form in the same change. "Delete account" removes
+the Firestore document and the sign-in. It does not remove memories and conversations on the phone (Storage does).
 
 ## Permissions and what they are for
 

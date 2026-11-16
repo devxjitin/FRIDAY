@@ -3,6 +3,15 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.32 - 2026-11-16
+
+### Added
+- An account. On the Profile page you can sign in with Google, which confirms your email, then save your name and year of birth. F.R.I.D.A.Y. is for people aged 18 or older, so a year of birth that is under 18, or that could still be, is not accepted. Profile shows your name, email ("Verified by Google"), age range and member-since month, and has Edit, Sign out and Delete account.
+- Delete account removes your name, year of birth and email from your F.R.I.D.A.Y. account and signs you out. It asks you to pick your Google account once more to confirm. Memories and conversations on the phone stay until you clear them in Storage.
+
+### Changed
+- The agreement now says that, if you sign in, your Google email, name and year of birth are stored in Google Firebase and only you can read them. Because it changed, you are asked to accept it again.
+
 ## 0.0.31 - 2026-11-16
 
 ### Changed

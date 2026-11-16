@@ -27,7 +27,9 @@ object Agreement {
                 "F.R.I.D.A.Y. needs a key from a Google project with billing turned on: Google's terms do not allow personal " +
                 "information on the unpaid tier, and what F.R.I.D.A.Y. sends can include it. Google charges that project for " +
                 "use; Nandivex does not receive or collect those charges. The app cannot check whether billing is on, so keeping it " +
-                "on is your responsibility. Crash reports go to Google Firebase Crashlytics."
+                "on is your responsibility. Crash reports go to Google Firebase Crashlytics. If you sign in to an account, " +
+                "your Google email, name and year of birth are stored in Google Firebase for your F.R.I.D.A.Y. account. " +
+                "Only you can read them, and you can delete them in Profile."
         ),
         Section(
             "What stays on your phone",

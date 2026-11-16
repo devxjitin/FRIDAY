@@ -576,3 +576,4 @@
 [2026-11-16] [Claude] [Sprint 6.4 built (0.0.29): Help, Storage, Usage additions, R9 wording fix and new agreement version, greetings, WRITING.md; rest of wording pass and failed-actions counter still open]
 [2026-11-16] [Claude] [Sprint 6.5 round 1 (0.0.30): wording pass, false lookup claims removed; layout polish waits for screen-by-screen comments]
 [2026-11-16] [Claude] [Sprint 7.1 part 1 (0.0.31): firestore.rules with 10 passing emulator tests, AgeRules 18+ logic with tests; Firebase console steps still needed]
+[2026-11-16] [Claude] [Sprint 7.1 part 2 (0.0.32): Google sign-in, profile form, Profile page with delete account; console steps done via CLI; sign-in untested on phone]
