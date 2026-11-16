@@ -1,5 +1,6 @@
 package com.nandivex.friday.ui.components
 
+import androidx.compose.runtime.getValue
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -33,12 +34,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,8 +48,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.nandivex.friday.ui.theme.AssistantAccent
-import com.nandivex.friday.ui.theme.AssistantOutline
 import com.nandivex.friday.ui.theme.AssistantSurface
 import com.nandivex.friday.ui.theme.AssistantTextMuted
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
@@ -64,7 +61,7 @@ fun deviceSummary(): String = "${Build.MANUFACTURER.replaceFirstChar { it.upperc
     "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
 
 /**
- * Help and support: email the developer, report a bug, or ask for a connector.
+ * Help and support: email the developer, report a bug, or ask for a new phone control.
  * [onRequest] gets "bug" or "connector" and opens that form.
  */
 @Composable
@@ -89,8 +86,8 @@ fun HelpPage(onRequest: (String) -> Unit, modifier: Modifier = Modifier) {
         )
         Spacer(Modifier.height(14.dp))
         HelpAction(
-            Icons.Outlined.Extension, "Request a connector",
-            "A connector lets F.R.I.D.A.Y. use another app or service, such as music, notes or a smart home."
+            Icons.Outlined.Extension, "Request a phone control",
+            "Tell the developer what you want to control on your phone by voice, such as a setting, an app or a button."
         ) { onRequest("connector") }
     }
 }

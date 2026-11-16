@@ -2,7 +2,6 @@ package com.nandivex.friday.ui
 
 import com.nandivex.friday.ui.components.FeatureRequest
 import com.nandivex.friday.ui.theme.ThemeMode
-import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.data.MicSensitivity
 
 /** Everything the screen can ask the app to do, in one place instead of 70+ separate parameters. */
@@ -21,7 +20,6 @@ class AssistantActions(
     /** Opens the website store to renew; null when this build has no store link. */
     val onRenewLicense: (() -> Unit)? = null,
     val onHomeTapped: () -> Unit = {},
-    val onConnectorsTapped: () -> Unit = {},
     val onDismissWhatsNew: () -> Unit = {},
     val onUsageTapped: () -> Unit = {},
     val onStorageTapped: () -> Unit = {},
@@ -40,8 +38,6 @@ class AssistantActions(
     val onDeletePastSession: (List<Long>) -> Unit = {},
     val onClearPastConversations: () -> Unit = {},
     val onShowOlderConversations: () -> Unit = {},
-    val onConnectorToolsEnabled: (List<DeviceTool>, Boolean, String) -> Unit = { _, _, _ -> },
-    val onRequestConnectorPermissions: (List<String>) -> Unit = {},
     val onDismissSettings: () -> Unit,
     val onClearApiKey: () -> Unit,
     val onLiveModelSelected: (String) -> Unit,
@@ -49,7 +45,6 @@ class AssistantActions(
     val onLanguageSelected: (String) -> Unit,
     val onMicSensitivitySelected: (MicSensitivity) -> Unit,
     val onBargeInToggled: (Boolean) -> Unit,
-    val onAnnounceNotificationsToggled: (Boolean) -> Unit,
     val onOwnerNameChanged: (String) -> Unit = {},
     val onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit = {},
     val onSaveDeveloperChanges: (String) -> Unit,

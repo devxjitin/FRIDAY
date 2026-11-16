@@ -48,25 +48,16 @@ class ConnectivityToolsTest {
         }
     }
 
-    @Test fun theNewToolsLiveInTheirConnectors() {
-        fun tools(id: String) = ConnectorRegistry.get(id).tools.map { it.functionName }.toSet()
-        assertTrue(tools("wifi").containsAll(setOf("get_wifi_info", "wifi_toggle")))
-        assertTrue(tools("bluetooth").containsAll(setOf("get_bluetooth_status", "bluetooth_toggle", "list_paired_devices")))
-        assertTrue(tools("network").containsAll(setOf("mobile_data_panel", "airplane_mode", "hotspot_settings", "nfc_settings", "open_connectivity_panel")))
-        assertTrue(tools("torch").containsAll(setOf("set_flashlight", "flashlight_strobe")))
-        assertTrue(tools("display").containsAll(setOf("dark_mode", "battery_saver")))
+    @Test fun theConnectivityToolsAreBuiltIn() {
+        val names = AssistantSettings().enabledDeviceTools.map { it.functionName }.toSet()
+        assertTrue(names.containsAll(setOf("get_wifi_info", "wifi_toggle", "get_bluetooth_status", "bluetooth_toggle", "list_paired_devices")))
+        assertTrue(names.containsAll(setOf("mobile_data_panel", "airplane_mode", "hotspot_settings", "nfc_settings", "open_connectivity_panel")))
+        assertTrue(names.containsAll(setOf("set_flashlight", "flashlight_strobe", "dark_mode", "battery_saver")))
     }
 
     @Test fun aStrobeNeedsAModeAndTheTimeIsOptional() {
         val params = DeviceTool.FLASHLIGHT_STROBE.params
         assertEquals(listOf("strobe", "sos"), params.first { it.name == "mode" }.choices)
         assertTrue(!params.first { it.name == "seconds" }.required)
-    }
-
-    @Test fun savedSettingsKeepTheNewToolsWithTheirConnector() {
-        // A phone that already had Wi-Fi and Torch on gets the new tools of those connectors too.
-        val on = effectiveDeviceTools(setOf("get_wifi_info=1", "set_flashlight=1"))
-        assertTrue(DeviceTool.WIFI_TOGGLE in on && DeviceTool.FLASHLIGHT_STROBE in on)
-        assertTrue(DeviceTool.BLUETOOTH_TOGGLE !in on)
     }
 }

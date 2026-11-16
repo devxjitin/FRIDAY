@@ -3,6 +3,18 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.18 - 2026-11-16
+
+### Changed
+- F.R.I.D.A.Y. is now a hands-free phone control assistant. There are no connectors any more: every phone control is built in and always on.
+- When you open the app, it asks you to turn on phone control (Android accessibility) and explains what it does. The home screen opens once it is on.
+- Wi-Fi name, Bluetooth and step permissions are asked once, after phone control is on.
+
+### Removed
+- Calls, text messages, WhatsApp, contacts, calendar, location and directions, notifications, files, app usage, sharing, weather and web search. To do these, ask F.R.I.D.A.Y. to open the app and use it for you.
+- The Connectors page, the "Read out notifications" setting and the spoken-yes rule that only the removed tools needed.
+- The calling, texting, contacts, calendar, storage, usage and notification-listener permissions.
+
 ## 0.0.17 - 2026-11-15
 
 ### Added

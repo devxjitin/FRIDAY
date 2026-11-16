@@ -1,5 +1,7 @@
 package com.nandivex.friday.ui
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -8,9 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,11 +18,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import com.nandivex.friday.data.MicSensitivity
 import kotlinx.coroutines.delay
 import com.nandivex.friday.ui.components.HomeBackground
 import com.nandivex.friday.ui.components.VoiceRibbon
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -33,7 +30,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -44,21 +40,15 @@ import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import com.nandivex.friday.ui.theme.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +58,6 @@ import com.nandivex.friday.ui.components.UsagePage
 import com.nandivex.friday.ui.components.AssistantToastHost
 import com.nandivex.friday.ui.components.MemoryPage
 import com.nandivex.friday.ui.components.HistoryPage
-import com.nandivex.friday.ui.components.FeatureRequest
 import com.nandivex.friday.ui.components.FeatureRequestPage
 import com.nandivex.friday.ui.components.HelpPage
 import com.nandivex.friday.ui.components.ProfilePage
@@ -77,7 +66,6 @@ import com.nandivex.friday.ui.components.AppDrawerContent
 import com.nandivex.friday.ui.theme.ThemeMode
 import com.nandivex.friday.ui.components.AppTopBar
 import com.nandivex.friday.ui.components.AppTopBarHeight
-import com.nandivex.friday.ui.components.ConnectorsPage
 import com.nandivex.friday.ui.components.MicButton
 import androidx.activity.compose.BackHandler
 import com.nandivex.friday.ui.components.NavTab
@@ -95,8 +83,6 @@ import com.nandivex.friday.ui.theme.AssistantError
 import com.nandivex.friday.ui.theme.AssistantTextMuted
 import com.nandivex.friday.ui.theme.AssistantTextSecondary
 import com.nandivex.friday.viewmodel.AppPage
-import com.nandivex.friday.viewmodel.AppNotificationType
-import com.nandivex.friday.data.DeviceTool
 import com.nandivex.friday.viewmodel.AssistantUiState
 import com.nandivex.friday.viewmodel.VoiceState
 
@@ -156,7 +142,6 @@ fun AssistantScreen(
         BackHandler(enabled = currentTab != NavTab.HOME && !drawerState.isOpen) { guardedNav(actions.onHomeTapped) }
         // Back with the menu open closes the menu instead of leaving the app.
         BackHandler(enabled = drawerState.isOpen) { scope.launch { drawerState.close() } }
-        // Inside Connectors, back from the browse view returns to the added connectors first.
         val wide = maxWidth >= 900.dp
         val drawerContent: @Composable (Modifier) -> Unit = { drawerModifier ->
             AppDrawerContent(
@@ -170,7 +155,6 @@ fun AssistantScreen(
                         NavTab.HOME -> guardedNav(actions.onHomeTapped)
                         NavTab.USAGE -> guardedNav(actions.onUsageTapped)
                         NavTab.STORAGE -> guardedNav(actions.onStorageTapped)
-                        NavTab.CONNECTORS -> guardedNav(actions.onConnectorsTapped)
                         NavTab.MEMORY -> guardedNav(actions.onMemoryTapped)
                         NavTab.HISTORY -> guardedNav(actions.onHistoryTapped)
                         NavTab.HELP -> guardedNav(actions.onHelpTapped)
@@ -285,15 +269,6 @@ fun AssistantScreen(
                 HelpPage(onRequest = openRequest, modifier = Modifier.padding(top = topReserve))
             }
 
-            if (tab == NavTab.CONNECTORS) {
-                ConnectorsPage(
-                    enabledTools = uiState.settings.enabledDeviceTools,
-                    onToolsEnabled = actions.onConnectorToolsEnabled,
-                    onRequestPermissions = actions.onRequestConnectorPermissions,
-                    modifier = Modifier.padding(top = topReserve)
-                )
-            }
-
             if (tab in listOf(NavTab.USAGE, NavTab.STORAGE, NavTab.ABOUT)) {
                 val pageModifier = Modifier.padding(top = topReserve)
                 when (tab) {
@@ -331,7 +306,6 @@ fun AssistantScreen(
                     onLanguageSelected = actions.onLanguageSelected,
                     onMicSensitivitySelected = actions.onMicSensitivitySelected,
                     onBargeInToggled = actions.onBargeInToggled,
-                    onAnnounceNotificationsToggled = actions.onAnnounceNotificationsToggled,
                     onOwnerNameChanged = actions.onOwnerNameChanged,
                     onReplyStyleSelected = actions.onReplyStyleSelected,
                     onClearApiKey = actions.onClearApiKey,

@@ -110,6 +110,41 @@ fun ActivationScreen(state: AccessState.NeedsKey, storeUrl: String, onActivate: 
     }
 }
 
+/**
+ * Shown on every open until FRIDAY's accessibility service is on. FRIDAY is a hands-free phone control app, so the home
+ * screen stays closed without it. This is also the prominent disclosure Google Play asks for: it says what the service
+ * reads and does, and the user agrees with a button before Android's own settings screen opens.
+ */
+@Composable
+fun PhoneControlScreen(onAgree: () -> Unit) {
+    AccessFrame {
+        Heading(
+            "Turn on phone control",
+            "F.R.I.D.A.Y. runs your phone by voice. For that it needs Android's accessibility permission."
+        )
+        Spacer(Modifier.height(22.dp))
+        DisclosureLine("What it does", "When you ask by voice, it reads what is on the screen and taps, types, scrolls, swipes and presses Back, Home or Recents for you.")
+        DisclosureLine("What is shared", "The screen text it reads is sent to Google Gemini only to carry out your request. It is not stored on our servers or sold.")
+        DisclosureLine("Your choice", "You can turn it off at any time in Settings, Accessibility, F.R.I.D.A.Y.")
+        Spacer(Modifier.height(22.dp))
+        PrimaryButton(text = "Agree and turn on", enabled = true, onClick = onAgree)
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "On the next screen, open F.R.I.D.A.Y. and switch it on. Then come back here.",
+            color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp, textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun DisclosureLine(title: String, text: String) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Text(title, color = AssistantTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(2.dp))
+        Text(text, color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 20.sp)
+    }
+}
+
 @Composable
 private fun AccessFrame(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().background(AssistantBackground), contentAlignment = Alignment.Center) {

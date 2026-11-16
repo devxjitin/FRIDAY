@@ -24,11 +24,10 @@ class OwnClockTest {
         assertTrue(AutomationEngine.isClock(ScheduledAction(7, 0L, notify, """{"kind":"alarm"}""", 0)))
     }
 
-    @Test fun timerAndAlarmToolsAreInTheAlarmsConnector() {
-        val tools = ConnectorRegistry.get("alarms").tools
+    @Test fun timerAndAlarmToolsAreBuiltIn() {
         listOf(
             DeviceTool.SET_ALARM, DeviceTool.LIST_ALARMS, DeviceTool.CANCEL_ALARM, DeviceTool.MODIFY_ALARM,
             DeviceTool.SET_TIMER, DeviceTool.LIST_TIMERS, DeviceTool.CANCEL_TIMER
-        ).forEach { assertTrue("$it", it in tools) }
+        ).forEach { assertTrue("$it", it in AssistantSettings().enabledDeviceTools) }
     }
 }

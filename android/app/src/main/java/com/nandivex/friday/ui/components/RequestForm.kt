@@ -1,5 +1,7 @@
 package com.nandivex.friday.ui.components
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.util.Patterns
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateColorAsState
@@ -30,7 +32,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -45,10 +46,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +62,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nandivex.friday.ui.theme.AssistantAccent
-import com.nandivex.friday.ui.theme.AssistantAccentFill
 import com.nandivex.friday.ui.theme.AssistantBackground
 import com.nandivex.friday.ui.theme.AssistantError
 import com.nandivex.friday.ui.theme.AssistantErrorFill
@@ -103,11 +101,11 @@ private class FormText(
 
 private val ConnectorText = FormText(
     icon = Icons.Outlined.Extension,
-    title = "Request a connector",
-    intro = "A connector lets F.R.I.D.A.Y. use another app or service, such as music, notes or a smart home.",
-    nameLabel = "App or service", nameHint = "For example: Spotify",
-    detailsLabel = "What should F.R.I.D.A.Y. do with it?", detailsHint = "Say what you want to do in that app: play, read, add, control. The more detail, the better.",
-    examplesHint = "For example: play my liked songs on Spotify"
+    title = "Request a phone control",
+    intro = "Tell the developer what you want to control on your phone by voice, such as a setting, an app or a button.",
+    nameLabel = "What to control", nameHint = "For example: Screen recorder",
+    detailsLabel = "What should F.R.I.D.A.Y. do?", detailsHint = "Say what you want to happen on the phone. The more detail, the better.",
+    examplesHint = "For example: start screen recording"
 )
 
 private val BugText = FormText(
@@ -122,7 +120,7 @@ private val BugText = FormText(
 )
 
 /**
- * A full screen form to ask the developer for a connector, or to report a bug. Each kind has its own wording.
+ * A full screen form to ask the developer for a new phone control, or to report a bug. Each kind has its own wording.
  * [onSend] starts sending; the caller keeps [sending] and [error] up to date and closes the form with [onBack] when it worked.
  */
 @Composable
@@ -175,7 +173,7 @@ fun FeatureRequestPage(
                 if (isConnector) {
                     FormField(
                         value = link, onChange = { link = it.take(MAX_LINK) }, max = MAX_LINK,
-                        label = "Website or app link", hint = "Optional. Where to find it, for example spotify.com",
+                        label = "Link", hint = "Optional. An app or page that shows it",
                         required = false, keyboardType = KeyboardType.Uri
                     )
                 }

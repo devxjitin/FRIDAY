@@ -2,7 +2,6 @@ package com.nandivex.friday.network
 
 import com.nandivex.friday.data.AssistantSettings
 import com.nandivex.friday.data.DeviceTool
-import com.nandivex.friday.data.effectiveDeviceTools
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -17,7 +16,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun slowToolsAreDeclaredNonBlocking() {
-        listOf("web_search", "fetch_webpage", "get_weather", "look_at_screen")
+        listOf("look_at_screen")
             .forEach { assertEquals(it, "NON_BLOCKING", declaration(it).optString("behavior")) }
     }
 
@@ -32,7 +31,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun defaultToolsStillBuild() {
-        val settings = AssistantSettings(enabledDeviceTools = effectiveDeviceTools(null))
+        val settings = AssistantSettings()
         assertTrue(liveFunctionDeclarations(settings).length() > 0)
     }
 }
