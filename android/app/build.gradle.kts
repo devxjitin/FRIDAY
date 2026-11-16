@@ -183,8 +183,6 @@ dependencies {
     implementation("com.google.android.material:material:1.14.0")
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    // Reads web pages as plain text on the phone.
-    implementation("org.jsoup:jsoup:1.18.3")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs_nio:2.1.5")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
     implementation("androidx.security:security-crypto:1.1.0")

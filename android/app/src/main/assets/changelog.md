@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.24 - 2026-11-16
+
+### Changed
+- The app is a little smaller: an unused web-page library from the removed web reader is gone. Nothing you can see changes.
+
 ## 0.0.23 - 2026-11-16
 
 ### Changed
