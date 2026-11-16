@@ -54,8 +54,8 @@ the final irreversible tap (Sprint 8.2).
    - Play subscription free trials are **at least 3 days**. A 1-day trial is not possible with Play Billing.
    - Uploads are App Bundles (`.aab`) with Play App Signing.
 4. **Firebase only, no AWS.** Project `friday-nandivex`.
-5. **Gemini access:** today the user brings their own Gemini API key, which never leaves the phone except to call
-   Gemini. This may change with D9 (Nandivex-provided Gemini included in the plan).
+5. **Gemini access (D9, decided 2026-11-16):** the user brings their **own Gemini API key with billing enabled**
+   (Google's paid tier). It never leaves the phone except to call Gemini. Nandivex does not pay for or resell Gemini.
 
 ---
 
@@ -115,7 +115,7 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | R6 **(fixed in 4.2)** | `docs/Idea.md`, `docs/PRIVACY_PLAN.md`, `docs/VIEWMODEL_SPLIT_PLAN.md` | Old white-label kiosk plan, a privacy plan for removed tools, a finished refactor plan. | 4.2 |
 | R7 **(fixed in 4.1)** | Merged manifest | The advertising ID (`AD_ID`) and `ACCESS_ADSERVICES_*` arrived from Firebase libraries although FRIDAY shows no ads; removed with `tools:node="remove"`. `WAKE_LOCK`, the install-referrer and `READ_GSERVICES` permissions went away with Analytics in 4.3; re-check the merged manifest in 9.1. | 4.1 |
 | R8 **(fixed in 5.1)** | API key and name | Entered only in Settings; a new user is not guided. No agreement is ever accepted. | 5.1 |
-| R9 | Setup key step, agreement | Google's Gemini API terms (read 2026-11-16) say **"Do not submit sensitive, confidential, or personal information to the Unpaid Services"**, and FRIDAY sends screen content. The setup still says "Get a free key". With a free key FRIDAY is used against Google's terms. | D9, then 6.4 / 7.3 |
+| R9 (decision made: D9) | Setup key step, agreement | Google's Gemini API terms (read 2026-11-16) say **"Do not submit sensitive, confidential, or personal information to the Unpaid Services"**, and FRIDAY sends screen content. The setup still says "Get a free key". With a free key FRIDAY is used against Google's terms. | D9, then 6.4 / 7.3 |
 | R10 | Whole app | Google's Gemini API terms say users **"must be 18 years of age or older"** and an app may not be **"directed towards or is likely to be accessed by individuals under the age of 18"**. FRIDAY has no age check today. | 7.1 |
 
 ---
@@ -148,7 +148,7 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | D6 | **Setup details.** | **Superseded 2026-11-16 by your review:** name, age and a verified email, in an account (Phase 7). |
 | D7 | **Firebase Analytics, anonymous sign-in, App Check** while nothing uses them. | **Decided 2026-11-16: removed** (4.3). Accounts (7.1) bring Firebase Authentication back for a real reason; Analytics stays out unless you ask for it. |
 | D8 | **How the email is verified.** | **Google sign-in** (Google has already verified the email; one tap; works on Firebase's free plan), with **email link sign-in** as the fallback for people without a Google account on the phone. A typed 6-digit code needs our own mail sender and Cloud Functions; skip it. |
-| D9 | **Whose Gemini key?** (R9) Google's terms forbid sending personal information to the unpaid Gemini tier, and asking people to pay us while they also pay Google is a hard sell. | Two honest options. **(a)** Users keep their own key, but setup asks for a key with **billing enabled** (paid tier) and says why. **(b)** Nandivex pays for Gemini and the subscription includes it: the app gets short-lived tokens from our Cloud Function, so there is no key in setup at all. (b) is the cleaner product for a paid app, but Nandivex then pays Google for every minute of use, prices (D3) must cover that, and it needs the Firebase **Blaze** plan. Decide before Phase 7. |
+| D9 | **Whose Gemini key?** (R9) | **Decided 2026-11-16: the user's own key, with billing enabled (Google's paid tier).** Setup says plainly that a free key is not allowed for FRIDAY because Google's terms forbid personal data on the unpaid tier, and links to Google's page for enabling billing. Nandivex pays nothing to Google per user, and the subscription (D3) pays only for FRIDAY itself. The app cannot see from the key alone whether billing is on, so this is a stated rule the user agrees to, not a check. |
 | D10 | **Trial.** Play subscription trials are at least 3 days and are part of a Play subscription purchase. | Either a Play free trial (3 days or more, inside the subscription) or an app-managed free period with no purchase (our server records it once per account). Decide with D3. |
 | D11 | **Age.** (R10) | Ask the **year of birth** in setup; under 18 cannot continue (Gemini terms). Use only an age band (18–24, 25–39, 40–59, 60+) to set the tone and pace of replies, never to change what FRIDAY will do. |
 
@@ -196,7 +196,7 @@ build through Firebase App Distribution.
 | 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (PRs #26–#28) | – |
 | 5. Setup | Setup screen: details, API key, agreement | 5.1 | **Done** (PR #29) | lawyer's read of the agreement, TalkBack check |
 | 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | To do — **next** | D4, the Nandivex logo file, your approval of the design (6.1) |
-| 7. Accounts, profile and plans | Verified email, age, profile, plans and trial in setup, upgrade, account deletion | 7.1–7.4 | To do | D1, D3, D8, D9, D10, D11, Play account |
+| 7. Accounts, profile and plans | Verified email, age, profile, plans and trial in setup, upgrade, account deletion | 7.1–7.4 | To do | D1, D3, D8, D10, D11, Play account |
 | 8. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 8.1–8.3 | To do | D5, testers with disabilities |
 | 9. Play launch | Console, policy forms, testing tracks, release | 9.1–9.3 | To do | D1, legal review |
 | 10. Extras | Faster ways to start, routines | 10.1–10.2 | Later | pick |
@@ -273,7 +273,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
   nothing is sent anywhere.** New counters start from the version that adds them, so earlier days show less.
 - **Wording:** every user-facing text rewritten in plain, short, human language (screens, buttons, errors, toasts,
   agreement, Help, Abilities page, store text), with one style guide in `docs/WRITING.md`, and the R9 fix to the key
-  step once D9 is decided. You read and approve the agreement and Help text.
+  step and agreement: a key with billing enabled, why a free key is not allowed, and a link to Google's billing page. You read and approve the agreement and Help text.
 - Done when: you approve each page on the phone, and the Usage numbers match a session you counted by hand.
 
 **Sprint 6.5: UI polish pass**
@@ -291,7 +291,7 @@ grows, and Play then **requires a way to delete the account inside the app and a
   with name, year of birth, email and its verified flag, written only by its own signed-in user; real
   `firestore.rules` with emulator tests; the **18+ check** from the year of birth, with a clear message for under-18s.
   Setup becomes: Welcome → Agreement → Sign in and verify email → About you (name, year of birth, language) → Plan →
-  Gemini access (per D9) → Voice → Permissions → Phone control → All set.
+  Gemini key with billing enabled (D9) → Voice → Permissions → Phone control → All set.
 - Profile page: name, email with a "Verified" badge, age band, plan, member since, edit, sign out, **Delete account**
   (removes the Firestore document and the sign-in), plus the deletion request page on the website.
 - Done when: rules tests prove a user can read and write only their own document, delete removes everything on the
@@ -302,13 +302,13 @@ grows, and Play then **requires a way to delete the account inside the app and a
   confirmations for 60+). It never changes which actions FRIDAY will or will not do. Unit tests for the band rules.
 - Done when: you hear the difference between two bands on the phone and agree it is respectful.
 
-**Sprint 7.3: Plans and trial in setup** (D3, D9, D10)
+**Sprint 7.3: Plans and trial in setup** (D3, D10)
 - Build: Play Billing Library; the plans you create in Play Console; the Plan step in setup (trial and paid plans, with
   price, period, renewal and how to cancel shown before purchase); purchase verification on the server (Cloud Functions
   + Play Developer API + Real-time developer notifications, Firebase **Blaze** plan); an `entitlements/{uid}` document
   only the server writes; access gated by the entitlement, with an offline grace period; developer access through Play
-  licence testers, not a code in the app. If D9 = (b), the Cloud Function that gives short-lived Gemini tokens to
-  users with an active plan is built here too.
+  licence testers, not a code in the app. The user's own Gemini key (D9) stays on the phone; plans pay for FRIDAY
+  only.
 - Done when: test purchases, trial start and end, renewals, cancellations and refunds from Play's test tools change
   access correctly, and no secret is in the app.
 
@@ -354,7 +354,7 @@ This phase is what decides whether Play accepts FRIDAY. It is product work, not 
   phone screenshots); privacy policy and terms on `friday.nandivex.in` (or `friday-nandivex.web.app`) rewritten for the
   Play app; **Data safety** form (voice audio and screen content sent to Gemini to perform requests, name and memory on
   device, crash data to Crashlytics, and from Phase 7 the account data: email, year of birth, plan); content rating; target audience;
-  **Accessibility API declaration**; **App access instructions** so reviewers can test (a test account with an active plan and Gemini access per D9,
+  **Accessibility API declaration**; **App access instructions** so reviewers can test (a test account with an active plan and a billing-enabled Gemini key for reviewers,
   because without them reviewers cannot use the app and the review can fail); the account deletion web page; a lawyer's read of the terms and privacy policy.
 - Done when: every Play Console section shows complete.
 
@@ -382,8 +382,7 @@ This phase is what decides whether Play accepts FRIDAY. It is product work, not 
 
 ## 8. Waiting on you
 
-1. D1, D3, D4, D5, D8, D9, D10, D11 (section 5). **D4 and D9 first:** the logo depends on D4, and setup and prices
-   depend on D9.
+1. D1, D3, D4, D5, D8, D10, D11 (section 5). **D4 first:** the logo depends on it.
 2. The **Nandivex Technologies logo** file (SVG, or a PNG at least 1024 px wide).
 3. Your approval of the design direction (6.1) before any UI code.
 4. Play developer account (and a D-U-N-S number if organisation).
@@ -405,13 +404,13 @@ release-key secrets for `release.yml`. The domain is still useful for the privac
 | Marvel IP complaint | D4. |
 | Screen text tricks FRIDAY into pressing Send or Pay | Untrusted-text marking (done) and spoken confirmation (8.2). |
 | App layouts change and screen jobs break | 8.3 test list; claim only what works. |
-| Reviewers cannot test without an account, a plan and Gemini access | A reviewer test account with an active plan (9.1). |
+| Reviewers cannot test without an account, a plan and a Gemini key | A reviewer test account with an active plan, and a separate billing-enabled reviewer key with a spending cap (9.1). |
 | Gemini key limits, cost or regional availability | Clear errors from the setup check and during use; the user owns the key. |
 | Losing the signing key | Play App Signing holds the app key; the upload key can be reset through Play support, but keep two backups anyway. |
-| Free-tier Gemini keys break Google's terms for personal data (R9) | D9: a paid-tier key or Gemini provided by Nandivex. Until then the setup wording is fixed in 6.4. |
+| Free-tier Gemini keys break Google's terms for personal data (R9) | D9: billing-enabled key required and explained in setup and the agreement (6.4). The app cannot verify billing from the key, so users may still paste a free key; the agreement makes that their responsibility. |
+| Users balk at paying Google and Nandivex | Setup states both costs before the plan step; Google's own pricing page linked; plan prices (D3) set with that in mind. |
 | Under-18 users (R10) | Year-of-birth check in setup (7.1); store listing and target audience set to adults (9.1). |
 | Accounts add personal data and Play's deletion rule | In-app and web account deletion (7.1); Data safety and privacy policy updated in the same change. |
-| Gemini costs if Nandivex pays (D9 b) | Prices set to cover use; per-user limits in the token function; a Google Cloud budget alert. |
 | "Modern" and "professional" are a matter of taste | Mock-ups approved before code (6.1); 6.5 repeats until you approve each screen. |
 
 ## 10. Delivery during development (unchanged)
@@ -450,5 +449,5 @@ plan (2026-11-16, Play-only decision). Permissions removed with them are listed 
 | 12 | The sidebar buttons are not professional | 6.3 |
 | 13 | Overall the UI does not look modern | 6.1–6.5 |
 
-Two of these collide with Google's own rules, so they are decisions and not only tasks: age (Gemini is for 18+ only,
-R10, D11) and free Gemini keys with personal screen data (R9, D9).
+Two of these collide with Google's own rules: age (Gemini is for 18+ only, R10, D11) and free Gemini keys with personal
+screen data (R9; decided in D9: the user's own key with billing enabled).
