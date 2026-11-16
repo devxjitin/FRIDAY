@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.20 - 2026-11-16
+
+### Fixed
+- The contact email in Help, About and bug reports is now contact@nandivex.in. It pointed to a wrong domain before, so messages never arrived.
+
 ## 0.0.19 - 2026-11-16
 
 ### Added

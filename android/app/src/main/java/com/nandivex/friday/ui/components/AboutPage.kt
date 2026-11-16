@@ -89,7 +89,7 @@ fun AboutPage(
         PageLabel("Developer")
         PageCard {
             Text("Developed by Nandivex Technologies", color = AssistantTextPrimary, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            Text("support@nandivex.com", color = AssistantTextMuted, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+            Text("contact@nandivex.in", color = AssistantTextMuted, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
         }
 
         PageLabel("Privacy")

@@ -74,4 +74,4 @@ The version name is the top `## x.y.z` heading of [`android/app/src/main/assets/
 
 ## Contact
 
-Support: support@nandivex.com
+Support: contact@nandivex.in

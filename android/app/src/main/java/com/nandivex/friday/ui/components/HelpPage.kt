@@ -54,7 +54,7 @@ import com.nandivex.friday.ui.theme.AssistantTextPrimary
 import com.nandivex.friday.ui.theme.AssistantTextSecondary
 
 /** Where support emails go, from the Contact card and the About page. */
-const val DEVELOPER_EMAIL = "support@nandivex.com"
+const val DEVELOPER_EMAIL = "contact@nandivex.in"
 
 /** "Pixel 9, Android 16 (API 36)": the phone details a bug report and a support email carry. */
 fun deviceSummary(): String = "${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}, " +
