@@ -25,7 +25,6 @@ import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
@@ -67,7 +66,6 @@ enum class NavTab(val label: String, val icon: ImageVector) {
     PROFILE("Profile", Icons.Outlined.AccountCircle),
     MEMORY("Memory", Icons.Outlined.Psychology),
     HISTORY("History", Icons.Outlined.History),
-    CONNECTORS("Connectors", Icons.Outlined.Extension),
     SETTINGS("Settings", AssistantIcons.Settings),
     USAGE("Usage", Icons.Outlined.Insights),
     STORAGE("Storage", Icons.Outlined.Inventory2),
@@ -84,7 +82,6 @@ private val RowHeight = 40.dp
 /** The menu in reading order: the basics, what FRIDAY does, what it knows about you, the numbers, then the app itself. */
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
     null to listOf(NavTab.HOME),
-    "Assistant" to listOf(NavTab.CONNECTORS),
     "Your data" to listOf(NavTab.MEMORY, NavTab.HISTORY),
     "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
     "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)

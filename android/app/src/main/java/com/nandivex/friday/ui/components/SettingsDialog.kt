@@ -91,7 +91,6 @@ fun SettingsPage(
     onLanguageSelected: (String) -> Unit,
     onMicSensitivitySelected: (MicSensitivity) -> Unit,
     onBargeInToggled: (Boolean) -> Unit,
-    onAnnounceNotificationsToggled: (Boolean) -> Unit,
     onOwnerNameChanged: (String) -> Unit = {},
     onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit = {},
     onSaveDeveloperChanges: (String) -> Unit,
@@ -188,7 +187,7 @@ fun SettingsPage(
                 0 -> Column {
                     GeneralSettingsContent(
                         settings, onLiveModelSelected, onVoiceSelected, onLanguageSelected,
-                        onMicSensitivitySelected, onBargeInToggled, onAnnounceNotificationsToggled, onOwnerNameChanged, onReplyStyleSelected
+                        onMicSensitivitySelected, onBargeInToggled, onOwnerNameChanged, onReplyStyleSelected
                     )
                     // The old Developer page now lives at the end of Settings.
                     Spacer(Modifier.height(24.dp))
@@ -306,7 +305,6 @@ private fun GeneralSettingsContent(
     onLanguageSelected: (String) -> Unit,
     onMicSensitivitySelected: (MicSensitivity) -> Unit,
     onBargeInToggled: (Boolean) -> Unit,
-    onAnnounceNotificationsToggled: (Boolean) -> Unit,
     onOwnerNameChanged: (String) -> Unit,
     onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit
 ) {
@@ -365,12 +363,6 @@ private fun GeneralSettingsContent(
             title = "Barge-in",
             hint = "Talk to interrupt. Turn off if it hears itself.",
             checked = settings.bargeInEnabled, onChange = onBargeInToggled
-        )
-        Spacer(Modifier.height(12.dp))
-        ToggleCard(
-            title = "Read out notifications",
-            hint = "Tells you about new notifications while you talk. The text is shared with Gemini.",
-            checked = settings.announceNotificationsEnabled, onChange = onAnnounceNotificationsToggled
         )
         DefaultAssistantSection()
     }

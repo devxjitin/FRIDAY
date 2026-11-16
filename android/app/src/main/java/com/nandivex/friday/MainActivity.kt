@@ -1,22 +1,18 @@
 package com.nandivex.friday
 
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.IOException
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.provider.OpenableColumns
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -24,12 +20,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
@@ -42,7 +36,6 @@ import com.nandivex.friday.ui.AssistantActions
 import com.nandivex.friday.ui.AssistantScreen
 import com.nandivex.friday.ui.theme.AssistantTheme
 import com.nandivex.friday.ui.theme.ActivePalette
-import com.nandivex.friday.ui.theme.ThemeMode
 import com.nandivex.friday.ui.theme.ThemePrefs
 import com.nandivex.friday.ui.theme.applyWindowColors
 import com.nandivex.friday.ui.theme.paletteFor
@@ -50,6 +43,8 @@ import com.nandivex.friday.viewmodel.AssistantViewModel
 import com.nandivex.friday.ui.AccessCheckingScreen
 import com.nandivex.friday.ui.ActivationScreen
 import com.nandivex.friday.ui.LicenseSummary
+import com.nandivex.friday.ui.PhoneControlScreen
+import com.nandivex.friday.data.AccessChecks
 import com.nandivex.friday.viewmodel.AccessState
 import com.nandivex.friday.viewmodel.AccessViewModel
 
@@ -192,6 +187,8 @@ class MainActivity : ComponentActivity() {
             // Permission can also be granted/revoked from outside this Activity (the system
             // Settings app) while it stays alive in the background -- recheck whenever it comes
             // back to the foreground instead of only trusting the launcher callback.
+            // Phone control (the accessibility service) is switched on in Android's settings, so it is re-checked on resume.
+            var phoneControlOn by remember { mutableStateOf(AccessChecks.phoneControlOn(this@MainActivity)) }
             val lifecycleOwner = LocalLifecycleOwner.current
             DisposableEffect(lifecycleOwner) {
                 val observer = LifecycleEventObserver { _, event ->
@@ -200,6 +197,7 @@ class MainActivity : ComponentActivity() {
                         val granted = hasMicPermission()
                         micGranted = granted
                         if (granted) micPermissionPermanentlyDenied = false
+                        phoneControlOn = AccessChecks.phoneControlOn(this@MainActivity)
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -225,6 +223,20 @@ class MainActivity : ComponentActivity() {
                         is AccessState.Active -> Unit
                     }
                     val active = accessState as AccessState.Active
+                    if (!phoneControlOn) {
+                        PhoneControlScreen(onAgree = {
+                            runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+                        })
+                        return@Surface
+                    }
+                    // Once phone control is on, ask once for what the built-in tools use (Wi-Fi name, Bluetooth, steps).
+                    var askedToolPermissions by rememberSaveable { mutableStateOf(false) }
+                    LaunchedEffect(micGranted) {
+                        if (!micGranted || askedToolPermissions) return@LaunchedEffect
+                        askedToolPermissions = true
+                        val missing = AccessChecks.missingToolPermissions(this@MainActivity)
+                        if (missing.isNotEmpty()) runCatching { toolPermissionLauncher.launch(missing.toTypedArray()) }
+                    }
 
                     val uiState by viewModel.uiState.collectAsState()
                     LaunchedEffect(uiState.permissionRequestId) {
@@ -264,7 +276,6 @@ class MainActivity : ComponentActivity() {
                                 ActivePalette.current = paletteFor(mode, night)
                             },
                             onHomeTapped = { viewModel.onHomeTapped() },
-                            onConnectorsTapped = { viewModel.onConnectorsTapped() },
                             onDismissWhatsNew = { viewModel.onDismissWhatsNew() },
                             onUsageTapped = { viewModel.onUsageTapped() },
                             onStorageTapped = { viewModel.onStorageTapped() },
@@ -285,8 +296,6 @@ class MainActivity : ComponentActivity() {
                             onDeletePastSession = { viewModel.onDeletePastSession(it) },
                             onClearPastConversations = { viewModel.onClearPastConversations() },
                             onShowOlderConversations = { viewModel.onShowOlderConversations() },
-                            onConnectorToolsEnabled = { tools, enabled, name -> viewModel.onConnectorToolsEnabled(tools, enabled, name) },
-                            onRequestConnectorPermissions = { permissions -> viewModel.onRequestConnectorPermissions(permissions) },
                             onRequestPermission = {
                                 permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                             },
@@ -308,7 +317,6 @@ class MainActivity : ComponentActivity() {
                             onLanguageSelected = { code -> viewModel.onLanguageSelected(code) },
                             onMicSensitivitySelected = { sensitivity -> viewModel.onMicSensitivitySelected(sensitivity) },
                             onBargeInToggled = { enabled -> viewModel.onBargeInToggled(enabled) },
-                            onAnnounceNotificationsToggled = { enabled -> viewModel.onAnnounceNotificationsToggled(enabled) },
                             onReplyStyleSelected = { style -> viewModel.onReplyStyleSelected(style) },
                             onOwnerNameChanged = { name -> viewModel.onOwnerNameChanged(name) },
                             onSaveDeveloperChanges = { apiKey ->
