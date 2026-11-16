@@ -141,8 +141,8 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | D3 | **Prices** (only if D2 = paid). | You decide. |
 | D4 | **Name.** F.R.I.D.A.Y. is a Marvel character. Play enforces intellectual-property rules at review and on complaints. | Use a listing name that does not depend on Marvel (for example "FRIDAY – Hands-Free Phone Access"), no Marvel quotes, art or "Iron Man" references. A trademark search before launch. A full rename is the safest option. |
 | D5 | **Persona.** A witty "Boss" assistant reads as a general assistant, which Play says does not qualify. | Keep the voice calm and short; make chat and memory secondary features of an access tool, not the headline. |
-| D7 | **Firebase Analytics and anonymous sign-in** while nothing uses them. | Remove both now (and App Check until a backend needs it). Crashlytics stays. Add them back only when a feature needs them. |
 | D6 | **Setup details:** what besides the name? | Only what the app uses: name, how to be addressed, language. No email, phone or address while there is no account, so the Data safety form stays small. |
+| D7 | **Firebase Analytics and anonymous sign-in** while nothing uses them. | Remove both now (and App Check until a backend needs it). Crashlytics stays. Add them back only when a feature needs them. |
 
 ---
 
