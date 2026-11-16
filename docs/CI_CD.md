@@ -1,31 +1,103 @@
-# CI/CD behavior
+# CI/CD
 
-## Validation
+FRIDAY is built and delivered by three GitHub Actions workflows. Nothing runs on AWS any more.
 
-`Checks` runs on every PR and can be called by the release workflow. A complete Git diff selects the Android, backend and browser-module jobs. Docs-only PRs still run the inexpensive workflow-logic tests and an always-running `Required checks` gate, so required status checks cannot remain pending because a workflow was skipped.
+| Workflow | When | What it does |
+|---|---|---|
+| `checks.yml` | Every pull request, and called by the other two | Tests and lint, plus the Python tests in `tests/ci` |
+| `distribute.yml` | Every merge to `main` that touches `android/` | Builds the **tester** APK and sends it to Firebase App Distribution (group `testers`) |
+| `release.yml` | Pushing a tag like `v0.0.21` | Builds the signed **release** APK and publishes it to the website |
 
-Android validation runs unit tests and lint in one Gradle invocation with `-PappVersionCode=1`, task-output caching and a timing profile. The stable validation version avoids minute-by-minute BuildConfig invalidation. This version is for validation only and is never published. Configuration caching is not enabled until plugin compatibility is established.
+## Checks
 
-Backend validation uses Python 3.14, caches pip downloads, runs tests, builds both Linux packages and imports their actual dependencies. Browser modules receive syntax checks. Changes to CI selection or validation logic conservatively validate all components.
+`checks.yml` classifies the complete diff (`scripts/ci_changes.py`) so docs-only changes stay cheap but the required gate
+(`Required checks`) always reports. Android changes run unit tests and lint in one Gradle call with a fixed version code
+(`-PappVersionCode=1`), which is used only for validation and never published. A pull request that changes the app must put
+a newer version at the top of `android/app/src/main/assets/changelog.md` (`scripts/check_version_bump.py`). The Python tests
+(`python -m unittest discover -s tests/ci`) cover change selection, the version bump and the release files.
 
-## Releases
+## Tester builds (Firebase App Distribution)
 
-`Publish OTA` runs on main pushes affecting Android, the publish script, the publish workflow or local actions. Backend, website, Python-version, documentation and checks-only changes do not automatically release an APK. Manual publishing is available on main.
+Every merge to `main` that touches the app builds `assembleBeta` (package `com.nandivex.friday.tester`, signed with the tester
+key) and uploads it to App Distribution with the newest changelog entry as release notes. Testers get a notification in
+the Firebase App Tester app. Login to Google is keyless (Workload Identity Federation), so no token is stored.
 
-1. Preflight rejects non-main releases and skips obsolete commits before installing build tools.
-2. The same commit runs the reusable `Checks` workflow. A failure prevents the publishing job from starting; signing material and AWS credentials are only restored after validation.
-3. The build step runs `publish-update.ps1 -Mode Build`. It builds the shrunk OTA APK, records its exact source commit/hash/size/version in `ota-manifest.json`, and performs no uploads.
-4. The upload step runs `-Mode Publish`. It checks the build manifest, requires a strictly newer version than live, rechecks source freshness, uploads the APK and only then updates `latest.json`.
-5. Gradle HTML timing profiles are retained as workflow artifacts for seven days. Build and upload are separate timed steps.
+## Website releases
 
-Local one-command publishing remains `./scripts/publish-update.ps1 -Notes "Changes"`, defaulting to `BuildAndPublish`. It requires an existing readable `latest.json`; authentication or network failures stop publication. The existing signing key and three-APK retention policy are preserved.
+The release APK (`com.nandivex.friday`) is published on **https://friday.nandivex.in** (Firebase Hosting, project
+`friday-nandivex`). Its backup address is `https://friday-nandivex.web.app`.
+
+To release:
+
+1. Put the new version at the top of `changelog.md` and merge to `main` (the tester build goes out as usual).
+2. Tag that commit and push the tag. The tag must be `v` plus the newest changelog version:
+
+   ```bash
+   git tag v0.0.21
+   git push origin v0.0.21
+   ```
+
+3. `release.yml` then:
+   - checks that the tag matches the changelog (`scripts/release_files.py check-tag`) and runs `checks.yml`;
+   - builds `assembleRelease` with a version code of minutes since 1970, so each release is higher than the one before;
+   - checks the APK is signed (and, if the repository variable `RELEASE_CERT_SHA256` is set, with that exact key);
+   - reads the **live** `latest.json`. If it cannot be read, or it is newer or equal, the release stops. A 404 on both
+     addresses means this is the first release;
+   - builds the website files (`scripts/release_files.py build`): `FRIDAY.apk`, `FRIDAY-<versionCode>.apk`, then
+     `latest.json` last;
+   - deploys `site/` to Firebase Hosting, and checks the live site serves the new version and the right APK size;
+   - saves the APK in a GitHub release, so every version stays available (Hosting only keeps the current one).
+
+`latest.json` holds `versionCode`, `versionName`, `apkUrl`, `sha256`, `sizeBytes`, `minAndroid`, `rollout` and `notes`. The
+app (`UpdateRules.kt`) offers an update only for a newer version code, a host in its allow-list, a matching SHA-256 and a
+minimum Android it meets. To hold a release back, deploy `latest.json` with `rollout` below 100; the app puts each phone in
+a fixed bucket from 0 to 99 and offers the update only when the bucket is lower than `rollout`.
+
+### What the site serves
+
+- `site/` is the whole website (home, download, install guide, privacy, terms). It is static HTML, one stylesheet, one script
+  and no outside resources; the Content Security Policy in `firebase.json` blocks everything else.
+- `latest.json`, `FRIDAY.apk`, `FRIDAY-*.apk` and `release-notes.txt` are written into `site/` by the workflow and are
+  gitignored.
+- Cache rules (`firebase.json`): `latest.json` is never cached, `FRIDAY.apk` for five minutes, and each versioned APK is
+  immutable.
+
+## Secrets and variables
+
+GitHub repository **secrets**:
+
+| Name | Used by | Content |
+|---|---|---|
+| `GOOGLE_SERVICES_JSON` | both | `android/app/google-services.json`, base64 |
+| `TESTER_KEYSTORE`, `TESTER_STORE_PASSWORD`, `TESTER_KEY_ALIAS`, `TESTER_KEY_PASSWORD` | `distribute.yml` | The shared tester signing key |
+| `RELEASE_KEYSTORE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD` | `release.yml` | The release signing key (`android/keystore/nivi-release.jks` on the dev PC), keystore as base64 |
+
+Repository **variable** (optional but recommended): `RELEASE_CERT_SHA256`, the SHA-256 of the release certificate, so a build
+signed with any other key is refused.
+
+The Google service account `firebase-adminsdk-fbsvc@friday-nandivex.iam.gserviceaccount.com` needs the **Firebase Hosting
+Admin** role for `release.yml` to deploy, and the Firebase Hosting API must be enabled on the project.
+
+## Keep the release key safe
+
+Android installs an update only if it is signed with the same key as the installed app. If the release key is lost, every
+user has to uninstall and reinstall. Keep the keystore and its passwords outside git, with backups in two separate places.
+
+## Local commands
+
+```bash
+# Tests, lint and a debug build
+cd android && ./gradlew testDebugUnitTest lintDebug assembleDebug
+
+# The Python tests, including the release files
+python -m unittest discover -s tests/ci -v
+
+# Preview the website on this PC
+python -m http.server 8080 --directory site
+```
 
 ## Repository protection
 
-Protect main with a PR requirement, required `Required checks` status, up-to-date branches, resolved conversations, administrator enforcement, and force pushes/deletions disabled. No approval count is required for a sole-maintainer repository. This repository setting is independent of YAML; inspect the actual GitHub API result before claiming it is active.
-
-## Scope and timing
-
-These workflows publish Android OTA updates. They validate backend/website changes but do not deploy Lambda, CloudFormation or Firebase Hosting. Python 3.14 runtime deployment remains separate.
-
-Tests now gate main releases, so total release time is not guaranteed to decrease immediately. Dependency and task-output caches reduce repeat work; selective jobs avoid unrelated work. Use the generated profiles and real GitHub run durations to measure improvements rather than estimating a promised speedup.
+Protect `main` with a pull request requirement, the `Required checks` status, up-to-date branches, resolved conversations,
+administrator enforcement, and force pushes and deletions disabled. This is a repository setting and is independent of the
+YAML: inspect the real GitHub API result before claiming it is active.
