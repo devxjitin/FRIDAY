@@ -572,3 +572,4 @@
 [2026-11-16] [Claude] [Plan: D4 decided by owner, keep the name F.R.I.D.A.Y.; IP risk and mitigations recorded]
 [2026-11-16] [Claude] [Sprint 6.1 done: design direction approved, logo A (Voice F), purple palette, system font]
 [2026-11-16] [Claude] [Sprint 6.2 built (0.0.27): purple palette, Voice F icons, system font; Nandivex logo waits for the file]
+[2026-11-16] [Claude] [Sprint 6.3 built (0.0.28): new sidebar; fixed unreadable button text from 6.2]

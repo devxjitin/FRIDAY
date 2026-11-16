@@ -21,5 +21,5 @@ fun assistantTypography() = Typography(
     bodyLarge = TextStyle(fontFamily = SystemFont, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp, color = AssistantTextPrimary),
     bodyMedium = TextStyle(fontFamily = SystemFont, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp, color = AssistantTextSecondary),
     bodySmall = TextStyle(fontFamily = SystemFont, fontWeight = FontWeight.Normal, fontSize = 12.sp, lineHeight = 17.sp, color = AssistantTextSecondary),
-    labelLarge = TextStyle(fontFamily = SystemFont, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = AssistantTextSecondary)
+    labelLarge = TextStyle(fontFamily = SystemFont, fontWeight = FontWeight.Medium, fontSize = 14.sp)
 )
