@@ -54,7 +54,7 @@ skip it.
 | D4 | **Name and IP.** F.R.I.D.A.Y. is a Marvel character. Marvel names, quotes and film artwork risk a takedown. | App name "FRIDAY – Voice Assistant", personality *inspired by* the film AI, no Marvel names or logos. |
 | D5 | Knowledge base, YouTube, Images page. | **Done:** all removed. |
 | D6 | Firebase account and project. | **Done:** project `friday-nandivex`. |
-| **D7** | **Distribution route.** Google's Accessibility API policy (read 2026-11-16) says an app that is not an accessibility tool may not use the API "to autonomously initiate, plan, and execute actions", and only services whose main purpose is helping people with disabilities may set `isAccessibilityTool`. A general voice assistant does not qualify, and FRIDAY's tap-and-type loop is that kind of autonomy. | **Decided: route B.** Release from our own website and Firebase App Distribution, Razorpay only. See section 12. |
+| **D7** | **Distribution route.** Google's Accessibility API policy (read 2026-11-16) says an app that is not an accessibility tool may not use the API "to autonomously initiate, plan, and execute actions", and only services whose main purpose is helping people with disabilities may set `isAccessibilityTool`. A general voice assistant does not qualify, and FRIDAY's tap-and-type loop is that kind of autonomy. | **Decided: route B.** Release from our own website (Firebase Hosting on a Nandivex GoDaddy domain) and Firebase App Distribution, Razorpay only. See section 12. |
 
 ---
 
@@ -214,9 +214,15 @@ the plan screen opens when it ends. The trial is app-managed through Firebase.
 - Misdeclaring is grounds for suspension of a developer account. Staying off Play avoids that risk entirely.
 
 **What we build**
-- **The site:** a Firebase Hosting site in `friday-nandivex` (free, HTTPS, can move to a Nandivex domain later). Pages:
-  landing, **Download**, sideloading guide with pictures (including "Allow restricted settings"), privacy policy, terms,
-  support contact.
+- **The site:** a Firebase Hosting site in `friday-nandivex` (free, automatic HTTPS), served on a **Nandivex domain
+  bought at GoDaddy**. I propose the subdomain `friday.nandivex.com`, so the main `nandivex.com` site is not touched
+  (the app already uses `support@nandivex.com`, so I take the domain to be `nandivex.com`; tell me if it is another).
+  Pages: landing, **Download**, sideloading guide with pictures (including "Allow restricted settings"), privacy
+  policy, terms, support contact.
+- **The domain steps:** I add the custom domain in Firebase Hosting, which gives the DNS records to create. **You** add
+  those records (a TXT to verify and the A records Firebase shows) in GoDaddy's DNS page, because that is your account.
+  Firebase then issues the HTTPS certificate by itself, which can take up to a day. Keep the Firebase `*.web.app`
+  address as a backup link until the domain works.
 - **The release files:** `FRIDAY.apk` and `latest.json` (`versionCode`, `versionName`, `apkUrl`, `sha256`, `notes`,
   `minAndroid`). `latest.json` is written last, so a half-uploaded release is never offered.
 - **The updater (in the app):** checks `latest.json` on open, shows "Update available" with the notes, downloads the APK
@@ -305,7 +311,7 @@ torch SOS blink stays.
 | **3. Hands-free control** | The tool set, the gate and the Abilities page | 3.1 – 3.5 done, 3.6 next | **Almost done** | phone tests |
 | **4. Accounts and setup** | Onboarding, sign-in, free trial, wake word | 4.1 – 4.3 | To do | none |
 | **5. Subscriptions** | Coupons, Razorpay, account page | 5.1 – 5.3 | To do | D3, Razorpay account and KYC |
-| **6. Release** | Signed APK, updater and download site on our own website | 6.1 – 6.3 | To do | domain choice, Razorpay live keys |
+| **6. Release** | Signed APK, updater and download site on our own website | 6.1 – 6.3 | To do | GoDaddy DNS records, Razorpay live keys |
 | **7. Extras** | Faster ways to reach FRIDAY | 7.1 – 7.2 | To do | pick which ones |
 
 ---
@@ -394,7 +400,8 @@ and 6.2 can run before Phase 4 or 5.
   13 and 15.
 
 **Sprint 6.2: The website and the release workflow**
-- Build: the Firebase Hosting site (landing, Download, sideloading guide, privacy, terms, support), `release.yml`
+- Build: the Firebase Hosting site on `friday.nandivex.com` (landing, Download, sideloading guide, privacy, terms,
+  support; you add the DNS records at GoDaddy), `release.yml`
   (tag → tests → release APK → upload to Hosting → `latest.json` last), a rewritten `docs/CI_CD.md`, and removal of
   `sites/ultron-showcase/`.
 - Demo: you push a version tag, and within minutes the site offers the new APK with its checksum, and an installed
@@ -422,6 +429,7 @@ Wi-Fi off), run locally without model planning, and a typed command bar on home.
 | Play bans accessibility-driven assistants | Not on Play (D7). Never set `isAccessibilityTool` unless FRIDAY truly is one. |
 | Sideloading puts users off, and Android 13+ greys out the accessibility switch until "Allow restricted settings" | A picture guide in the gate and on the site, tested on real phones in Sprints 4.1 and 6.1. |
 | Losing the release signing key strands every user | Two offline backups, checked before the first public release. |
+| The domain or its DNS lapses, and downloads and updates stop | Auto-renew the domain at GoDaddy, keep the `*.web.app` address as a backup, and let the app fall back to it for `latest.json`. |
 | A bad update reaches everyone | `latest.json` is written last, with a rollout percentage and a checksum. |
 | Prompt injection from text on screen makes FRIDAY press Send or pay | Untrusted-content marking now; confirmation before irreversible actions in Sprint 3.6. |
 | App layouts change and the screen tools break | The Sprint 3.6 test list, and `look_at_screen` as a fallback. Report the reliable jobs honestly. |
