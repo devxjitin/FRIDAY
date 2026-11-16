@@ -29,13 +29,12 @@ object AccessChecks {
 
     /**
      * The runtime permissions the built-in tools use, asked once after phone control is on: the Wi-Fi name needs
-     * location, Bluetooth needs nearby devices from Android 12, and the step counter needs physical activity.
+     * location and Bluetooth needs nearby devices from Android 12.
      */
     fun toolPermissions(): List<String> = buildList {
         add(Manifest.permission.ACCESS_FINE_LOCATION)
         add(Manifest.permission.ACCESS_COARSE_LOCATION)
         if (Build.VERSION.SDK_INT >= 31) add(Manifest.permission.BLUETOOTH_CONNECT)
-        if (Build.VERSION.SDK_INT >= 29) add(Manifest.permission.ACTIVITY_RECOGNITION)
     }
 
     fun missingToolPermissions(context: Context): List<String> = toolPermissions().filter {

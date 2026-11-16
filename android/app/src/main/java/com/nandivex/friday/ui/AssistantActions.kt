@@ -34,6 +34,7 @@ class AssistantActions(
     val onRestoreMemory: (String) -> Unit = {},
     val onHistoryTapped: () -> Unit = {},
     val onHelpTapped: () -> Unit = {},
+    val onAbilitiesTapped: () -> Unit = {},
     val onSendFeatureRequest: (FeatureRequest, (String?) -> Unit) -> Unit = { _, _ -> },
     val onDeletePastSession: (List<Long>) -> Unit = {},
     val onClearPastConversations: () -> Unit = {},

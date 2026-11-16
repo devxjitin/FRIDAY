@@ -277,6 +277,8 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun onHelpTapped() = openPage(AppPage.HELP)
 
+    fun onAbilitiesTapped() = openPage(AppPage.ABILITIES)
+
     /**
      * Opens the email app with a feature request or bug report filled in for the developer. [onDone] gets null when
      * the email app opened, else a message for the user. (Sending from inside the app comes with accounts in Phase 4.)

@@ -3,6 +3,16 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.19 - 2026-11-16
+
+### Added
+- A new "What F.R.I.D.A.Y. can do" page in the menu lists everything it can do on your phone, grouped by screen control, navigation, connectivity, sound, display, apps and clipboard. It only shows the list: there is nothing to switch on or off.
+
+### Removed
+- Alarms, timers, reminders and "show a notification". To set one, ask F.R.I.D.A.Y. to open the Clock app and use it for you.
+- Steps, light sensor, storage and memory, and phone model details. The time and battery are still answered.
+- The alarm ringing screen and service, and the permissions they needed (exact alarms, full-screen alerts, run at startup, wake lock, physical activity, data sync).
+
 ## 0.0.18 - 2026-11-16
 
 ### Changed

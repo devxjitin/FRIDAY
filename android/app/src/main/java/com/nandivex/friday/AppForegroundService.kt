@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.IntentFilter
 import android.media.AudioManager
-import com.nandivex.friday.data.AutomationEngine
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -26,37 +25,12 @@ class AppForegroundService : Service() {
     private var muted = false
     private var sessionStartMs = System.currentTimeMillis()
 
-    /** Turns phone events into automation rule runs. Sticky broadcasts replayed on registering are ignored. */
-    private val eventReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (isInitialStickyBroadcast) return
-            val event = when (intent.action) {
-                Intent.ACTION_POWER_CONNECTED -> "charger_connected"
-                Intent.ACTION_POWER_DISCONNECTED -> "charger_disconnected"
-                Intent.ACTION_BATTERY_LOW -> "battery_low"
-                Intent.ACTION_USER_PRESENT -> "screen_unlocked"
-                AudioManager.ACTION_HEADSET_PLUG -> if (intent.getIntExtra("state", 0) == 1) "headphones_plugged" else null
-                else -> null
-            }
-            if (event != null) AutomationEngine.onEvent(context.applicationContext, event)
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
         instance = this
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_POWER_CONNECTED)
-            addAction(Intent.ACTION_POWER_DISCONNECTED)
-            addAction(Intent.ACTION_BATTERY_LOW)
-            addAction(Intent.ACTION_USER_PRESENT)
-            addAction(AudioManager.ACTION_HEADSET_PLUG)
-        }
-        ContextCompat.registerReceiver(this, eventReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
     override fun onDestroy() {
-        runCatching { unregisterReceiver(eventReceiver) }
         if (instance === this) instance = null
         super.onDestroy()
     }
@@ -81,7 +55,7 @@ class AppForegroundService : Service() {
     private fun applyMode(listening: Boolean) {
         if (listening && !this.listening) sessionStartMs = System.currentTimeMillis()
         this.listening = listening
-        if (!listening && !AutomationEngine.hasRules(this)) {
+        if (!listening) {
             // Nothing needs the service now, so the notification goes away instead of sitting there idle.
             if (instance === this) instance = null
             startForeground(NOTIFICATION_ID, buildNotification(false)) // a started foreground service must show once before it stops

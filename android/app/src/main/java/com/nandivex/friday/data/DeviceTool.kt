@@ -11,14 +11,6 @@ data class ToolParam(
     val choices: List<String> = emptyList()
 )
 
-/** Tools that never need a screen, so they can run from an alarm or a phone event. */
-val AUTOMATABLE_TOOL_NAMES = listOf(
-    "set_volume", "set_ringer_mode", "vibrate_device", "set_flashlight", "media_control", "set_do_not_disturb",
-    "set_clipboard_text", "show_notification", "set_screen_timeout", "set_auto_rotate",
-    "schedule_reminder", "lock_screen", "take_screenshot", "get_battery_status",
-    "get_network_status", "get_current_time", "get_storage_and_memory"
-)
-
 private fun volumeStreamParam() = ToolParam(
     "stream", ToolParamType.STRING,
     "Which volume: assistant is the assistant's own voice (the call volume), media is music and videos, " +
@@ -133,14 +125,6 @@ enum class DeviceTool(
         "get_battery_status", "Battery", "Tell the battery level and charging state.",
         "Returns the battery percentage, charging state, temperature and whether battery saver is on."
     ),
-    DEVICE_INFO(
-        "get_device_info", "Device info", "Tell the phone model, Android version, screen, language and time zone.",
-        "Returns the device model, Android version, screen size and orientation, language and time zone."
-    ),
-    STORAGE_MEMORY(
-        "get_storage_and_memory", "Storage and memory", "Tell free storage and free RAM.",
-        "Returns free and total internal storage and free and total RAM."
-    ),
     NETWORK(
         "get_network_status", "Network status", "Tell whether Wi-Fi or mobile data is connected.",
         "Returns whether the device is online and whether it is on Wi-Fi, mobile data or another network."
@@ -158,14 +142,6 @@ enum class DeviceTool(
         "set_clipboard_text", "Write clipboard", "Copy text to the clipboard.",
         "Copies the given text to the clipboard so the user can paste it elsewhere.",
         listOf(ToolParam("text", ToolParamType.STRING, "Text to copy."))
-    ),
-    SHOW_NOTIFICATION(
-        "show_notification", "Show notification", "Post a notification on the phone.",
-        "Shows a notification with a title and message, for example as a reminder.",
-        listOf(
-            ToolParam("title", ToolParamType.STRING, "Notification title."),
-            ToolParam("message", ToolParamType.STRING, "Notification text.")
-        )
     ),
     SET_DND(
         "set_do_not_disturb", "Do Not Disturb", "Turn Do Not Disturb on or off.",
@@ -218,109 +194,10 @@ enum class DeviceTool(
         listOf(ToolParam("name", ToolParamType.STRING, "App name."))
     ),
 
-    SET_ALARM(
-        "set_alarm", "Set alarm", "Set an alarm that rings with sound.",
-        "Sets an alarm for a time of day in 24-hour format, for waking up or ringing at a clock time. For \"in 10 minutes\" use set_timer; " +
-            "for \"remind me to ...\" use schedule_reminder. It is the assistant's own alarm: it rings on the alarm volume until stopped or snoozed, " +
-            "and you can list, change and cancel it. Add repeat daily or weekly for an alarm that keeps ringing. " +
-            "Setting the same time again replaces the old alarm. Act immediately, then say it is set.",
-        listOf(
-            ToolParam("hour", ToolParamType.INTEGER, "Hour 0-23."),
-            ToolParam("minute", ToolParamType.INTEGER, "Minute 0-59."),
-            ToolParam("label", ToolParamType.STRING, "Optional alarm name.", required = false),
-            ToolParam("repeat", ToolParamType.STRING, "daily or weekly. Leave out for a single alarm.", required = false)
-        )
-    ),
-    LIST_ALARMS(
-        "list_alarms", "List alarms", "See the alarms that are set.",
-        "Lists every alarm still waiting to ring, with its time and name. An alarm that already rang or was cancelled is not listed."
-    ),
-    CANCEL_ALARM(
-        "cancel_alarm", "Cancel alarm", "Cancel an alarm.",
-        "Cancels an alarm for real, without opening any app: give hour and minute for a time, a label for a named alarm, " +
-            "or neither for the next alarm. While an alarm is ringing, calling it with nothing stops the ringing. " +
-            "Use this whenever the user asks to cancel, delete, stop or turn off an alarm; never open the Clock app. " +
-            "The result says which alarm was removed, or lists the alarms that exist when none matched; tell the user exactly that.",
-        listOf(
-            ToolParam("hour", ToolParamType.INTEGER, "Hour 0-23 of the alarm to cancel.", required = false),
-            ToolParam("minute", ToolParamType.INTEGER, "Minute 0-59 of the alarm to cancel. Default 0.", required = false),
-            ToolParam("label", ToolParamType.STRING, "Name of the alarm to cancel, when no time is given.", required = false),
-            ToolParam("id", ToolParamType.INTEGER, "Alarm number, if known.", required = false)
-        )
-    ),
-    MODIFY_ALARM(
-        "modify_alarm", "Change an alarm", "Move an alarm to a new time.",
-        "Moves the alarm at hour:minute to new_hour:new_minute, keeping its name and repeat unless a new label is given. " +
-            "Call list_alarms first if the time is not known.",
-        listOf(
-            ToolParam("hour", ToolParamType.INTEGER, "Current hour 0-23 of the alarm."),
-            ToolParam("minute", ToolParamType.INTEGER, "Current minute 0-59 of the alarm."),
-            ToolParam("new_hour", ToolParamType.INTEGER, "New hour 0-23."),
-            ToolParam("new_minute", ToolParamType.INTEGER, "New minute 0-59."),
-            ToolParam("label", ToolParamType.STRING, "Optional new alarm name. The old name is kept if left out.", required = false)
-        )
-    ),
-    SET_TIMER(
-        "set_timer", "Set timer", "Start a countdown timer that rings with sound.",
-        "Starts a countdown timer for the given number of seconds (up to 24 hours), for \"in 10 minutes\" or \"after half an hour\" with nothing to remember. " +
-            "It rings on the alarm volume until stopped. " +
-            "Several timers can run at once; give each a label when the user names it.",
-        listOf(
-            ToolParam("seconds", ToolParamType.INTEGER, "Timer length in seconds."),
-            ToolParam("label", ToolParamType.STRING, "Optional timer name.", required = false)
-        )
-    ),
-    LIST_TIMERS(
-        "list_timers", "List timers", "See the running timers.",
-        "Lists every running timer with the time left. Use it for questions like how much time is left."
-    ),
-    CANCEL_TIMER(
-        "cancel_timer", "Cancel timer", "Stop a running timer.",
-        "Cancels a running timer for real. Give its label or number; with neither, a ringing timer is stopped, or else the one ringing soonest is cancelled. " +
-            "Use this whenever the user asks to stop, cancel or delete a timer.",
-        listOf(
-            ToolParam("label", ToolParamType.STRING, "Name of the timer to cancel.", required = false),
-            ToolParam("id", ToolParamType.INTEGER, "Timer number, if known.", required = false)
-        )
-    ),
 
-    SCHEDULE_REMINDER(
-        "schedule_reminder", "Reminder", "Remind you at a time or after a while, with a sound.",
-        "Sets a reminder: a message about something to do, which pops up with a sound and vibration. Use it when the user says what to be reminded of; " +
-            "use set_alarm or set_timer when they only want ringing. Give minutes from now (up to a year), or at_time as HH:MM in 24-hour time, " +
-            "with an optional date (YYYY-MM-DD) for another day. Without a date, at_time means the next time the clock shows it. " +
-            "Add repeat daily or weekly for a reminder that keeps coming. Call get_current_time first if the date or time is unclear.",
-        listOf(
-            ToolParam("message", ToolParamType.STRING, "What to remind about."),
-            ToolParam("minutes", ToolParamType.INTEGER, "Minutes from now, 1-525600. Leave out when using at_time.", required = false),
-            ToolParam("at_time", ToolParamType.STRING, "Clock time HH:MM, 24-hour.", required = false),
-            ToolParam("date", ToolParamType.STRING, "Day for at_time as YYYY-MM-DD. Leave out for the next occurrence.", required = false),
-            ToolParam("repeat", ToolParamType.STRING, "daily or weekly. Leave out for a single reminder.", required = false)
-        )
-    ),
 
-    LIST_REMINDERS(
-        "list_reminders", "List reminders", "See the reminders that are still waiting.",
-        "Lists the reminders that have not gone off yet, each with its number and time. Alarms and timers are not in it; use list_alarms or list_timers."
-    ),
 
-    CANCEL_REMINDER(
-        "cancel_reminder", "Cancel a reminder", "Cancel a waiting reminder.",
-        "Cancels one waiting reminder by its number. Call list_reminders first to find the number.",
-        listOf(ToolParam("id", ToolParamType.INTEGER, "Reminder number from list_reminders."))
-    ),
 
-    MODIFY_REMINDER(
-        "modify_reminder", "Change a reminder", "Change the time or text of a waiting reminder.",
-        "Changes a waiting reminder by its number: a new time (minutes from now, or at_time with an optional date), a new message, or both. Call list_reminders first to find the number.",
-        listOf(
-            ToolParam("id", ToolParamType.INTEGER, "Reminder number from list_reminders."),
-            ToolParam("minutes", ToolParamType.INTEGER, "New delay in minutes from now, 1-525600.", required = false),
-            ToolParam("at_time", ToolParamType.STRING, "New clock time HH:MM, 24-hour.", required = false),
-            ToolParam("date", ToolParamType.STRING, "Day for at_time as YYYY-MM-DD.", required = false),
-            ToolParam("message", ToolParamType.STRING, "New text of the reminder.", required = false)
-        )
-    ),
 
     WIFI_TOGGLE(
         "wifi_toggle", "Wi-Fi on or off", "Turn Wi-Fi on or off (opens the panel).",
@@ -379,14 +256,6 @@ enum class DeviceTool(
 
 
 
-    STEPS(
-        "get_step_count", "Step counter", "Tell the steps counted by the phone.",
-        "Returns the step counter value (steps since the phone last restarted)."
-    ),
-    LIGHT(
-        "get_light_level", "Light sensor", "Tell how bright the room is.",
-        "Reads the ambient light sensor and describes how bright the surroundings are."
-    ),
 
     READ_SCREEN(
         "read_screen", "Read the screen", "See the text and buttons on screen (sends them to Gemini).",

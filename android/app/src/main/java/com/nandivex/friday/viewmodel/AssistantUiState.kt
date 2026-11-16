@@ -5,7 +5,7 @@ import com.nandivex.friday.data.MemoryItem
 import com.nandivex.friday.data.StoredTurn
 
 /** The page on screen. Exactly one is shown at a time; HOME is the voice screen. */
-enum class AppPage { HOME, PROFILE, MEMORY, HISTORY, SETTINGS, USAGE, STORAGE, DEVELOPER, HELP, ABOUT }
+enum class AppPage { HOME, PROFILE, MEMORY, HISTORY, ABILITIES, SETTINGS, USAGE, STORAGE, DEVELOPER, HELP, ABOUT }
 
 
 enum class AppNotificationType { SUCCESS, ERROR, WARNING, INFO }

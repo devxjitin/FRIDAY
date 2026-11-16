@@ -10,29 +10,18 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Display over other apps: lets the accessibility-driven actions start screens from the background. Granted by the user in Settings. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Special access the user grants in Settings; the app checks Settings.System.canWrite() before using it. -->
     <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <!-- Reminders must ring on the minute. USE_EXACT_ALARM is granted at install on Android 13+, so nobody has to tap an
-         "Reminders" switch; SCHEDULE_EXACT_ALARM only covers Android 12. -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <!-- Location only lets get_wifi_info read the Wi-Fi network name; FRIDAY never asks for background location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-
-    <!-- FRIDAY rings its own alarms and timers: the ringing screen shows over the lock screen and the phone stays awake while it rings. -->
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-feature android:name="android.hardware.microphone" android:required="true" />
 
@@ -88,42 +77,11 @@
                 android:value="Keeps the assistant availability notification visible." />
         </service>
 
-        <service
-            android:name=".AlarmRingService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Plays the alarm or timer sound until the user stops it." />
-        </service>
-
-        <activity
-            android:name=".AlarmActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:launchMode="singleInstance"
-            android:showWhenLocked="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.Assistant"
-            android:turnScreenOn="true" />
-
-        <receiver
-            android:name=".AutomationReceiver"
-            android:exported="false" />
-
         <receiver
             android:name=".UpdatedReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

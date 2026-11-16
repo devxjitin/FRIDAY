@@ -131,8 +131,6 @@ class MainActivity : ComponentActivity() {
         }
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         enableImmersiveMode()
-        // Only saved automation rules keep the service (and its notification) up; a voice session starts it itself.
-        if (com.nandivex.friday.data.AutomationEngine.hasRules(this)) AppForegroundService.start(this)
         handleAssistIntent(intent)
 
         setContent {
@@ -290,6 +288,7 @@ class MainActivity : ComponentActivity() {
                             onRestoreMemory = { viewModel.onRestoreMemory(it) },
                             onHistoryTapped = { viewModel.onHistoryTapped() },
                             onHelpTapped = { viewModel.onHelpTapped() },
+                            onAbilitiesTapped = { viewModel.onAbilitiesTapped() },
                             onSendFeatureRequest = { form, done ->
                                 viewModel.onSendFeatureRequest(form, done)
                             },
