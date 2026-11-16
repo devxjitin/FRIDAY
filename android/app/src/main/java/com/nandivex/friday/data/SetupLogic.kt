@@ -6,7 +6,7 @@ import android.content.Context
  * The version of the agreement text the user accepts in setup. Raise it whenever the agreement, the Terms or the Privacy
  * Policy change in a way that matters; everyone then sees the agreement screen once more, and only that screen.
  */
-const val TERMS_VERSION = "2026-11-16.2"
+const val TERMS_VERSION = "2026-11-16.3"
 
 /** The steps of first-run setup, in order. The phone control and the final "all set" screens come after them. */
 enum class SetupStep { WELCOME, AGREEMENT, ABOUT_YOU, API_KEY, VOICE, PERMISSIONS }

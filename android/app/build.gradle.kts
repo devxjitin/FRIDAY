@@ -190,8 +190,14 @@ dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
-    // Crash reports only. No sign-in, no App Check and no Analytics until a feature needs them (friday_plan.md, D7).
     implementation("com.google.firebase:firebase-crashlytics")
+    // The account (friday_plan.md, Phase 7): Google sign-in and the user's own profile document. No Analytics, no App Check.
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.11.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
