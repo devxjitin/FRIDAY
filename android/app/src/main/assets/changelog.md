@@ -3,6 +3,13 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.30 - 2026-11-16
+
+### Changed
+- The app now calls itself F.R.I.D.A.Y. in messages, buttons and confirmations instead of "the assistant". This covers the History, Memory, Settings and Usage pages, the microphone button's screen reader label and the error messages.
+- Clear and Delete confirmations on History and Memory now say plainly what is deleted and that it cannot be undone. They no longer say F.R.I.D.A.Y. looks things up in old conversations, which it has not done since 0.0.8.
+- The "could not reach Google Gemini" message now names Google Gemini.
+
 ## 0.0.29 - 2026-11-16
 
 ### Changed

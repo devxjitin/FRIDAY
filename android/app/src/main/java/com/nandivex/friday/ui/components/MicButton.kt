@@ -102,7 +102,7 @@ fun MicButton(
             } else {
                 Icon(
                     imageVector = if (active) Icons.Filled.Stop else Icons.Filled.Mic,
-                    contentDescription = if (active) "Stop talking to the assistant" else "Start talking to the assistant",
+                    contentDescription = if (active) "Stop talking to F.R.I.D.A.Y." else "Start talking to F.R.I.D.A.Y.",
                     modifier = Modifier.size(32.dp)
                 )
             }

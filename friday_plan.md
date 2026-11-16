@@ -282,6 +282,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
 - Build: consistent spacing, cards, buttons, empty states, loading states and motion on every page; large text and
   dark mode checked on every screen; an Accessibility Scanner run with no errors.
 - Done when: you call it professional, screen by screen. This sprint repeats until you do.
+- **Round 1 built 2026-11-16 (0.0.30, PR pending):** the wording pass on History, Memory, Settings, Usage, errors and the mic button label (one name for the app, no false "looks up old conversations" claims). **Not yet done in this sprint:** spacing and card consistency, empty and loading states, large-text and dark-mode checks on every screen, the Accessibility Scanner run (needs Google's scanner app on the phone), Abilities page text, Settings page layout. These need your screen-by-screen comments, so the next rounds follow what you point at.
 
 ### Phase 7: Accounts, profile and plans (your review, items 7 and 8)
 

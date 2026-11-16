@@ -257,7 +257,7 @@ fun SettingsPage(
             tonalElevation = 6.dp,
             title = { Text("Remove API key?") },
             text = {
-                Text("The assistant stops working until you add a key again. The active conversation, if any, isn't affected.")
+                Text("F.R.I.D.A.Y. stops working until you add a key again. A conversation that is already open is not affected.")
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -344,7 +344,7 @@ private fun GeneralSettingsContent(
             value = ownerInput,
             onValueChange = { ownerInput = it.take(com.nandivex.friday.data.MAX_ASSISTANT_NAME_LENGTH) },
             singleLine = true,
-            placeholder = { Text("How should the assistant address you?", color = AssistantTextMuted) },
+            placeholder = { Text("How should F.R.I.D.A.Y. address you?", color = AssistantTextMuted) },
             colors = assistantTextFieldColors(),
             keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = {

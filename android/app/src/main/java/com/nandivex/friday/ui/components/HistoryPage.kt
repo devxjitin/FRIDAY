@@ -83,7 +83,7 @@ fun HistoryPage(
     Column(modifier.fillMaxSize().padding(horizontal = 16.dp).verticalScroll(rememberScrollState())) {
         if (total == 0) {
             Text(
-                "No conversations yet. What you say to the assistant will show up here.",
+                "No conversations yet. What you say to F.R.I.D.A.Y. will show up here.",
                 color = AssistantTextMuted, fontSize = 14.sp, lineHeight = 20.sp, modifier = Modifier.padding(vertical = 24.dp, horizontal = 4.dp)
             )
             return@Column
@@ -135,7 +135,7 @@ fun HistoryPage(
         AlertDialog(
             onDismissRequest = { deleting = null },
             title = { Text("Delete this session?") },
-            text = { Text("The ${session.turns.size} exchanges in it will be deleted. The assistant can no longer look them up.") },
+            text = { Text("The ${session.turns.size} exchanges in it will be deleted. This cannot be undone.") },
             confirmButton = {
                 TextButton(onClick = { onDeleteSession(session.turns.map { it.id }); deleting = null }) { Text("Delete", color = AssistantError) }
             },
@@ -146,7 +146,7 @@ fun HistoryPage(
         AlertDialog(
             onDismissRequest = { confirmingClear = false },
             title = { Text("Clear all history?") },
-            text = { Text("The assistant will no longer be able to look up anything said before. This cannot be undone.") },
+            text = { Text("Everything in your history will be deleted. This cannot be undone.") },
             confirmButton = { TextButton(onClick = { onClearAll(); confirmingClear = false }) { Text("Clear all", color = AssistantError) } },
             dismissButton = { TextButton(onClick = { confirmingClear = false }) { Text("Cancel") } }
         )
@@ -189,7 +189,7 @@ private fun SessionCard(session: SessionGroup, open: Boolean, onToggle: () -> Un
                             Text(turn.userText, color = AssistantTextPrimary, fontSize = 14.sp, lineHeight = 20.sp)
                         }
                         if (turn.assistantText.isNotBlank()) {
-                            Text("Assistant", color = AssistantTextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
+                            Text("F.R.I.D.A.Y.", color = AssistantTextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp))
                             Text(turn.assistantText, color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 20.sp)
                         }
                     }
