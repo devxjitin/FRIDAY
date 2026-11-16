@@ -96,7 +96,6 @@ fun AssistantScreen(
     micPermissionPermanentlyDenied: Boolean = false,
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     voiceLevel: () -> Float = { 0f },
-    license: LicenseSummary? = null,
     actions: AssistantActions,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize().background(com.nandivex.friday.ui.theme.AssistantBackground)) {
@@ -148,7 +147,7 @@ fun AssistantScreen(
             AppDrawerContent(
                 selected = currentTab,
                 assistantName = com.nandivex.friday.data.DISPLAY_NAME,
-                userName = license?.status?.name?.takeIf { it.isNotBlank() } ?: uiState.settings.ownerName,
+                userName = uiState.settings.ownerName,
                 onClose = { scope.launch { drawerState.close() } },
                 onSelect = { tab ->
                     scope.launch { drawerState.close() }
@@ -258,11 +257,7 @@ fun AssistantScreen(
 
             if (tab == NavTab.PROFILE) {
                 ProfilePage(
-                    license = license,
                     ownerName = uiState.settings.ownerName,
-                    onRefresh = actions.onRefreshLicense,
-                    onRenew = actions.onRenewLicense,
-                    onRemoveKey = actions.onRemoveLicense,
                     modifier = Modifier.padding(top = topReserve)
                 )
             }
@@ -294,8 +289,6 @@ fun AssistantScreen(
                     )
                     NavTab.ABOUT -> AboutPage(
                         assistantName = com.nandivex.friday.data.DISPLAY_NAME,
-                        checkingForUpdate = uiState.update is com.nandivex.friday.viewmodel.UpdateUiState.Checking,
-                        onCheckForUpdates = actions.onCheckForUpdates,
                         modifier = pageModifier
                     )
                     else -> Unit
@@ -377,10 +370,6 @@ fun AssistantScreen(
         }
 
         com.nandivex.friday.ui.components.WhatsNewCard(uiState.whatsNew, actions.onDismissWhatsNew)
-        com.nandivex.friday.ui.components.UpdateDialog(
-            state = uiState.update, onStart = actions.onStartUpdate, onInstall = actions.onInstallUpdate,
-            onDismiss = actions.onDismissUpdate
-        )
 
         // Drawn last so it sits above every page without covering the page heading.
         AssistantToastHost(

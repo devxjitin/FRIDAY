@@ -31,7 +31,7 @@ class ApiKeyStore internal constructor(prefsProvider: () -> SharedPreferences) :
 
     private val prefs: SharedPreferences? by lazy {
         try {
-            prefsProvider()
+            prefsProvider().also { it.edit().remove(LEGACY_EMBEDDING_KEY).apply() }
         } catch (e: Exception) {
             Log.e("AssistantError", "Secure key storage is unavailable", e)
             null
@@ -44,14 +44,6 @@ class ApiKeyStore internal constructor(prefsProvider: () -> SharedPreferences) :
     override fun setApiKey(key: String): Boolean = write { it.putString(KEY_API_KEY, key.trim()) }
 
     override fun clearApiKey(): Boolean = write { it.remove(KEY_API_KEY) }
-
-    /** Required key for document formatting, embedding, and knowledge-base search. */
-    override fun getEmbeddingApiKey(): String? = read(KEY_EMBEDDING_API_KEY)
-
-    override fun setEmbeddingApiKey(key: String): Boolean =
-        write { it.putString(KEY_EMBEDDING_API_KEY, key.trim()) }
-
-    override fun clearEmbeddingApiKey(): Boolean = write { it.remove(KEY_EMBEDDING_API_KEY) }
 
     private fun read(name: String): String? = try {
         prefs?.getString(name, null)?.takeIf { it.isNotBlank() }
@@ -72,6 +64,7 @@ class ApiKeyStore internal constructor(prefsProvider: () -> SharedPreferences) :
 
     private companion object {
         const val KEY_API_KEY = "gemini_api_key"
-        const val KEY_EMBEDDING_API_KEY = "gemini_embedding_api_key"
+        /** The removed Knowledge base used a second key; it is deleted from phones that still hold one. */
+        const val LEGACY_EMBEDDING_KEY = "gemini_embedding_api_key"
     }
 }

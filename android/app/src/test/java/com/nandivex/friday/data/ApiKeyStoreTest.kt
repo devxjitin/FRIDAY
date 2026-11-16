@@ -9,13 +9,10 @@ class ApiKeyStoreTest {
 
     @Test fun `unavailable secure storage reads as no key instead of crashing`() {
         assertNull(failing.getApiKey())
-        assertNull(failing.getEmbeddingApiKey())
     }
 
     @Test fun `unavailable secure storage reports every write as failed`() {
         assertFalse(failing.setApiKey("key"))
-        assertFalse(failing.setEmbeddingApiKey("key"))
         assertFalse(failing.clearApiKey())
-        assertFalse(failing.clearEmbeddingApiKey())
     }
 }

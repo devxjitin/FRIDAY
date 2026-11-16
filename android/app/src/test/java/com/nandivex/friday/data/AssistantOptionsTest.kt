@@ -34,9 +34,4 @@ class AssistantOptionsTest {
     fun `languages outside the supported set are rejected`() {
         assertFalse(AssistantOptions.isApprovedLanguage("fr-FR"))
     }
-
-    @Test
-    fun `dataset model is fixed to Gemini 3 5 Flash-Lite`() {
-        assertEquals("gemini-3.5-flash-lite", AssistantOptions.DATASET_MODEL)
-    }
 }

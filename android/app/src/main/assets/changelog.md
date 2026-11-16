@@ -3,6 +3,17 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.23 - 2026-11-16
+
+### Changed
+- F.R.I.D.A.Y. will be delivered through Google Play only, so the built-in "Check for updates" and the permission to install apps are gone. Updates will come from Play.
+- The phone control screen no longer shows the "Allow restricted settings" help, which is only needed for apps installed from a file.
+- The Profile page shows your name and this phone. The activation key card, which did nothing, is removed.
+- The About page now says plainly that what you say, and the screen text or picture F.R.I.D.A.Y. reads for a request, goes to Google Gemini with your own API key.
+
+### Removed
+- The second "knowledge" API key that the removed Knowledge base used is deleted from phones that still held one.
+
 ## 0.0.21 - 2026-11-16
 
 ### Added

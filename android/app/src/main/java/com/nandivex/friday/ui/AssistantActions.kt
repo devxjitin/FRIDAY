@@ -15,10 +15,6 @@ class AssistantActions(
     val onDeveloperTapped: () -> Unit = {},
     val onAboutTapped: () -> Unit = {},
     val onProfileTapped: () -> Unit = {},
-    /** Re-checks the activation key with the server, from the Profile page. */
-    val onRefreshLicense: () -> Unit = {},
-    /** Opens the website store to renew; null when this build has no store link. */
-    val onRenewLicense: (() -> Unit)? = null,
     val onHomeTapped: () -> Unit = {},
     val onDismissWhatsNew: () -> Unit = {},
     val onUsageTapped: () -> Unit = {},
@@ -35,10 +31,6 @@ class AssistantActions(
     val onHistoryTapped: () -> Unit = {},
     val onHelpTapped: () -> Unit = {},
     val onAbilitiesTapped: () -> Unit = {},
-    val onCheckForUpdates: () -> Unit = {},
-    val onStartUpdate: () -> Unit = {},
-    val onInstallUpdate: () -> Unit = {},
-    val onDismissUpdate: () -> Unit = {},
     val onSendFeatureRequest: (FeatureRequest, (String?) -> Unit) -> Unit = { _, _ -> },
     val onDeletePastSession: (List<Long>) -> Unit = {},
     val onClearPastConversations: () -> Unit = {},
@@ -54,5 +46,4 @@ class AssistantActions(
     val onReplyStyleSelected: (com.nandivex.friday.data.ReplyStyle) -> Unit = {},
     val onSaveDeveloperChanges: (String) -> Unit,
     val onDismissToast: () -> Unit,
-    val onRemoveLicense: () -> Unit = {},
 )
