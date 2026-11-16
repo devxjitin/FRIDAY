@@ -1,6 +1,6 @@
 # Data flows
 
-What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.25). This is the working source for the
+What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.26). This is the working source for the
 public privacy policy (`site/privacy.html`) and for the Google Play **Data safety** form (Sprint 8.1). If the code changes,
 change this file in the same pull request.
 
@@ -16,7 +16,7 @@ The app talks to `generativelanguage.googleapis.com` directly from the phone (Ok
 | A screenshot (JPEG, longest side 1280 px) | Only when `look_at_screen` runs | A blank or protected window is detected and not sent. |
 | Clipboard text, battery, time, Wi-Fi name, paired Bluetooth devices, list of launchable apps | Only when the matching tool is called | |
 | The user's name or form of address, saved memory notes, up to 10 recent turns | At the start of a session | Memory is added to the instructions. |
-| The Gemini API key | With every request, as the key | Stored encrypted (Android Keystore). |
+| The Gemini API key | With every request, as the key; also once in setup, as the `x-goog-api-key` header of a request for the first page of models, to check that Google accepts it | Stored encrypted (Android Keystore) only after Google accepts it. The check uses no tokens. |
 
 What Google does with this depends on the plan the key belongs to (Google's Gemini API terms). FRIDAY cannot promise more.
 
@@ -29,6 +29,7 @@ What Google does with this depends on the plan the key belongs to (Google's Gemi
 | Past conversations (text of each turn) | ObjectBox database | History page, clear data, uninstall |
 | Usage counters (voice seconds, tool calls, tokens by day) | DataStore | Usage page, clear data, uninstall |
 | Settings: voice, language, reply style, your name, theme | DataStore / preferences | Clear data, uninstall |
+| The accepted agreement version, the time it was accepted, and whether the "all set" screen was seen | Preferences (`setup`) | Clear data, uninstall |
 
 Android backup and device transfer are **off** (`allowBackup=false`, empty backup rules), so none of this is copied to Google
 Drive or a new phone.

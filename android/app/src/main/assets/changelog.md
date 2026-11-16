@@ -3,6 +3,18 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.26 - 2026-11-16
+
+### Added
+- A first-run setup. On a new install F.R.I.D.A.Y. now walks you through: a short welcome, an agreement that says what it reads, what is sent to Google Gemini and what stays on your phone, your name and language, your Gemini API key, a voice, and the microphone and notification permissions. The home screen stays closed until you have accepted the agreement, entered a name and saved a working key.
+- The Gemini key is checked with Google before it is saved, and a wrong, limited or blocked key is explained in plain words.
+- If the agreement changes in a later version, you are asked to accept it again, and nothing else.
+- When phone control is on for the first time, a short "You are all set" screen gives a few things to say.
+
+### Changed
+- Phones that already have a key or a name skip the steps they have answered and only see the rest, starting with the agreement.
+- The microphone and notification questions now come from setup instead of appearing over the first screen.
+
 ## 0.0.25 - 2026-11-16
 
 ### Changed

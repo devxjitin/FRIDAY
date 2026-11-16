@@ -1,7 +1,7 @@
 # FRIDAY: product plan
 
 Owner: Nandivex Technologies · Package `com.nandivex.friday` · Plan date 2026-11-13 · **Rewritten 2026-11-16** ·
-App version on `main`: **0.0.23**; Sprints 4.2 (0.0.24) and 4.3 (0.0.25) are in review
+App version on `main`: **0.0.25**; Sprint 5.1 (0.0.26) is in review
 
 **Status in one line:** the app itself (voice, phone control tools, theme, persona) is built and works in tester builds.
 On 2026-11-16 the distribution decision changed from "our own website" to **Google Play only**. The website download,
@@ -185,8 +185,8 @@ build through Firebase App Distribution.
 | 1. Foundation | Package, Firebase, tester delivery, dead weight out | 1.1–1.3 | **Done** | – |
 | 2. Identity | Look, voice, name | 2.1–2.3 | **Done** | – |
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
-| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | 4.1 **done**, 4.2 and 4.3 in review | – |
-| 5. Setup | Your setup screen: details, API key, agreement | 5.1 | To do | D6, final Terms/Privacy text |
+| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (merged, PRs #26–#28) | – |
+| 5. Setup | Your setup screen: details, API key, agreement | 5.1 | In review | phone walk-through, lawyer's read of the agreement |
 | 6. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 6.1–6.3 | To do | D4, D5, testers with disabilities |
 | 7. Monetisation | Play Billing (only if paid) | 7.1–7.2 | Blocked on D2 | D2, D3 |
 | 8. Play launch | Console, policy forms, testing tracks, release | 8.1–8.3 | To do | D1, account, legal review |
@@ -204,7 +204,7 @@ build through Firebase App Distribution.
   still work on Android 16.
 - Done when: `git grep -i "latest.json\|REQUEST_INSTALL\|ULTR-"` finds nothing in `android/`, and the AAB builds.
 
-**Sprint 4.2: Documentation that is true** — **built 2026-11-16, version 0.0.24, in review**
+**Sprint 4.2: Documentation that is true** — **done and merged 2026-11-16 (0.0.24, PR #27)**
 - Build: new README (hands-free access, Play only, how to build); delete `docs/Idea.md` and
   `docs/VIEWMODEL_SPLIT_PLAN.md`; rewrite `docs/PRIVACY_PLAN.md` for the current data flows (voice and screen content
   to Gemini, name and memory on the phone, crash reports to Crashlytics); `docs/CI_CD.md` without the website release.
@@ -212,20 +212,19 @@ build through Firebase App Distribution.
 - Done when: every feature named in the docs exists in the app.
 - Found while checking: the app created a Firebase anonymous user on every launch and included Firebase Analytics, and nothing read either. Removed in Sprint 4.3.
 
-**Sprint 4.3: Remove unused Firebase parts** — **built 2026-11-16, version 0.0.25, in review**
+**Sprint 4.3: Remove unused Firebase parts** — **done and merged 2026-11-16 (0.0.25, PR #28)**; a Crashlytics test report reaching the console is still unchecked
 - Built: Firebase Analytics, Authentication (anonymous sign-in) and App Check removed from the app, with `FridayApp` and the three `AppCheckInstaller` files; only Crashlytics stays. Privacy page, README and `docs/DATA_FLOWS.md` updated to say so.
 - Not done: a Crashlytics test crash on a phone to prove reports still arrive (the tester build has the long-press test crash in About).
 - Done when: a test crash from a tester build shows up in the Firebase console.
 
 ### Phase 5: Setup
 
-**Sprint 5.1: First-run setup** (section 6)
-- Build: `ui/setup/` with the eight steps, a `SetupState` stored in DataStore (terms version, accepted-at time, done
-  flag), routing in `MainActivity`: setup not done → setup; phone control off → gate; else home. Unit tests for the
-  routing, the terms-version re-prompt, name validation and the key check result mapping.
-- Phone check: a fresh install finishes setup in about two minutes; a wrong key is caught on step 4; Decline closes the
-  app; after a terms version bump the agreement shows once more; TalkBack can read every step.
-- Done when: no path reaches home without an accepted agreement, a saved name and a checked key.
+**Sprint 5.1: First-run setup** (section 6) — **built 2026-11-16, version 0.0.26, in review**
+- Built: `ui/SetupScreens.kt`, `viewmodel/SetupViewModel.kt`, `data/SetupLogic.kt` (routing rules, terms version, name rule), `data/Agreement.kt` (the in-app agreement text) and `network/GeminiKeyCheck.kt` (asks Google for the first page of models with the key in a header; the key is saved only after Google accepts it). Routing in `MainActivity`: setup steps, then the phone control gate, then a one-time "all set" screen, then home. The voice session (`AccessGate`) stays closed until setup has nothing left to ask. 20 new unit tests (`SetupLogicTest`, `GeminiKeyCheckTest`).
+- Differences from the section 6 sketch, so the plan stays true: one name field ("What should FRIDAY call you?", with a "Use Boss" shortcut) instead of name plus a separate form of address; **no voice sample** (a sample would need its own Gemini call, so the voice step says you will hear it in your first conversation); the agreement text lives in the app and does **not** link to the website because the site is not deployed yet.
+- Checked: tests, lint and build pass; on an Android 16 phone with an existing key the app opens on the agreement, the Accept button stays disabled until the box is ticked, Decline is there.
+- **Not checked, needs you** (accepting the agreement and entering a key are your actions): the full walk through name, key check with a good and a bad key, voice, permissions, phone control and the "all set" screen; a fresh install (welcome screen); TalkBack reading every step; the agreement text read by a lawyer (8.1).
+- Done when: no path reaches home without an accepted agreement, a saved name and a checked key (**proved in `SetupLogicTest` for every combination**; the phone walk is still to do).
 
 ### Phase 6: Accessibility tool readiness
 
