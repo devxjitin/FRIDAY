@@ -143,7 +143,7 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | D1 | **Play developer account:** personal or organisation (Nandivex)? | Organisation. It needs a D-U-N-S number but skips the "12 testers for 14 days" closed test that new personal accounts must pass before production. |
 | D2 | **Free or paid?** | **Decided 2026-11-16: paid plans with a trial**, chosen in setup and upgradable later (your review, item 8). |
 | D3 | **Prices** and which plans (monthly, yearly, tiers). | You decide. |
-| D4 | **Name.** F.R.I.D.A.Y. is a Marvel character. Play enforces intellectual-property rules at review and on complaints. | Use a listing name that does not depend on Marvel (for example "FRIDAY – Hands-Free Phone Access"), no Marvel quotes, art or "Iron Man" references, and a trademark search before launch. A full rename is the safest option. Decide **before** the new logo (6.1), so it is not drawn twice. |
+| D4 | **Name.** | **Decided 2026-11-16 by you: keep F.R.I.D.A.Y.** The risk stays: F.R.I.D.A.Y. is a Marvel character, and Play acts on intellectual-property complaints, which can mean a forced rename or a takedown after launch. What we do to keep the risk low: no Marvel quotes, art, "Iron Man" or "Stark" references anywhere; our own logo; a descriptive store title such as "F.R.I.D.A.Y. – Hands-Free Phone Access"; a trademark search before launch (9.1); and a fallback name kept ready so a rename is quick if a complaint comes. |
 | D5 | **Persona.** A witty "Boss" assistant reads as a general assistant, which Play says does not qualify. | Keep the voice calm and short; make chat and memory secondary features of an access tool, not the headline. |
 | D6 | **Setup details.** | **Superseded 2026-11-16 by your review:** name, age and a verified email, in an account (Phase 7). |
 | D7 | **Firebase Analytics, anonymous sign-in, App Check** while nothing uses them. | **Decided 2026-11-16: removed** (4.3). Accounts (7.1) bring Firebase Authentication back for a real reason; Analytics stays out unless you ask for it. |
@@ -195,7 +195,7 @@ build through Firebase App Distribution.
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
 | 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (PRs #26–#28) | – |
 | 5. Setup | Setup screen: details, API key, agreement | 5.1 | **Done** (PR #29) | lawyer's read of the agreement, TalkBack check |
-| 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | To do — **next** | D4, the Nandivex logo file, your approval of the design (6.1) |
+| 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | To do — **next** | the Nandivex logo file, your approval of the design (6.1) |
 | 7. Accounts, profile and plans | Verified email, age, profile, plans and trial in setup, upgrade, account deletion | 7.1–7.4 | To do | D1, D3, D8, D10, D11, Play account |
 | 8. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 8.1–8.3 | To do | D5, testers with disabilities |
 | 9. Play launch | Console, policy forms, testing tracks, release | 9.1–9.3 | To do | D1, legal review |
@@ -243,8 +243,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
 - Build: one page of mock-ups for you to approve: the purple palette in light and dark (with contrast numbers), two or
   three FRIDAY logo concepts in purple, where the Nandivex logo sits (welcome, About, splash), the system font, and the
   new home, sidebar, Profile, Help, Storage and Usage screens.
-- Needs from you: D4 (the name, because the logo carries it) and the **Nandivex Technologies logo as an SVG or a large
-  PNG**. I cannot create the company's logo; I can only place the one you give me.
+- Needs from you: the **Nandivex Technologies logo as an SVG or a large PNG** (the name is decided: F.R.I.D.A.Y.). I cannot create the company's logo; I can only place the one you give me.
 - Done when: you have picked one direction in writing. Nothing in 6.2–6.5 starts before that.
 
 **Sprint 6.2: Brand in the app** (items 1–4)
@@ -382,7 +381,7 @@ This phase is what decides whether Play accepts FRIDAY. It is product work, not 
 
 ## 8. Waiting on you
 
-1. D1, D3, D4, D5, D8, D10, D11 (section 5). **D4 first:** the logo depends on it.
+1. D1, D3, D5, D8, D10, D11 (section 5).
 2. The **Nandivex Technologies logo** file (SVG, or a PNG at least 1024 px wide).
 3. Your approval of the design direction (6.1) before any UI code.
 4. Play developer account (and a D-U-N-S number if organisation).
@@ -401,7 +400,7 @@ release-key secrets for `release.yml`. The domain is still useful for the privac
 |---|---|
 | **Google does not accept FRIDAY as an accessibility tool** (the biggest risk; Google decides) | Phase 8 makes access the real primary purpose; honest declaration; closed test with real users. If refused, we learn the reason before any public launch; the fallback is a reduced build without model-driven screen control, which is a different product and needs a new decision. |
 | Play's policy text changes | Re-read the Accessibility API page before 9.1 and before every major update. |
-| Marvel IP complaint | D4. |
+| Marvel IP complaint (name kept by your decision, D4) | No Marvel material, own logo, trademark search before launch, a fallback name ready. |
 | Screen text tricks FRIDAY into pressing Send or Pay | Untrusted-text marking (done) and spoken confirmation (8.2). |
 | App layouts change and screen jobs break | 8.3 test list; claim only what works. |
 | Reviewers cannot test without an account, a plan and a Gemini key | A reviewer test account with an active plan, and a separate billing-enabled reviewer key with a spending cap (9.1). |
