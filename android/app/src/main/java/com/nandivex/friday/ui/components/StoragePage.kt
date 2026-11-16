@@ -17,7 +17,12 @@ import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxHeight
+import com.nandivex.friday.ui.theme.AssistantAccent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -74,26 +79,26 @@ fun StoragePage(
 
     val items = listOf(
         StorageItem(
-            Icons.Outlined.Psychology, "Memory",
-            "$memoryCount ${if (memoryCount == 1) "fact" else "facts"}", "What the assistant knows about you.", memoryBytes,
-            "Clear memory?", "Everything it remembers about you will be forgotten.", if (memoryCount > 0) onClearMemory else null
+            Icons.Outlined.Psychology, "Memories",
+            "$memoryCount ${if (memoryCount == 1) "fact" else "facts"}", "Facts F.R.I.D.A.Y. remembered about you.", memoryBytes,
+            "Clear memories?", "F.R.I.D.A.Y. will forget everything it remembered about you. This cannot be undone.", if (memoryCount > 0) onClearMemory else null
         ),
         StorageItem(
-            Icons.Outlined.History, "Past conversations",
+            Icons.Outlined.History, "Conversations",
             if (pastConversationCount == 0) "None" else "$pastConversationCount saved",
-            "Everything you and the assistant said before.", pastConversationBytes,
-            "Clear past conversations?", "The assistant will no longer be able to look up anything said before.",
+            "What you and F.R.I.D.A.Y. said. Shown on the History page.", pastConversationBytes,
+            "Clear conversations?", "Your History page will be empty. This cannot be undone.",
             if (pastConversationCount > 0) onClearPastConversations else null
         ),
         StorageItem(
-            Icons.Outlined.Cached, "Cache",
-            if (cacheBytes > 0) "Temporary files" else "Empty", "Temporary files the app can rebuild.", cacheBytes,
-            "Clear cache?", "Temporary files will be deleted.", if (cacheBytes > 0) onClearCache else null
+            Icons.Outlined.Cached, "Temporary files",
+            if (cacheBytes > 0) "In use" else "Empty", "Files the app can rebuild by itself.", cacheBytes,
+            "Clear temporary files?", "They will be deleted. The app makes new ones when it needs them.", if (cacheBytes > 0) onClearCache else null
         ),
         StorageItem(
-            Icons.Outlined.Insights, "Usage statistics",
-            if (hasUsage) "Recorded" else "Empty", "The numbers on the Usage page.", null,
-            "Reset usage statistics?", "Usage will start again from zero.", if (hasUsage) onResetUsage else null
+            Icons.Outlined.Insights, "Usage numbers",
+            if (hasUsage) "Recorded" else "Empty", "The counts on the Usage page.", null,
+            "Reset usage numbers?", "The Usage page will start again from zero. This cannot be undone.", if (hasUsage) onResetUsage else null
         )
     )
     val total = items.sumOf { it.bytes ?: 0L }
@@ -104,10 +109,29 @@ fun StoragePage(
             Text("Used by F.R.I.D.A.Y.", color = AssistantTextSecondary, fontSize = 13.sp)
             Spacer(Modifier.height(4.dp))
             Text(formatBytes(total), color = AssistantTextPrimary, fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(4.dp))
-            Text("Everything below is stored only on this phone.", color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp)
+            val parts = items.filter { (it.bytes ?: 0L) > 0L }
+            if (total > 0 && parts.isNotEmpty()) {
+                Spacer(Modifier.height(12.dp))
+                val shades = listOf(AssistantAccent, AssistantAccent.copy(alpha = 0.65f), AssistantAccent.copy(alpha = 0.4f), AssistantTextMuted)
+                Row(Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(6.dp)), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    parts.forEachIndexed { i, item ->
+                        Box(Modifier.weight((item.bytes ?: 1L).toFloat().coerceAtLeast(1f)).fillMaxHeight().background(shades[i % shades.size]))
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                parts.forEachIndexed { i, item ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(shades[i % shades.size]))
+                        Spacer(Modifier.size(10.dp))
+                        Text(item.title, color = AssistantTextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Text(formatBytes(item.bytes ?: 0L), color = AssistantTextSecondary, fontSize = 14.sp)
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text("All of this is stored only on this phone.", color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp)
         }
-        PageLabel("On this phone")
+        PageLabel("What is stored")
         PageCard {
             items.forEachIndexed { index, item ->
                 if (index > 0) {
@@ -117,7 +141,7 @@ fun StoragePage(
             }
         }
         Text(
-            "Clearing cannot be undone.",
+            "Your Gemini key is not listed here. Remove it in Settings.",
             color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 12.dp, start = 4.dp)
         )
     }

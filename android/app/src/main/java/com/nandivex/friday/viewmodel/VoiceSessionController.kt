@@ -480,7 +480,13 @@ internal class VoiceSessionController(
                 silentTurnRetried = false
                 timers.cancelTurnTimeout()
                 timers.resetIdle()
-                recordUsage(UsageDay("", toolCalls = calls.size))
+                recordUsage(
+                    UsageDay(
+                        "", toolCalls = calls.size,
+                        toolUse = calls.groupingBy { it.name }.eachCount(),
+                        hours = mapOf(java.time.LocalTime.now().hour.toString() to calls.size)
+                    )
+                )
                 tools.onToolCalls(client, calls)
             }
 

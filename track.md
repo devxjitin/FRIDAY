@@ -573,3 +573,4 @@
 [2026-11-16] [Claude] [Sprint 6.1 done: design direction approved, logo A (Voice F), purple palette, system font]
 [2026-11-16] [Claude] [Sprint 6.2 built (0.0.27): purple palette, Voice F icons, system font; Nandivex logo waits for the file]
 [2026-11-16] [Claude] [Sprint 6.3 built (0.0.28): new sidebar; fixed unreadable button text from 6.2]
+[2026-11-16] [Claude] [Sprint 6.4 built (0.0.29): Help, Storage, Usage additions, R9 wording fix and new agreement version, greetings, WRITING.md; rest of wording pass and failed-actions counter still open]

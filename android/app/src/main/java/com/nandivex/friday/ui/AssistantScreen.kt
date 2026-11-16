@@ -115,7 +115,7 @@ fun AssistantScreen(
         // A live session keeps running behind the other pages without showing anything there.
         // Space the pages leave free at the top for the slim top bar.
         val topReserve = AppTopBarHeight
-        // The request form (one screen for a connector, one for a bug) opens from the Help & support page.
+        // The request form (one screen for an idea, one for a problem) opens from the Help and support page.
         var requestType by remember { mutableStateOf<String?>(null) }
         var requestSending by remember { mutableStateOf(false) }
         var requestError by remember { mutableStateOf<String?>(null) }

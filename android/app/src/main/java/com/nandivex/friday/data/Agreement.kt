@@ -23,9 +23,11 @@ object Agreement {
                 "a request it sends the text on your screen, and a screenshot when it needs to look at the screen as a picture. " +
                 "That can include private things on the screen at that moment, such as messages, names, numbers, one-time " +
                 "codes or amounts. It goes from your phone straight to Google using your own Gemini API key, not through " +
-                "Nandivex servers. What Google does with it is set by Google's Gemini API terms and the plan of your key. For " +
-                "example, Google may use content sent with a free key to improve its products. Crash reports go to Google " +
-                "Firebase Crashlytics."
+                "Nandivex servers. What Google does with it is set by Google's Gemini API terms and the plan of your key. " +
+                "F.R.I.D.A.Y. needs a key from a Google project with billing turned on: Google's terms do not allow personal " +
+                "information on the unpaid tier, and what F.R.I.D.A.Y. sends can include it. Google charges that project for " +
+                "use; Nandivex does not receive or collect those charges. The app cannot check whether billing is on, so keeping it " +
+                "on is your responsibility. Crash reports go to Google Firebase Crashlytics."
         ),
         Section(
             "What stays on your phone",

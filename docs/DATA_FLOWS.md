@@ -1,6 +1,6 @@
 # Data flows
 
-What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.26). This is the working source for the
+What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.29). This is the working source for the
 public privacy policy (`site/privacy.html`) and for the Google Play **Data safety** form (Sprint 8.1). If the code changes,
 change this file in the same pull request.
 
@@ -27,7 +27,7 @@ What Google does with this depends on the plan the key belongs to (Google's Gemi
 | Gemini API key | Encrypted preferences (`assistant_secure_prefs`) | Remove key in Settings, clear data, uninstall |
 | Memory notes (up to 150) | Local store | Memory page, clear data, uninstall |
 | Past conversations (text of each turn) | ObjectBox database | History page, clear data, uninstall |
-| Usage counters (voice seconds, tool calls, tokens by day) | DataStore | Usage page, clear data, uninstall |
+| Usage counters (voice seconds, tool calls, which tools ran and at which hour of the day, tokens by day) | DataStore | Usage page, clear data, uninstall |
 | Settings: voice, language, reply style, your name, theme | DataStore / preferences | Clear data, uninstall |
 | The accepted agreement version, the time it was accepted, and whether the "all set" screen was seen | Preferences (`setup`) | Clear data, uninstall |
 
