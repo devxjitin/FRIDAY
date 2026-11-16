@@ -559,3 +559,4 @@
 [2026-11-15] [Claude] [Sprint 3.3: wifi_toggle, bluetooth_toggle, list_paired_devices, mobile_data_panel, airplane_mode, hotspot_settings, nfc_settings, flashlight_strobe/SOS, dark_mode, battery_saver (panel + self-tap hint); version 0.0.17]
 [2026-11-16] [Claude] [Sprint 3.4: hands-free vision. Connectors removed, all phone-control tools built in; calls, SMS, WhatsApp, contacts, calendar, location, notifications, files, app usage, share, weather, web search removed with ActionGate and their permissions; phone control gate with accessibility disclosure on app open; version 0.0.18]
 [2026-11-16] [Claude] [Sprint 3.5: alarm/timer/reminder engine, show_notification and steps/light/storage/device-info tools removed with their permissions; read-only What F.R.I.D.A.Y. can do page in the sidebar; version 0.0.19]
+[2026-11-16] [Claude] [Fix: contact email corrected to contact@nandivex.in in Help, About, README (was support@nandivex.com, wrong domain); version 0.0.20]
