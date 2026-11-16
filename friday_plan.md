@@ -186,7 +186,7 @@ build through Firebase App Distribution.
 | 2. Identity | Look, voice, name | 2.1–2.3 | **Done** | – |
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
 | 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (merged, PRs #26–#28) | – |
-| 5. Setup | Your setup screen: details, API key, agreement | 5.1 | In review | phone walk-through, lawyer's read of the agreement |
+| 5. Setup | Your setup screen: details, API key, agreement | 5.1 | **Done** | lawyer's read of the agreement, TalkBack check |
 | 6. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 6.1–6.3 | To do | D4, D5, testers with disabilities |
 | 7. Monetisation | Play Billing (only if paid) | 7.1–7.2 | Blocked on D2 | D2, D3 |
 | 8. Play launch | Console, policy forms, testing tracks, release | 8.1–8.3 | To do | D1, account, legal review |
@@ -219,12 +219,12 @@ build through Firebase App Distribution.
 
 ### Phase 5: Setup
 
-**Sprint 5.1: First-run setup** (section 6) — **built 2026-11-16, version 0.0.26, in review**
+**Sprint 5.1: First-run setup** (section 6) — **done 2026-11-16, version 0.0.26, PR #29; you walked through it on your phone**
 - Built: `ui/SetupScreens.kt`, `viewmodel/SetupViewModel.kt`, `data/SetupLogic.kt` (routing rules, terms version, name rule), `data/Agreement.kt` (the in-app agreement text) and `network/GeminiKeyCheck.kt` (asks Google for the first page of models with the key in a header; the key is saved only after Google accepts it). Routing in `MainActivity`: setup steps, then the phone control gate, then a one-time "all set" screen, then home. The voice session (`AccessGate`) stays closed until setup has nothing left to ask. 20 new unit tests (`SetupLogicTest`, `GeminiKeyCheckTest`).
 - Differences from the section 6 sketch, so the plan stays true: one name field ("What should FRIDAY call you?", with a "Use Boss" shortcut) instead of name plus a separate form of address; **no voice sample** (a sample would need its own Gemini call, so the voice step says you will hear it in your first conversation); the agreement text lives in the app and does **not** link to the website because the site is not deployed yet.
 - Checked: tests, lint and build pass; on an Android 16 phone with an existing key the app opens on the agreement, the Accept button stays disabled until the box is ticked, Decline is there.
-- **Not checked, needs you** (accepting the agreement and entering a key are your actions): the full walk through name, key check with a good and a bad key, voice, permissions, phone control and the "all set" screen; a fresh install (welcome screen); TalkBack reading every step; the agreement text read by a lawyer (8.1).
-- Done when: no path reaches home without an accepted agreement, a saved name and a checked key (**proved in `SetupLogicTest` for every combination**; the phone walk is still to do).
+- **Phone check:** you completed the setup on a fresh install (Android 16). Still **not** checked: TalkBack reading every step, and the agreement text read by a lawyer (8.1). What you saw go wrong, if anything, is not recorded here: tell me and it goes into the next sprint.
+- Done when: no path reaches home without an accepted agreement, a saved name and a checked key (**proved in `SetupLogicTest` for every combination**, and walked through on the phone).
 
 ### Phase 6: Accessibility tool readiness
 
