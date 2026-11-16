@@ -3,6 +3,15 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.29 - 2026-11-16
+
+### Changed
+- Help and support is rebuilt: a search box, common questions that open and close, and a Contact section with Email support, Report a problem and Suggest a feature. "Request a phone control" is gone.
+- Storage shows a bar split by what takes the space, with a Clear button and a confirmation for each kind of data. The Conversations text no longer says the assistant looks things up in them, which it has not done since 0.0.8.
+- Usage adds "Most used" (the actions you use most) and "Busiest hours". They are counted on your phone from this version, so earlier days show less.
+- The setup and the agreement now say that F.R.I.D.A.Y. needs a Gemini key from a Google project with billing turned on, why, and that Google charges your project, not Nandivex. There is a link to Google's billing page. Because the agreement changed, you are asked to accept it again.
+- The home greetings are shorter and plainer.
+
 ## 0.0.28 - 2026-11-16
 
 ### Fixed

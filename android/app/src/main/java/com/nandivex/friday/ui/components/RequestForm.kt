@@ -72,7 +72,7 @@ import com.nandivex.friday.ui.theme.AssistantTextMuted
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
 import com.nandivex.friday.ui.theme.AssistantTextSecondary
 
-/** What the request form sends. [type] is "connector" or "bug"; [device] is filled only for a bug report. */
+/** What the request form sends. [type] is "feature" or "bug"; [device] is filled only for a bug report. */
 data class FeatureRequest(
     val type: String, val name: String, val details: String, val examples: String, val email: String, val device: String = ""
 )
@@ -85,7 +85,7 @@ private const val MAX_EMAIL = 120
 private const val MIN_NAME = 2
 private const val MIN_DETAILS = 10
 
-/** Words that change between the connector form and the bug form. */
+/** Words that change between the feature form and the bug form. */
 private class FormText(
     val icon: ImageVector,
     val title: String,
@@ -99,18 +99,19 @@ private class FormText(
     val sendLabel: String = "Send request"
 )
 
-private val ConnectorText = FormText(
+private val FeatureText = FormText(
     icon = Icons.Outlined.Extension,
-    title = "Request a phone control",
-    intro = "Tell the developer what you want to control on your phone by voice, such as a setting, an app or a button.",
-    nameLabel = "What to control", nameHint = "For example: Screen recorder",
-    detailsLabel = "What should F.R.I.D.A.Y. do?", detailsHint = "Say what you want to happen on the phone. The more detail, the better.",
-    examplesHint = "For example: start screen recording"
+    title = "Suggest a feature",
+    intro = "Tell us what you would like F.R.I.D.A.Y. to do on your phone. We read every message, but we cannot promise to build every idea.",
+    nameLabel = "Your idea in a few words", nameHint = "For example: Start screen recording",
+    detailsLabel = "What should it do?", detailsHint = "Describe what you would like to happen on the phone.",
+    examplesHint = "For example: start screen recording",
+    sendLabel = "Send idea"
 )
 
 private val BugText = FormText(
     icon = Icons.Outlined.BugReport,
-    title = "Report a bug",
+    title = "Report a problem",
     intro = "Tell the developer what went wrong. Clear steps make a bug much quicker to fix.",
     nameLabel = "What went wrong?", nameHint = "For example: The mic stops after two replies",
     detailsLabel = "What happened?", detailsHint = "What you did, what F.R.I.D.A.Y. did, and whether it happens every time.",
@@ -120,7 +121,7 @@ private val BugText = FormText(
 )
 
 /**
- * A full screen form to ask the developer for a new phone control, or to report a bug. Each kind has its own wording.
+ * A full screen form to suggest a feature, or to report a problem. Each kind has its own wording.
  * [onSend] starts sending; the caller keeps [sending] and [error] up to date and closes the form with [onBack] when it worked.
  */
 @Composable
@@ -131,11 +132,11 @@ fun FeatureRequestPage(
     onSend: (FeatureRequest) -> Unit,
     onBack: () -> Unit
 ) {
-    val isConnector = type == "connector"
+    val isConnector = type == "feature"
     val isBug = type == "bug"
     val text = when {
         isBug -> BugText
-        else -> ConnectorText
+        else -> FeatureText
     }
     // On by default: the phone model and Android version make most bugs much easier to reproduce.
     var includeDevice by remember(type) { mutableStateOf(true) }

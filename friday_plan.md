@@ -276,6 +276,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
   agreement, Help, Abilities page, store text), with one style guide in `docs/WRITING.md`, and the R9 fix to the key
   step and agreement: a key with billing enabled, why a free key is not allowed, and a link to Google's billing page. You read and approve the agreement and Help text.
 - Done when: you approve each page on the phone, and the Usage numbers match a session you counted by hand.
+- **Built 2026-11-16 (0.0.29, PR pending):** Help (search, 6 questions, Contact, Report a problem, Suggest a feature; "Request a phone control" removed), Storage (split bar, wording fixed: the old text claimed the assistant looks up past conversations, which was removed in 0.0.8), Usage (Most used, Busiest hours, counted from 0.0.29), the R9 fix in setup and the agreement (billing-enabled key; `TERMS_VERSION` raised so everyone accepts again), shorter home greetings, `docs/WRITING.md`. **Not done:** "failed actions" and "apps opened" in Usage (needs the tool result path); the rest of the app's texts (Settings, Abilities page, toasts, errors) are not yet rewritten to the style guide; Privacy policy and Terms links in Help wait until the website is deployed; the agreement text needs a lawyer's read.
 
 **Sprint 6.5: UI polish pass**
 - Build: consistent spacing, cards, buttons, empty states, loading states and motion on every page; large text and

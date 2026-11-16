@@ -69,6 +69,7 @@ import com.nandivex.friday.ui.theme.AssistantTextSecondary
 import com.nandivex.friday.viewmodel.SetupUiState
 
 private const val KEY_PAGE_URL = "https://aistudio.google.com/apikey"
+private const val BILLING_PAGE_URL = "https://ai.google.dev/gemini-api/docs/billing"
 
 /** Shown for the moment it takes to read the phone's saved answers. */
 @Composable
@@ -216,7 +217,11 @@ private fun ApiKeyStep(state: SetupUiState, actions: SetupActions) {
         TextButton(
             onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(KEY_PAGE_URL))) } },
             modifier = Modifier.heightIn(min = 48.dp)
-        ) { Text("Get a free key from Google AI Studio", color = AssistantAccent) }
+        ) { Text("Get a key from Google AI Studio", color = AssistantAccent) }
+        TextButton(
+            onClick = { runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(BILLING_PAGE_URL))) } },
+            modifier = Modifier.heightIn(min = 48.dp)
+        ) { Text("How to turn on billing", color = AssistantAccent) }
         state.keyMessage?.let { if (state.keyMessageIsError) ErrorText(it) else SuccessText(it) }
         if (state.hasApiKey && state.keyMessage == null && key.isEmpty()) SuccessText("A key is already saved on this phone.")
         Spacer(Modifier.height(10.dp))
@@ -234,9 +239,9 @@ private fun ApiKeyStep(state: SetupUiState, actions: SetupActions) {
         }
         Spacer(Modifier.height(18.dp))
         Text(
-            "The key is stored encrypted on this phone and used only to call Gemini. Google's own Gemini API terms and limits apply " +
-                "to your key. Free keys have usage limits, and Google may use content sent with a free key to improve its products. " +
-                "The key is long, so ask someone to help you paste it if that is easier.",
+            "Use a key from a Google project with billing turned on. F.R.I.D.A.Y. can send what is on your screen, and Google's terms do not " +
+                "allow personal information on the free tier. Google charges your project for use; Nandivex does not. The app cannot check " +
+                "whether billing is on. The key is stored encrypted on this phone and used only to call Gemini.",
             color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 19.sp, textAlign = TextAlign.Center
         )
     }

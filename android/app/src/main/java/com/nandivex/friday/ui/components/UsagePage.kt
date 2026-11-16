@@ -153,6 +153,52 @@ fun UsagePage(
             }
         }
 
+        val toolUse = total.toolUse.filterValues { it > 0 }
+        if (toolUse.isNotEmpty()) {
+            PageLabel("Most used")
+            val top = toolUse.entries.sortedByDescending { it.value }.take(5)
+            val most = top.first().value.toDouble()
+            PageCard {
+                top.forEachIndexed { i, (name, count) ->
+                    if (i > 0) Spacer(Modifier.height(12.dp))
+                    Row(Modifier.fillMaxWidth()) {
+                        Text(toolLabel(name), color = AssistantTextPrimary, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                        Text(count.toString(), color = AssistantTextSecondary, fontSize = 14.sp)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(AssistantFieldBackground)) {
+                        Box(Modifier.fillMaxWidth((count / most).toFloat().coerceIn(0.02f, 1f)).height(6.dp).clip(RoundedCornerShape(3.dp)).background(AssistantAccent))
+                    }
+                }
+            }
+        }
+
+        val hours = total.hours.filterValues { it > 0 }
+        if (hours.isNotEmpty()) {
+            PageLabel("Busiest hours")
+            val perHour = (0..23).map { hours[it.toString()] ?: 0 }
+            val busiest = perHour.indices.maxByOrNull { perHour[it] } ?: 0
+            PageCard {
+                Text(
+                    "Most actions happen around " + hourText(busiest) + ".",
+                    color = AssistantTextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium
+                )
+                Spacer(Modifier.height(10.dp))
+                BarChart(perHour.map { it.toDouble() }, busiest) {}
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth()) {
+                    Text("12 am", color = AssistantTextMuted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text("12 pm", color = AssistantTextMuted, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text("11 pm", color = AssistantTextMuted, fontSize = 12.sp)
+                }
+            }
+        }
+
+        Text(
+            "Counted on this phone and never sent anywhere. Most used and Busiest hours are counted from version 0.0.29, so earlier days show less.",
+            color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 16.dp, start = 4.dp)
+        )
+
         val purposes = total.purposes.filterValues { it > 0 }
         if (purposes.isNotEmpty()) {
             PageLabel("What it was used for")
@@ -173,6 +219,15 @@ fun UsagePage(
             }
         }
     }
+}
+
+/** The name shown for a tool: its label from the tool list, or the raw name when it is unknown. */
+private fun toolLabel(functionName: String): String =
+    com.nandivex.friday.data.DeviceTool.entries.firstOrNull { it.functionName == functionName }?.label ?: functionName
+
+private fun hourText(hour: Int): String {
+    val h = if (hour % 12 == 0) 12 else hour % 12
+    return "$h ${if (hour < 12) "am" else "pm"}"
 }
 
 /** "Up 20% from yesterday", or null when there is nothing to compare. */

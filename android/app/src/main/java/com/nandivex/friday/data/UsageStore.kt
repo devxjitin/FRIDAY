@@ -24,7 +24,11 @@ data class UsageDay(
     val purposes: Map<String, Long> = emptyMap(),
     /** Typed-chat and helper tokens by the model that spent them (model id -> tokens); part of [inputTokens] and [outputTokens]. */
     val modelInput: Map<String, Long> = emptyMap(),
-    val modelOutput: Map<String, Long> = emptyMap()
+    val modelOutput: Map<String, Long> = emptyMap(),
+    /** How many times each tool ran (tool function name -> count). Counted from version 0.0.29 on. */
+    val toolUse: Map<String, Int> = emptyMap(),
+    /** Tool runs by hour of the day, "0" to "23". Counted from version 0.0.29 on. */
+    val hours: Map<String, Int> = emptyMap()
 ) {
     val tokens: Long get() = inputTokens + outputTokens
 
@@ -33,9 +37,14 @@ data class UsageDay(
         voiceSessions + other.voiceSessions, voiceSeconds + other.voiceSeconds, toolCalls + other.toolCalls,
         (purposes.keys + other.purposes.keys).associateWith { (purposes[it] ?: 0L) + (other.purposes[it] ?: 0L) },
         merge(modelInput, other.modelInput),
-        merge(modelOutput, other.modelOutput)
+        merge(modelOutput, other.modelOutput),
+        mergeCounts(toolUse, other.toolUse),
+        mergeCounts(hours, other.hours)
     )
 }
+
+private fun mergeCounts(a: Map<String, Int>, b: Map<String, Int>) =
+    (a.keys + b.keys).associateWith { (a[it] ?: 0) + (b[it] ?: 0) }
 
 private fun merge(a: Map<String, Long>, b: Map<String, Long>) =
     (a.keys + b.keys).associateWith { (a[it] ?: 0L) + (b[it] ?: 0L) }
@@ -78,6 +87,8 @@ class UsageStore(private val context: Context) {
                     .put("p", JSONObject().also { p -> it.purposes.forEach { (name, tokens) -> p.put(name, tokens) } })
                     .put("mi", JSONObject().also { m -> it.modelInput.forEach { (name, tokens) -> m.put(name, tokens) } })
                     .put("mo", JSONObject().also { m -> it.modelOutput.forEach { (name, tokens) -> m.put(name, tokens) } })
+                    .put("tu", JSONObject().also { m -> it.toolUse.forEach { (name, n) -> m.put(name, n) } })
+                    .put("hr", JSONObject().also { m -> it.hours.forEach { (name, n) -> m.put(name, n) } })
             )
         }
         return root.toString()
@@ -92,11 +103,15 @@ class UsageStore(private val context: Context) {
                 val spent = o.optJSONObject("p")
                 val modelIn = o.optJSONObject("mi")
                 val modelOut = o.optJSONObject("mo")
+                val toolUse = o.optJSONObject("tu")
+                val hours = o.optJSONObject("hr")
                 UsageDay(
                     day, o.optInt("m"), o.optLong("i"), o.optLong("o"), o.optInt("vs"), o.optLong("vt"), o.optInt("t"),
                     spent?.keys()?.asSequence()?.associateWith { name -> spent.optLong(name) } ?: emptyMap(),
                     modelIn?.keys()?.asSequence()?.associateWith { name -> modelIn.optLong(name) } ?: emptyMap(),
-                    modelOut?.keys()?.asSequence()?.associateWith { name -> modelOut.optLong(name) } ?: emptyMap()
+                    modelOut?.keys()?.asSequence()?.associateWith { name -> modelOut.optLong(name) } ?: emptyMap(),
+                    toolUse?.keys()?.asSequence()?.associateWith { name -> toolUse.optInt(name) } ?: emptyMap(),
+                    hours?.keys()?.asSequence()?.associateWith { name -> hours.optInt(name) } ?: emptyMap()
                 )
             }.sortedBy { it.day }.toList()
         } catch (e: Exception) {
