@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.31 - 2026-11-16
+
+### Changed
+- Preparation for accounts. Nothing you can see changes yet. The rule that F.R.I.D.A.Y. is for people aged 18 or older, which Google's Gemini terms require, is now written and tested, ready for the sign-up step.
+
 ## 0.0.30 - 2026-11-16
 
 ### Changed
