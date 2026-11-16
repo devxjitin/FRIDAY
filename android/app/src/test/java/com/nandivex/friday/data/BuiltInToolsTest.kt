@@ -43,12 +43,28 @@ class BuiltInToolsTest {
         assertTrue("still declared: ${names intersect gone}", (names intersect gone).isEmpty())
     }
 
+    @Test fun everyToolIsListedInExactlyOneAbilityGroup() {
+        val owners = Abilities.groups.flatMap { g -> g.tools.map { it to g.title } }.groupBy({ it.first }, { it.second })
+        DeviceTool.entries.forEach { assertEquals("$it", 1, owners[it]?.size ?: 0) }
+        Abilities.groups.forEach { assertTrue("${it.title} has no summary", it.summary.isNotBlank()) }
+    }
+
+    @Test fun noAlarmReminderOrStatusToolsRemain() {
+        val names = DeviceTool.entries.map { it.functionName }.toSet()
+        val gone = setOf(
+            "set_alarm", "list_alarms", "cancel_alarm", "modify_alarm", "set_timer", "list_timers", "cancel_timer",
+            "schedule_reminder", "list_reminders", "cancel_reminder", "modify_reminder", "show_notification",
+            "get_step_count", "get_light_level", "get_storage_and_memory", "get_device_info"
+        )
+        assertTrue("still declared: ${names intersect gone}", (names intersect gone).isEmpty())
+    }
+
     @Test fun phoneControlToolsStayAvailable() {
         val names = DeviceTool.entries.map { it.functionName }.toSet()
         listOf(
             "read_screen", "click_on_text", "tap_screen_position", "type_text", "swipe_screen", "scroll_screen",
             "press_back", "go_to_home_screen", "open_app", "set_flashlight", "set_volume", "set_brightness",
-            "wifi_toggle", "bluetooth_toggle", "set_alarm", "set_timer", "schedule_reminder"
+            "wifi_toggle", "bluetooth_toggle", "get_current_time", "get_battery_status"
         ).forEach { assertTrue("$it is missing", it in names) }
     }
 

@@ -13,8 +13,6 @@ import com.google.firebase.auth.FirebaseAuth
 class FridayApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        // The Schedule feature is gone; clear what an earlier version left behind.
-        runCatching { com.nandivex.friday.data.LegacyScheduleCleanup.run(this) }
         if (runCatching { FirebaseApp.getApps(this).isEmpty() }.getOrDefault(true)) return
         runCatching { AppCheckInstaller.install() }.onFailure { Log.w(TAG, "App Check setup failed", it) }
         runCatching {

@@ -59,6 +59,7 @@ import com.nandivex.friday.ui.components.AssistantToastHost
 import com.nandivex.friday.ui.components.MemoryPage
 import com.nandivex.friday.ui.components.HistoryPage
 import com.nandivex.friday.ui.components.FeatureRequestPage
+import com.nandivex.friday.ui.components.AbilitiesPage
 import com.nandivex.friday.ui.components.HelpPage
 import com.nandivex.friday.ui.components.ProfilePage
 import com.nandivex.friday.ui.components.AppDrawerContainerColor
@@ -158,6 +159,7 @@ fun AssistantScreen(
                         NavTab.MEMORY -> guardedNav(actions.onMemoryTapped)
                         NavTab.HISTORY -> guardedNav(actions.onHistoryTapped)
                         NavTab.HELP -> guardedNav(actions.onHelpTapped)
+                        NavTab.ABILITIES -> guardedNav(actions.onAbilitiesTapped)
                         NavTab.SETTINGS -> guardedNav(actions.onSettingsTapped)
                         NavTab.DEVELOPER -> guardedNav(actions.onDeveloperTapped)
                         NavTab.ABOUT -> guardedNav(actions.onAboutTapped)
@@ -263,6 +265,10 @@ fun AssistantScreen(
                     onRemoveKey = actions.onRemoveLicense,
                     modifier = Modifier.padding(top = topReserve)
                 )
+            }
+
+            if (tab == NavTab.ABILITIES) {
+                AbilitiesPage(modifier = Modifier.padding(top = topReserve))
             }
 
             if (tab == NavTab.HELP) {

@@ -122,8 +122,6 @@ class DeviceToolRunner(
             DeviceTool.TIME -> "status=ok\n" + ZonedDateTime.now()
                 .format(DateTimeFormatter.ofPattern("EEEE, d MMMM yyyy, hh:mm a (zzz), 'time zone' VV, 'ISO date' yyyy-MM-dd, HH:mm 'in 24-hour'", Locale.ENGLISH))
             DeviceTool.BATTERY -> battery()
-            DeviceTool.DEVICE_INFO -> deviceInfo()
-            DeviceTool.STORAGE_MEMORY -> storageAndMemory()
             DeviceTool.NETWORK -> network()
             DeviceTool.GET_RINGER -> "status=ok\nRinger mode is ${ringerName(audioManager.ringerMode)}."
             DeviceTool.SET_RINGER -> setRinger(text("mode"))
@@ -145,7 +143,6 @@ class DeviceToolRunner(
                     .setPrimaryClip(ClipData.newPlainText("assistant", value))
                 "status=ok\nCopied to the clipboard."
             }
-            DeviceTool.SHOW_NOTIFICATION -> showNotification(text("title") ?: return MISSING, text("message") ?: return MISSING, args.optBoolean("urgent"), text("kind"), text("label").orEmpty())
             DeviceTool.FLASHLIGHT -> flashlight(text("state"))
             DeviceTool.MEDIA_CONTROL -> mediaControl(text("command"))
             DeviceTool.OPEN_APP -> openApp(text("name") ?: return MISSING)
@@ -174,27 +171,6 @@ class DeviceToolRunner(
                 start(Intent(if (text("mode") == "video") MediaStore.ACTION_VIDEO_CAPTURE else MediaStore.ACTION_IMAGE_CAPTURE))
                 "status=ok\nCamera opened."
             }
-            DeviceTool.SCHEDULE_REMINDER -> {
-                val message = text("message") ?: return MISSING
-                val due = runCatching { AutomationEngine.reminderTime(number("minutes"), text("at_time"), text("date")) }
-                    .getOrElse { return "status=invalid\n${it.message}" }
-                val repeat = AutomationEngine.repeatMinutes(text("repeat"))
-                notificationsMissing()?.let { return it }
-                // Saved like any scheduled action, so the reminder survives a restart of the phone.
-                val scheduled = AutomationEngine.scheduleAt(
-                    app, DeviceTool.SHOW_NOTIFICATION,
-                    JSONObject().put("title", "Reminder").put("message", message).put("urgent", true).toString(),
-                    due, repeat
-                )
-                val every = when (repeat) { 1_440 -> ", and again every day"; 10_080 -> ", and again every week"; else -> "" }
-                if (scheduled.startsWith("status=ok")) "status=ok\nReminder set for ${AutomationEngine.format(due)}$every."
-                else scheduled
-            }
-            DeviceTool.LIST_REMINDERS -> AutomationEngine.listScheduled(app)
-            DeviceTool.CANCEL_REMINDER -> AutomationEngine.cancelReminder(app, number("id"))
-            DeviceTool.MODIFY_REMINDER -> AutomationEngine.modifyReminder(app, number("id"), number("minutes"), text("message"), text("at_time"), text("date"))
-            DeviceTool.STEPS -> steps()
-            DeviceTool.LIGHT -> lightLevel()
             DeviceTool.WIFI_INFO -> wifiInfo()
             DeviceTool.READ_SCREEN -> {
                 val service = AssistantAccessibilityService.instance ?: return accessibilityDenied()
@@ -327,25 +303,6 @@ class DeviceToolRunner(
                 Settings.System.putInt(app.contentResolver, Settings.System.ACCELEROMETER_ROTATION, on)
                 "status=ok\nAuto-rotate is ${if (on == 1) "on" else "off"}."
             }
-            DeviceTool.SET_ALARM -> {
-                val hour = number("hour") ?: return MISSING
-                val minute = number("minute") ?: return MISSING
-                notificationsMissing()?.let { return it }
-                OwnClock.setAlarm(app, hour, minute, text("label") ?: "", text("repeat"))
-            }
-            DeviceTool.LIST_ALARMS -> OwnClock.list(app, OwnClock.KIND_ALARM)
-            DeviceTool.CANCEL_ALARM -> OwnClock.cancel(app, OwnClock.KIND_ALARM, number("id"), number("hour"), number("minute"), text("label"))
-            DeviceTool.MODIFY_ALARM -> OwnClock.modifyAlarm(
-                app, number("hour") ?: return MISSING, number("minute") ?: return MISSING,
-                number("new_hour") ?: return MISSING, number("new_minute") ?: return MISSING, text("label")
-            )
-            DeviceTool.SET_TIMER -> {
-                val seconds = number("seconds") ?: return MISSING
-                notificationsMissing()?.let { return it }
-                OwnClock.setTimer(app, seconds, text("label") ?: "")
-            }
-            DeviceTool.LIST_TIMERS -> OwnClock.list(app, OwnClock.KIND_TIMER)
-            DeviceTool.CANCEL_TIMER -> OwnClock.cancel(app, OwnClock.KIND_TIMER, number("id"), null, null, text("label"))
             DeviceTool.OPEN_SETTINGS -> {
                 val action = when (text("screen")) {
                     "wifi" -> Settings.ACTION_WIFI_SETTINGS
@@ -586,43 +543,6 @@ class DeviceToolRunner(
         return "status=ok\nBluetooth is on. Paired devices: ${if (names.isEmpty()) "none" else names.joinToString()}."
     }
 
-    private suspend fun readSensor(type: Int): Float? {
-        val manager = app.getSystemService(SensorManager::class.java)
-        val sensor = manager.getDefaultSensor(type) ?: return null
-        return withTimeoutOrNull(3_000L) {
-            suspendCancellableCoroutine { continuation ->
-                val listener = object : SensorEventListener {
-                    override fun onSensorChanged(event: SensorEvent) {
-                        manager.unregisterListener(this)
-                        if (continuation.isActive) continuation.resume(event.values[0])
-                    }
-                    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
-                }
-                manager.registerListener(listener, sensor, SensorManager.SENSOR_DELAY_NORMAL)
-                continuation.invokeOnCancellation { manager.unregisterListener(listener) }
-            }
-        }
-    }
-
-    private suspend fun steps(): String {
-        if (Build.VERSION.SDK_INT >= 29) missingPermission(Manifest.permission.ACTIVITY_RECOGNITION)?.let { return it }
-        val value = readSensor(Sensor.TYPE_STEP_COUNTER)
-            ?: return "status=unavailable\nThis phone has no step counter or it gave no reading."
-        return "status=ok\n${value.toLong()} steps counted since the phone last restarted."
-    }
-
-    private suspend fun lightLevel(): String {
-        val lux = readSensor(Sensor.TYPE_LIGHT) ?: return "status=unavailable\nThis phone has no light sensor or it gave no reading."
-        val word = when {
-            lux < 10 -> "very dark"
-            lux < 50 -> "dim"
-            lux < 400 -> "normal indoor light"
-            lux < 5_000 -> "bright"
-            else -> "very bright, like daylight"
-        }
-        return "status=ok\nAmbient light is ${lux.toInt()} lux ($word)."
-    }
-
     /** Sets screen brightness for the whole phone when Modify system settings is allowed, otherwise only inside FRIDAY. */
     private fun setBrightness(percent: Int) {
         if (Settings.System.canWrite(app)) {
@@ -672,23 +592,6 @@ class DeviceToolRunner(
             "Temperature $tempC C. Battery saver is ${if (saver) "on" else "off"}."
     }
 
-    private fun deviceInfo(): String {
-        val metrics = app.resources.displayMetrics
-        val landscape = app.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val screenOn = app.getSystemService(PowerManager::class.java).isInteractive
-        return "status=ok\nDevice ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}). " +
-            "Screen ${metrics.widthPixels}x${metrics.heightPixels}, ${if (landscape) "landscape" else "portrait"}, " +
-            "${if (screenOn) "on" else "off"}. Language ${Locale.getDefault().displayName}. Time zone ${TimeZone.getDefault().id}."
-    }
-
-    private fun storageAndMemory(): String {
-        fun gb(bytes: Long) = "%.1f GB".format(Locale.ENGLISH, bytes / 1_073_741_824.0)
-        val stat = StatFs(Environment.getDataDirectory().path)
-        val memory = ActivityManager.MemoryInfo().also { app.getSystemService(ActivityManager::class.java).getMemoryInfo(it) }
-        return "status=ok\nStorage: ${gb(stat.availableBytes)} free of ${gb(stat.totalBytes)}. " +
-            "RAM: ${gb(memory.availMem)} free of ${gb(memory.totalMem)}."
-    }
-
     private fun network(): String {
         val manager = app.getSystemService(ConnectivityManager::class.java)
         val caps = manager.activeNetwork?.let { manager.getNetworkCapabilities(it) }
@@ -722,22 +625,6 @@ class DeviceToolRunner(
         } catch (e: SecurityException) {
             "status=unavailable\nChanging this needs Do Not Disturb access, which has not been granted to the app."
         }
-    }
-
-    private fun showNotification(title: String, message: String, urgent: Boolean, kind: String? = null, label: String = ""): String =
-        if (AlertNotifications.show(app, title, message, urgent, kind, label)) "status=ok\nNotification shown."
-        else "status=unavailable\nNotifications are turned off for this app."
-
-    /**
-     * Alarms, timers and reminders need FRIDAY's notifications: that is where they show and where Stop is. Returns a tool
-     * result asking for them (Android 13+ shows its own dialog), or null when they are on.
-     */
-    private fun notificationsMissing(): String? {
-        if (NotificationManagerCompat.from(app).areNotificationsEnabled()) return null
-        if (Build.VERSION.SDK_INT >= 33) missingPermission(Manifest.permission.POST_NOTIFICATIONS)?.let { return it }
-        start(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, app.packageName))
-        return "status=permission_needed\nNotifications are turned off for FRIDAY, so nothing was set: it could not ring or show. " +
-            "FRIDAY's notification settings were opened; the user must turn them on, then ask again."
     }
 
     private fun flashlight(state: String?): String {
@@ -904,10 +791,8 @@ class DeviceToolRunner(
         const val VOLUME_STREAM = AudioManager.STREAM_VOICE_CALL
         val VOLUME_NAMES = listOf("assistant", "media", "ring", "alarm", "notification")
         const val INVALID_LEVEL = "status=invalid\nUse action increase, decrease, or set with a percent."
-        /** Tools that query storage or the installed apps. */
-        val BLOCKING_TOOLS = setOf(
-            DeviceTool.STORAGE_MEMORY, DeviceTool.OPEN_APP, DeviceTool.OPEN_APP_SETTINGS, DeviceTool.LIST_APPS
-        )
+        /** Tools that look through the installed apps. */
+        val BLOCKING_TOOLS = setOf(DeviceTool.OPEN_APP, DeviceTool.OPEN_APP_SETTINGS, DeviceTool.LIST_APPS)
         const val MISSING ="status=invalid\nA required value was missing."
     }
 }

@@ -21,7 +21,7 @@ class NonBlockingToolsTest {
     }
 
     @Test fun quickToolsStayBlocking() {
-        listOf("set_volume", "set_flashlight", "set_alarm", "read_screen")
+        listOf("set_volume", "set_flashlight", "set_ringer_mode", "read_screen")
             .forEach { assertFalse(it, declaration(it).has("behavior")) }
     }
 
