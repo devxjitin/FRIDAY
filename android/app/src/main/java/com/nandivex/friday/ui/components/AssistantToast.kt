@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nandivex.friday.ui.theme.AssistantInfo
 import com.nandivex.friday.ui.theme.AssistantSuccess
-import com.nandivex.friday.ui.theme.AssistantAmber
+import com.nandivex.friday.ui.theme.AssistantWarning
 import com.nandivex.friday.ui.theme.AssistantErrorFill
 import com.nandivex.friday.ui.theme.AssistantSurfaceElevated
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
@@ -74,7 +74,7 @@ fun AssistantToastHost(
         val (accentColor, icon) = when (type) {
             AppNotificationType.SUCCESS -> AssistantSuccess to Icons.Filled.Check
             AppNotificationType.ERROR -> AssistantErrorFill to Icons.Filled.Error
-            AppNotificationType.WARNING -> AssistantAmber to Icons.Filled.Warning
+            AppNotificationType.WARNING -> AssistantWarning to Icons.Filled.Warning
             AppNotificationType.INFO -> AssistantInfo to Icons.Filled.Info
         }
         Row(

@@ -3,6 +3,14 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.27 - 2026-11-16
+
+### Changed
+- New look: a purple theme in light and dark mode replaces the teal one. The main button is purple with white text on the light page and light purple with dark text on the dark page.
+- New F.R.I.D.A.Y. logo: a white F on a purple square, with a voice wave as its middle bar. It is the app icon (including the Android 13 themed icon), the splash screen and the icon in About.
+- The app now uses your phone's own font and follows its text size setting, instead of a bundled font. The app is a little smaller.
+- The voice wave and the microphone button use purple tones; errors stay red.
+
 ## 0.0.26 - 2026-11-16
 
 ### Added

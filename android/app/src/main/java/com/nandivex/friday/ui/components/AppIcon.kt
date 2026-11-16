@@ -10,25 +10,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.nandivex.friday.R
 
-/** The launcher icon (the F.R.I.D.A.Y. mark on navy) at any size, so the app shows one identity everywhere. */
+/** The launcher icon (the F.R.I.D.A.Y. mark on purple) at any size, so the app shows one identity everywhere. */
 @Composable
 fun AppIconTile(size: Dp, modifier: Modifier = Modifier) {
     Box(
         modifier.size(size).clip(RoundedCornerShape(size * 0.24f))
-            .background(Brush.linearGradient(listOf(Color(0xFF162036), Color(0xFF0A0F1A)))),
+            .background(Color(0xFF5B2EC9)),
         contentAlignment = Alignment.Center
     ) {
         // The launcher art keeps a wide safe margin for adaptive-icon masks; zoom in so the mark fills the tile.
         Image(
             painterResource(R.drawable.ic_launcher_foreground), contentDescription = null,
-            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.2f; scaleY = 1.2f }
+            modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.7f; scaleY = 1.7f }
         )
     }
 }

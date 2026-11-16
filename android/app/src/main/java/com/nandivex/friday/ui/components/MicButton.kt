@@ -30,7 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.nandivex.friday.ui.theme.AssistantAccent
-import com.nandivex.friday.ui.theme.AssistantAmber
+import com.nandivex.friday.ui.theme.AssistantWarning
 import com.nandivex.friday.ui.theme.AssistantError
 import com.nandivex.friday.ui.theme.AssistantTextPrimary
 import com.nandivex.friday.network.LiveContext
@@ -115,7 +115,7 @@ fun MicButton(
 private fun ContextRing(fraction: Float) {
     val color = when (LiveContext.level(fraction)) {
         LiveContext.Level.NORMAL -> AssistantAccent
-        LiveContext.Level.WARNING -> AssistantAmber
+        LiveContext.Level.WARNING -> AssistantWarning
         LiveContext.Level.CRITICAL -> AssistantError
     }
     val track = AssistantTextPrimary.copy(alpha = 0.15f)

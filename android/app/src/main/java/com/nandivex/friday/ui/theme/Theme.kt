@@ -49,10 +49,10 @@ private val White = Color.White
 private fun colorSchemeFor(p: AssistantPalette) =
     if (p.dark) {
         darkColorScheme(
-            // accentFill, not accent: white on the bright dark-theme red is only 3:1, on the deep red it is 5.5:1.
-            primary = p.accentFill, onPrimary = White,
-            secondary = p.accentFill, onSecondary = White,
-            tertiary = p.amber, onTertiary = Color.Black,
+            // The main button colours: light purple with dark text (8.5:1).
+            primary = p.buttonFill, onPrimary = p.onButtonFill,
+            secondary = p.buttonFill, onSecondary = p.onButtonFill,
+            tertiary = p.warning, onTertiary = Color.Black,
             background = p.background, onBackground = p.textPrimary,
             surface = p.surface, onSurface = p.textPrimary,
             surfaceVariant = p.surfaceElevated, onSurfaceVariant = p.textSecondary,
@@ -70,7 +70,7 @@ private fun colorSchemeFor(p: AssistantPalette) =
         lightColorScheme(
             primary = p.accent, onPrimary = White,
             secondary = p.accent, onSecondary = White,
-            tertiary = p.amber, onTertiary = Color.Black,
+            tertiary = p.warning, onTertiary = White,
             background = p.background, onBackground = p.textPrimary,
             surface = p.surface, onSurface = p.textPrimary,
             surfaceVariant = p.surfaceElevated, onSurfaceVariant = p.textSecondary,

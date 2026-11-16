@@ -157,7 +157,7 @@ fun FeatureRequestPage(
                 IconButton(onClick = onBack, enabled = !sending) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back", tint = AssistantTextPrimary)
                 }
-                Text(text.title, color = AssistantTextPrimary, fontSize = 18.sp, fontFamily = com.nandivex.friday.ui.theme.AssistantSerif)
+                Text(text.title, color = AssistantTextPrimary, fontSize = 18.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Default)
             }
             Column(
                 Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
