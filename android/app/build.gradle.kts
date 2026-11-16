@@ -70,6 +70,9 @@ android {
         versionCode = appVersionCode
         versionName = appVersionName
 
+        // The in-app updater reads latest.json from the website and exists only in the release build.
+        buildConfigField("boolean", "SELF_UPDATE", "false")
+        buildConfigField("String", "UPDATE_URLS", "\"https://friday.nandivex.in/latest.json,https://friday-nandivex.web.app/latest.json\"")
     }
 
     signingConfigs {
@@ -107,6 +110,7 @@ android {
 
     buildTypes {
         release {
+            buildConfigField("boolean", "SELF_UPDATE", "true")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (hasReleaseSigningConfig) {

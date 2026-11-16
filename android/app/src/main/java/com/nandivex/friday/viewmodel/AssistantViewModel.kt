@@ -68,6 +68,8 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
+    private val updates = UpdateController(application, viewModelScope, _uiState)
+
     /** Mic level while listening, playback level while speaking. Kept out of [uiState] because it changes
      *  ~25 times a second and only the voice ribbon needs it; putting it in the state recomposed the whole screen. */
     private val _voiceLevel = MutableStateFlow(0f)
@@ -657,7 +659,16 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     fun onAppForegrounded() {
         session.onAppForegrounded()
         startPendingAssist()
+        updates.checkInBackground()
     }
+
+    fun onCheckForUpdates() = updates.checkNow()
+
+    fun onStartUpdate() = updates.startDownload()
+
+    fun onInstallUpdate() = updates.install()
+
+    fun onDismissUpdate() = updates.dismiss()
 
     /** Resume also covers returning from dialogs without an intervening Activity stop. */
     fun onAppResumed() {

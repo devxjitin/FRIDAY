@@ -52,6 +52,8 @@ import java.util.Date
 @Composable
 fun AboutPage(
     assistantName: String,
+    checkingForUpdate: Boolean = false,
+    onCheckForUpdates: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     PageColumn(modifier) {
@@ -82,6 +84,18 @@ fun AboutPage(
             PageRow("Package", BuildConfig.APPLICATION_ID)
             PageRow("Device", Build.MODEL)
             PageRow("Android", "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        }
+
+        // Only the website release can update itself; tester and developer builds get theirs elsewhere.
+        if (BuildConfig.SELF_UPDATE) {
+            PageLabel("Updates")
+            PageCard {
+                Text("F.R.I.D.A.Y. checks for a new version when you open it. You can also check now.", color = AssistantTextSecondary, fontSize = 14.sp, lineHeight = 21.sp)
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = onCheckForUpdates, enabled = !checkingForUpdate, shape = AppButtonShape) {
+                    Text(if (checkingForUpdate) "Checking…" else "Check for updates")
+                }
+            }
         }
 
         WhatsNew()

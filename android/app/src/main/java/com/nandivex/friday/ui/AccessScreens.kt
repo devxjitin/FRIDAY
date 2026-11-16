@@ -116,7 +116,7 @@ fun ActivationScreen(state: AccessState.NeedsKey, storeUrl: String, onActivate: 
  * reads and does, and the user agrees with a button before Android's own settings screen opens.
  */
 @Composable
-fun PhoneControlScreen(onAgree: () -> Unit) {
+fun PhoneControlScreen(onAgree: () -> Unit, onOpenAppInfo: () -> Unit = {}) {
     AccessFrame {
         Heading(
             "Turn on phone control",
@@ -133,6 +133,16 @@ fun PhoneControlScreen(onAgree: () -> Unit) {
             "On the next screen, open F.R.I.D.A.Y. and switch it on. Then come back here.",
             color = AssistantTextMuted, fontSize = 13.sp, lineHeight = 18.sp, textAlign = TextAlign.Center
         )
+        // An app installed from a file or the web (not from a store) has its accessibility switch locked on Android 13 and newer.
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            Spacer(Modifier.height(22.dp))
+            DisclosureLine(
+                "If the switch is greyed out",
+                "Android locks it for apps that were not installed from a store. Tap Open app info, then the three dots at the top right, " +
+                    "then Allow restricted settings. Come back here and turn F.R.I.D.A.Y. on."
+            )
+            TextButton(onClick = onOpenAppInfo) { Text("Open app info", color = AssistantAccent) }
+        }
     }
 }
 

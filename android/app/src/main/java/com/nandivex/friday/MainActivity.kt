@@ -222,9 +222,17 @@ class MainActivity : ComponentActivity() {
                     }
                     val active = accessState as AccessState.Active
                     if (!phoneControlOn) {
-                        PhoneControlScreen(onAgree = {
-                            runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-                        })
+                        PhoneControlScreen(
+                            onAgree = { runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } },
+                            onOpenAppInfo = {
+                                runCatching {
+                                    startActivity(
+                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                            .setData(Uri.fromParts("package", packageName, null))
+                                    )
+                                }
+                            }
+                        )
                         return@Surface
                     }
                     // Once phone control is on, ask once for what the built-in tools use (Wi-Fi name, Bluetooth, steps).
@@ -289,6 +297,10 @@ class MainActivity : ComponentActivity() {
                             onHistoryTapped = { viewModel.onHistoryTapped() },
                             onHelpTapped = { viewModel.onHelpTapped() },
                             onAbilitiesTapped = { viewModel.onAbilitiesTapped() },
+                            onCheckForUpdates = { viewModel.onCheckForUpdates() },
+                            onStartUpdate = { viewModel.onStartUpdate() },
+                            onInstallUpdate = { viewModel.onInstallUpdate() },
+                            onDismissUpdate = { viewModel.onDismissUpdate() },
                             onSendFeatureRequest = { form, done ->
                                 viewModel.onSendFeatureRequest(form, done)
                             },
