@@ -1,8 +1,48 @@
 rules_version = '2';
-// The app keeps no data in Firestore: prompts, skills and connectors ship inside the APK, and subscriptions live in
-// the old licence servers. Everything here stays closed until the Firebase rules are written (Phase 4).
+// Two collections, nothing else.
+//   users/{uid}         the signed-in user's own profile: name, year of birth, email. Only that user reads, writes
+//                       and deletes it, and the server checks the email against the sign-in and the 18+ rule.
+//   entitlements/{uid}  the plan a user has paid for. The user may read it; only the server (which bypasses these
+//                       rules) writes it.
+// Everything else stays closed.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Born in year Y is certainly 18 or older once the year is Y + 19 (they may turn 18 any day of Y + 18).
+    function adultByYear(year) {
+      return year is int && year >= 1900 && request.time.year() - year >= 19;
+    }
+
+    function validProfile(data) {
+      return data.keys().hasOnly(['name', 'yearOfBirth', 'email', 'emailVerified', 'language', 'createdAt', 'updatedAt'])
+        && data.keys().hasAll(['name', 'yearOfBirth', 'email', 'emailVerified', 'createdAt'])
+        && data.name is string && data.name.trim().size() >= 1 && data.name.size() <= 40
+        && adultByYear(data.yearOfBirth)
+        && data.email is string && data.email == request.auth.token.email
+        && data.emailVerified == true && request.auth.token.email_verified == true
+        && (!('language' in data) || (data.language is string && data.language.size() <= 40))
+        && data.createdAt is timestamp
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow create: if signedIn() && request.auth.uid == uid && validProfile(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && request.auth.uid == uid && validProfile(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /entitlements/{uid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

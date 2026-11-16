@@ -299,6 +299,7 @@ grows, and Play then **requires a way to delete the account inside the app and a
   (removes the Firestore document and the sign-in), plus the deletion request page on the website.
 - Done when: rules tests prove a user can read and write only their own document, delete removes everything on the
   server, and an under-18 year of birth cannot get past setup.
+- **Progress 2026-11-16 (0.0.31, PR pending):** `firestore.rules` written (users/{uid} and entitlements/{uid}; the 18+ rule and the email check are enforced on the server too) with 10 emulator tests that pass (`cd tests/rules && npm install && npm test`, needs Java); `AgeRules` (18+ and age bands) with unit tests. The 18+ rule needs a birth year of **Y + 19 or earlier**, because with only a year someone born in Y + 18 may still be 17; a person who turns 18 this year waits until January. **Not done:** Firebase Authentication and Firestore in the app, the sign-in step, Profile, Delete account, the deletion web page, running the rules tests in CI, deploying the rules. Needs from you: Firebase console steps (Auth providers, Firestore database, SHA-1 fingerprints for debug and release, a new google-services.json).
 
 **Sprint 7.2: Age-aware replies** (D11)
 - Build: the age band goes into the session instructions to set tone, speed and wording (for example slower, fuller
