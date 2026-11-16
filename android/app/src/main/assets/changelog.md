@@ -5,9 +5,11 @@ notes and the About page all read it from here. A date after the version is opti
 
 ## 0.0.28 - 2026-11-16
 
+### Fixed
+- Button text, such as "Got it" in the update notice, was hard to read on the dark theme. It now uses the button's own text colour.
+
 ### Changed
-- A new menu. Pages are grouped as Home, What it can do, History and Memory, then Account (Profile), App (Settings, Usage, Storage) and Support (Help and support, About). The header shows the app mark, your name and the app name, and the footer shows the version and "from Nandivex Technologies".
-- Menu rows are larger (48 dp), with a clear purple selected row, and a screen reader announces which row is selected.
+- The menu keeps its layout, now in the purple theme, with softer and evenly spaced lines between the groups.
 
 ## 0.0.27 - 2026-11-16
 
