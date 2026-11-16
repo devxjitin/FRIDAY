@@ -42,7 +42,7 @@ The full list is on the **What F.R.I.D.A.Y. can do** page inside the app. It is 
 - You bring your own **Gemini API key**. It is stored encrypted on the phone (Android Keystore) and used only to call Gemini.
 - While a session is open, microphone audio goes to Gemini. When F.R.I.D.A.Y. carries out a request it reads the screen, and the screen text, or a screenshot when you ask it to look, goes to Gemini too. What Google does with it depends on the plan of your key.
 - Memory, history, usage counters and settings stay on the phone. Android backup is off.
-- Firebase is used for crash reports (Crashlytics), basic usage statistics (Analytics) and an anonymous sign-in with App Check. See [`docs/DATA_FLOWS.md`](docs/DATA_FLOWS.md) for the exact list and the public [privacy policy](site/privacy.html).
+- Firebase is used for crash reports (Crashlytics) only: no Analytics, no sign-in, no App Check. See [`docs/DATA_FLOWS.md`](docs/DATA_FLOWS.md) for the exact list and the public [privacy policy](site/privacy.html).
 - Text from the screen or clipboard is marked untrusted before the model sees it, and only your spoken request gives authority.
 
 ## Project layout

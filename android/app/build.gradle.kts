@@ -190,12 +190,8 @@ dependencies {
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
 
     implementation(platform("com.google.firebase:firebase-bom:35.1.0"))
-    // Identity (anonymous at first), proof that requests come from the genuine app, and crash and usage reporting.
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-appcheck-playintegrity")
-    debugImplementation("com.google.firebase:firebase-appcheck-debug")
+    // Crash reports only. No sign-in, no App Check and no Analytics until a feature needs them (friday_plan.md, D7).
     implementation("com.google.firebase:firebase-crashlytics")
-    implementation("com.google.firebase:firebase-analytics")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

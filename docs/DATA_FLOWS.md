@@ -1,6 +1,6 @@
 # Data flows
 
-What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.24). This is the working source for the
+What FRIDAY reads, stores and sends, as the code stands on 2026-11-16 (version 0.0.25). This is the working source for the
 public privacy policy (`site/privacy.html`) and for the Google Play **Data safety** form (Sprint 8.1). If the code changes,
 change this file in the same pull request.
 
@@ -37,13 +37,11 @@ Drive or a new phone.
 
 | Service | What it receives | Why |
 |---|---|---|
-| Crashlytics | Crash stack traces, app version, phone model, Android version, an installation identifier | Fixing crashes |
-| Analytics | Basic usage events and an app-instance identifier | Basic statistics. **Not configured or limited in code today.** |
-| Authentication | An anonymous user (a random id), created on first launch | **Nothing reads it yet.** It exists for a later account or billing step. |
-| App Check | A Play Integrity token (release build) or a debug token (debug build) | Proves requests come from the real app. **Nothing enforces it yet.** |
+| Crashlytics | Crash stack traces, app version, phone model, Android version, an installation identifier | Fixing crashes. Crashlytics' own library (Firebase Installations) assigns the identifier. |
 
-Open decision (`friday_plan.md`): whether to keep Analytics and the anonymous sign-in while nothing uses them. Not collecting
-data is the simpler answer for the Data safety form.
+Firebase is used for **crash reports only**. Analytics, Authentication (the anonymous user) and App Check were removed in
+0.0.25 because nothing used them (decision D7). Add them back only with a feature that needs them, and update this file,
+the privacy policy and the Data safety form in the same change.
 
 ## Permissions and what they are for
 
@@ -61,5 +59,5 @@ data is the simpler answer for the Data safety form.
 
 Removed on purpose: advertising ID and AdServices permissions (`tools:node="remove"`), install-packages, overlay, contacts,
 calls, SMS, calendar, files, usage access, notification listener, exact alarms, activity recognition.
-Still arriving from libraries and to review in Sprint 8.1: `WAKE_LOCK`, the Play install-referrer permission, and Google
-Play services' own `READ_GSERVICES`.
+After removing Analytics (0.0.25) the merged release manifest holds only the permissions above, plus Android's own
+signature permission for non-exported receivers. Check the merged manifest again before the Data safety form (Sprint 8.1).
