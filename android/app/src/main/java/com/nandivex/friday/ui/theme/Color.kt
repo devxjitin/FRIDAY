@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
  * Every colour the screens use, as one light set and one dark set. The Assistant* names below are read at use time from
  * the palette that is active, so a page never needs to know which theme it is in. Text pairs were checked for contrast
  * (4.5:1 or better for text on every surface it sits on), and [accent] is for text and outlines while [accentFill] is
- * for backgrounds that carry white text, because one teal cannot be both on a dark page.
+ * for backgrounds that carry white text, because one purple cannot be both on a dark page.
  */
 @Immutable
 class AssistantPalette(
@@ -25,7 +25,7 @@ class AssistantPalette(
     val accent: Color,
     val accentFill: Color,
     val accentAlt: Color,
-    val amber: Color,
+    val warning: Color,
     val error: Color,
     val errorFill: Color,
     val success: Color,
@@ -33,59 +33,59 @@ class AssistantPalette(
     val textPrimary: Color,
     val textSecondary: Color,
     val textMuted: Color,
-    /** Fill and text colour of the main button: teal on both pages. */
+    /** Fill and text colour of the main button: purple with white text on the light page, light purple with dark text on the dark page. */
     val buttonFill: Color,
     val onButtonFill: Color
 )
 
-// Light: a cool, pale page with teal accents. Text colours were checked at 4.5:1 or better on every surface (see PaletteContrastTest).
+// Light: a pale violet page with purple accents. Text colours were checked at 4.5:1 or better on every surface (see PaletteContrastTest).
 val LightPalette = AssistantPalette(
     dark = false,
-    background = Color(0xFFF6F8FB),
-    surface = Color(0xFFEBEFF5),
-    surfaceElevated = Color(0xFFE0E6EF),
-    outline = Color(0xFFD3DBE7),
+    background = Color(0xFFFAF8FF),
+    surface = Color(0xFFFFFFFF),
+    surfaceElevated = Color(0xFFF3EFFC),
+    outline = Color(0xFFDDD6EE),
     fieldBackground = Color(0xFFFFFFFF),
-    selectedBg = Color(0xFFDDE9F2),
-    primary = Color(0xFF0A6573),
-    accent = Color(0xFF0A6573),
-    accentFill = Color(0xFF0E7C8C),
-    accentAlt = Color(0xFF9A4507),
-    amber = Color(0xFF9A4507),
-    error = Color(0xFFB42318),
-    errorFill = Color(0xFFB42318),
-    success = Color(0xFF1B6E37),
+    selectedBg = Color(0xFFEDE7FB),
+    primary = Color(0xFF5B2EC9),
+    accent = Color(0xFF5B2EC9),
+    accentFill = Color(0xFF5B2EC9),
+    accentAlt = Color(0xFF5B2EC9),
+    warning = Color(0xFF9A4507),
+    error = Color(0xFFB3261E),
+    errorFill = Color(0xFFB3261E),
+    success = Color(0xFF1B6E3C),
     info = Color(0xFF2C5D9B),
-    textPrimary = Color(0xFF0F1A2B),
-    textSecondary = Color(0xFF3F4E64),
-    textMuted = Color(0xFF52627A),
-    buttonFill = Color(0xFF0E7C8C),
+    textPrimary = Color(0xFF1B1530),
+    textSecondary = Color(0xFF5A5470),
+    textMuted = Color(0xFF6B6584),
+    buttonFill = Color(0xFF5B2EC9),
     onButtonFill = Color(0xFFFFFFFF)
 )
 
-// Dark: a deep navy page with cyan accents and an amber highlight.
+// Dark: a deep violet page with a light purple accent. The main button is light purple with dark text.
 val DarkPalette = AssistantPalette(
     dark = true,
-    background = Color(0xFF0A0F1A),
-    surface = Color(0xFF111827),
-    surfaceElevated = Color(0xFF172033),
-    outline = Color(0xFF22304A),
-    fieldBackground = Color(0xFF0D1422),
-    selectedBg = Color(0xFF14233A),
-    primary = Color(0xFF3DD9EB),
-    accent = Color(0xFF3DD9EB),
-    accentFill = Color(0xFF0E7C8C),
-    accentAlt = Color(0xFFF5A524),
-    amber = Color(0xFFF5A524),
-    error = Color(0xFFF87171),
-    errorFill = Color(0xFFB42318),
-    success = Color(0xFF4ADE80),
-    info = Color(0xFF7FB2FF),
-    textPrimary = Color(0xFFE6EEF8),
-    textSecondary = Color(0xFFA6B4C8),
-    textMuted = Color(0xFF8B9BB3),
-    buttonFill = Color(0xFF0E7C8C),
-    onButtonFill = Color(0xFFFFFFFF)
+    background = Color(0xFF0F0B1A),
+    surface = Color(0xFF19132B),
+    surfaceElevated = Color(0xFF221A38),
+    outline = Color(0xFF2E2548),
+    fieldBackground = Color(0xFF140F24),
+    selectedBg = Color(0xFF2A2046),
+    primary = Color(0xFFB79CFF),
+    accent = Color(0xFFB79CFF),
+    accentFill = Color(0xFF5B2EC9),
+    accentAlt = Color(0xFFB79CFF),
+    warning = Color(0xFFFFB454),
+    error = Color(0xFFFF8A80),
+    errorFill = Color(0xFFB3261E),
+    success = Color(0xFF6FDB9A),
+    info = Color(0xFF8FB8FF),
+    textPrimary = Color(0xFFF1EDFB),
+    textSecondary = Color(0xFFB9B1D1),
+    textMuted = Color(0xFFA097BC),
+    buttonFill = Color(0xFFB79CFF),
+    onButtonFill = Color(0xFF0F0B1A)
 )
 
 /** The palette in use. A snapshot state, so every screen that read a colour redraws when the theme changes. */
@@ -107,7 +107,7 @@ val AssistantPrimaryLight: Color get() = ActivePalette.current.primary
 val AssistantAccent: Color get() = ActivePalette.current.accent
 val AssistantAccentFill: Color get() = ActivePalette.current.accentFill
 val AssistantAccentAlt: Color get() = ActivePalette.current.accentAlt
-val AssistantAmber: Color get() = ActivePalette.current.amber
+val AssistantWarning: Color get() = ActivePalette.current.warning
 val AssistantError: Color get() = ActivePalette.current.error
 val AssistantErrorFill: Color get() = ActivePalette.current.errorFill
 val AssistantSuccess: Color get() = ActivePalette.current.success
@@ -117,6 +117,6 @@ val AssistantTextPrimary: Color get() = ActivePalette.current.textPrimary
 val AssistantTextSecondary: Color get() = ActivePalette.current.textSecondary
 val AssistantTextMuted: Color get() = ActivePalette.current.textMuted
 
-/** The main button: teal with white text on both pages. */
+/** The main button fill and the text colour that sits on it. */
 val AssistantButtonFill: Color get() = ActivePalette.current.buttonFill
 val AssistantOnButtonFill: Color get() = ActivePalette.current.onButtonFill

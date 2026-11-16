@@ -571,3 +571,4 @@
 [2026-11-16] [Claude] [Plan: D9 decided, the user's own Gemini key with billing enabled]
 [2026-11-16] [Claude] [Plan: D4 decided by owner, keep the name F.R.I.D.A.Y.; IP risk and mitigations recorded]
 [2026-11-16] [Claude] [Sprint 6.1 done: design direction approved, logo A (Voice F), purple palette, system font]
+[2026-11-16] [Claude] [Sprint 6.2 built (0.0.27): purple palette, Voice F icons, system font; Nandivex logo waits for the file]

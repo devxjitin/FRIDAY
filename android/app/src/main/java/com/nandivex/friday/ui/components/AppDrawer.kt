@@ -158,7 +158,7 @@ private fun DrawerHeader(assistantName: String, onClose: (() -> Unit)?) {
         Text(
             assistantName,
             color = AssistantTextPrimary,
-            fontFamily = com.nandivex.friday.ui.theme.AssistantSerif,
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Default,
             fontSize = 26.sp,
             fontWeight = FontWeight.Normal,
             maxLines = 1,
@@ -233,7 +233,7 @@ fun AppTopBar(
         Text(
             title,
             color = AssistantTextPrimary,
-            fontFamily = com.nandivex.friday.ui.theme.AssistantSerif,
+            fontFamily = androidx.compose.ui.text.font.FontFamily.Default,
             fontSize = 18.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

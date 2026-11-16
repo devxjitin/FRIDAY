@@ -253,6 +253,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
   everywhere, with the bundled Inter font and its licence file removed; the HUD ring and voice ribbon recoloured.
 - Done when: no teal or amber is left in `Color.kt`, the contrast test passes, and the icons look right on your phone's
   home screen in light and dark.
+- **Built 2026-11-16 (0.0.27, PR pending):** purple palettes, Voice F icons (adaptive, monochrome, splash), system font, Inter removed. The warning colour stays orange-brown so warnings differ from errors. Still to do: the Nandivex logo (needs your file) and the 512 px Play icon (9.1).
 
 **Sprint 6.3: Navigation and sidebar** (items 6, 12, 13)
 - Build: a new sidebar: a header with the user's name, email and plan (filled from 7.1); then **Home**, **What FRIDAY

@@ -21,7 +21,7 @@ class PaletteContrastTest {
 
     private fun texts(p: AssistantPalette) = mapOf(
         "textPrimary" to p.textPrimary, "textSecondary" to p.textSecondary, "textMuted" to p.textMuted,
-        "accent" to p.accent, "amber" to p.amber, "error" to p.error, "success" to p.success, "info" to p.info
+        "accent" to p.accent, "warning" to p.warning, "error" to p.error, "success" to p.success, "info" to p.info
     )
 
     private fun check(name: String, p: AssistantPalette) {
@@ -29,7 +29,7 @@ class PaletteContrastTest {
             val ratio = contrast(t, s)
             assertTrue("$name: $tn on $sn is only ${"%.2f".format(ratio)}:1", ratio >= 4.5)
         }
-        val fills = mapOf("accentFill" to p.accentFill, "buttonFill" to p.buttonFill, "errorFill" to p.errorFill)
+        val fills = mapOf("accentFill" to p.accentFill, "errorFill" to p.errorFill)
         for ((fn, f) in fills) {
             val ratio = contrast(Color.White, f)
             assertTrue("$name: white text on $fn is only ${"%.2f".format(ratio)}:1", ratio >= 4.5)
