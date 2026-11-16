@@ -195,7 +195,7 @@ build through Firebase App Distribution.
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
 | 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (PRs #26–#28) | – |
 | 5. Setup | Setup screen: details, API key, agreement | 5.1 | **Done** (PR #29) | lawyer's read of the agreement, TalkBack check |
-| 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | To do — **next** | the Nandivex logo file, your approval of the design (6.1) |
+| 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | 6.1 **done**; 6.2 next | the Nandivex logo file |
 | 7. Accounts, profile and plans | Verified email, age, profile, plans and trial in setup, upgrade, account deletion | 7.1–7.4 | To do | D1, D3, D8, D10, D11, Play account |
 | 8. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 8.1–8.3 | To do | D5, testers with disabilities |
 | 9. Play launch | Console, policy forms, testing tracks, release | 9.1–9.3 | To do | D1, legal review |
@@ -244,7 +244,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
   three FRIDAY logo concepts in purple, where the Nandivex logo sits (welcome, About, splash), the system font, and the
   new home, sidebar, Profile, Help, Storage and Usage screens.
 - Needs from you: the **Nandivex Technologies logo as an SVG or a large PNG** (the name is decided: F.R.I.D.A.Y.). I cannot create the company's logo; I can only place the one you give me.
-- Done when: you have picked one direction in writing. Nothing in 6.2–6.5 starts before that.
+- **Done 2026-11-16.** Mock-ups: design canvas "FRIDAY design direction" (artifact Q2aQvmwhxidWaJA2LqpTfL). You approved **logo A (Voice F)**: a rounded purple square with a white F whose middle bar is a voice wave. Palette (light primary #5B2EC9 on #FAF8FF, dark primary #B79CFF on #0F0B1A, all text pairs 4.5:1 or better), the system font and the screen layouts are the base for 6.2–6.5. Still open: the Nandivex logo file; details in the mock-ups marked as open (price, trial length, year of birth, email method) follow D3, D10, D11 and D8.
 
 **Sprint 6.2: Brand in the app** (items 1–4)
 - Build: the purple palette as the app's palette (light and dark), with `PaletteContrastTest` updated so every text

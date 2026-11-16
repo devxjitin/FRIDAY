@@ -570,3 +570,4 @@
 [2026-11-16] [Claude] [Plan: your app review (13 points) added; new Phase 6 brand and UI overhaul, Phase 7 accounts, age, plans and trial; accessibility, launch and extras renumbered 8-10; decisions D8-D11; Gemini 18+ and unpaid-tier terms found (R9, R10)]
 [2026-11-16] [Claude] [Plan: D9 decided, the user's own Gemini key with billing enabled]
 [2026-11-16] [Claude] [Plan: D4 decided by owner, keep the name F.R.I.D.A.Y.; IP risk and mitigations recorded]
+[2026-11-16] [Claude] [Sprint 6.1 done: design direction approved, logo A (Voice F), purple palette, system font]
