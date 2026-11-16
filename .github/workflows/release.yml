@@ -1,0 +1,139 @@
+name: Release to website
+
+# Pushing a tag such as v0.0.21 builds the signed release APK and publishes it, with latest.json, to the website
+# (Firebase Hosting, friday.nandivex.in). The tag must match the newest version in changelog.md. latest.json is written last
+# and an older or equal version can never replace a newer live one. Every APK is also kept in a GitHub release.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    uses: ./.github/workflows/checks.yml
+
+  release:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      FIREBASE_PROJECT: friday-nandivex
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches the newest changelog version
+        run: python scripts/release_files.py check-tag "$GITHUB_REF_NAME"
+
+      - name: Restore Firebase config and the release signing key
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in GOOGLE_SERVICES_JSON RELEASE_KEYSTORE RELEASE_STORE_PASSWORD RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD; do
+            test -n "${!name}" || { echo "::error::Secret $name is missing"; exit 1; }
+          done
+          printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > android/app/google-services.json
+          mkdir -p android/keystore
+          printf '%s' "$RELEASE_KEYSTORE" | base64 -d > android/keystore/release.jks
+          {
+            echo "RELEASE_STORE_FILE=keystore/release.jks"
+            echo "RELEASE_STORE_PASSWORD=$RELEASE_STORE_PASSWORD"
+            echo "RELEASE_KEY_ALIAS=$RELEASE_KEY_ALIAS"
+            echo "RELEASE_KEY_PASSWORD=$RELEASE_KEY_PASSWORD"
+          } > android/local.properties
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: ./.github/actions/gradle-memory
+
+      # Minutes since 1970: always higher than the build before it, which is what Android and the updater compare.
+      - name: Version code
+        run: echo "VERSION_CODE=$(( $(date -u +%s) / 60 ))" >> "$GITHUB_ENV"
+
+      - name: Build the release APK
+        working-directory: android
+        run: ./gradlew assembleRelease -PappVersionCode="$VERSION_CODE" --console=plain
+
+      - name: Check the APK is signed with the release key
+        env:
+          EXPECTED_CERT_SHA256: ${{ vars.RELEASE_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          apk=android/app/build/outputs/apk/release/app-release.apk
+          test -f "$apk" || { echo "::error::Release APK was not built (is it unsigned?)"; exit 1; }
+          out=$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk")
+          echo "$out"
+          if [ -n "${EXPECTED_CERT_SHA256:-}" ]; then
+            actual=$(echo "$out" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1 | tr 'A-F' 'a-f')
+            expected=$(echo "$EXPECTED_CERT_SHA256" | tr -d ': ' | tr 'A-F' 'a-f')
+            test "$actual" = "$expected" || { echo "::error::The APK is signed with a different key than RELEASE_CERT_SHA256"; exit 1; }
+          fi
+
+      # Keyless login: GitHub proves who it is to Google (Workload Identity Federation), so no key or token is stored.
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/825446749947/locations/global/workloadIdentityPools/github-actions/providers/github
+          service_account: firebase-adminsdk-fbsvc@friday-nandivex.iam.gserviceaccount.com
+
+      # The live latest.json decides whether this release is newer. 404 on every address means nothing is published yet
+      # (the first release). Any other failure stops the job, so a network blip can never let an older build through.
+      - name: Read the live latest.json
+        run: |
+          set -uo pipefail
+          : > live.json
+          not_found=0
+          for url in https://friday.nandivex.in/latest.json https://friday-nandivex.web.app/latest.json; do
+            code=$(curl -sS --max-time 30 -H 'Cache-Control: no-cache' -o live.tmp -w '%{http_code}' "$url" || echo 000)
+            echo "$url -> $code"
+            if [ "$code" = "200" ]; then mv live.tmp live.json; not_found=0; break; fi
+            if [ "$code" = "404" ]; then not_found=1; continue; fi
+            # A domain that is not connected yet fails to resolve (000): fall through to the other address.
+          done
+          if [ ! -s live.json ] && [ "$not_found" != "1" ]; then
+            echo "::error::Could not read the live latest.json, so it is not safe to publish"; exit 1
+          fi
+
+      - name: Build the website files
+        run: python scripts/release_files.py build --apk android/app/build/outputs/apk/release/app-release.apk --version-code "$VERSION_CODE" --out site --live live.json --tag "$GITHUB_REF_NAME"
+
+      - name: Deploy to Firebase Hosting
+        run: npx --yes firebase-tools@15 deploy --only hosting --project "$FIREBASE_PROJECT" --non-interactive
+
+      - name: Check the live site serves this release
+        run: |
+          set -euo pipefail
+          sleep 10
+          live=$(curl -fsS --max-time 30 -H 'Cache-Control: no-cache' "https://$FIREBASE_PROJECT.web.app/latest.json")
+          echo "$live"
+          test "$(echo "$live" | python -c 'import json,sys; print(json.load(sys.stdin)["versionCode"])')" = "$VERSION_CODE"
+          size=$(stat -c %s "site/FRIDAY-$VERSION_CODE.apk")
+          served=$(curl -fsSI --max-time 30 "https://$FIREBASE_PROJECT.web.app/FRIDAY-$VERSION_CODE.apk" | tr -d '\r' | sed -n 's/^[Cc]ontent-[Ll]ength: //p' | tail -1)
+          test "$served" = "$size" || { echo "::error::Served APK is $served bytes, expected $size"; exit 1; }
+
+      - name: Keep the APK in a GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "site/FRIDAY-$VERSION_CODE.apk#FRIDAY-$GITHUB_REF_NAME.apk" \
+            --title "FRIDAY ${GITHUB_REF_NAME#v}" --notes-file site/release-notes.txt

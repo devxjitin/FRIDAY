@@ -36,10 +36,12 @@ Every decision below follows from four facts:
 | Sprints 3.1 to 3.3 | Connectors, calls, SMS, WhatsApp, Wi-Fi / Bluetooth toggles, strobe and SOS torch, dark mode, battery saver | 0.0.15 to 0.0.17 |
 | Sprint 3.4 | **Vision change:** connectors, calls, SMS, WhatsApp, contacts, calendar, location, notifications, files, app usage, share, weather and web search removed; phone control gate on open | 0.0.18 |
 | Sprint 3.5 | Alarms, timers, reminders, show-notification and status tools removed; read-only Abilities page | 0.0.19 |
-| Decision D7 | Route B chosen: release from our own website (this plan update) | n/a |
+| Decision D7 | Route B chosen: release from our own website | n/a |
+| Sprint 6.1 | Release build and updater: `latest.json` rules, checksum and signer checks, update dialog, `isAccessibilityTool` off | 0.0.21 |
+| Sprint 6.2 | **Built, not deployed yet:** the website (`site/`), `firebase.json` hosting, `scripts/release_files.py`, `release.yml`, the rewritten `docs/CI_CD.md` | no app change |
 
-**Not built yet:** Firebase sign-in and Firestore rules, onboarding, free trial, coupons, Razorpay, the website itself,
-the release workflow, wake word. The old activation-key screen is already gone: every build opens straight to the
+**Not built yet:** Firebase sign-in and Firestore rules, onboarding, free trial, coupons, Razorpay, wake word. **Built but
+not live:** the website and the release workflow (Sprint 6.2): they need the one-time setup in section 12. The old activation-key screen is already gone: every build opens straight to the
 assistant until the free trial and accounts arrive in Phase 4.
 
 ---
@@ -232,10 +234,23 @@ the plan screen opens when it ends. The trial is app-managed through Firebase.
 - **The release key:** the existing release key `android/keystore/nivi-release.jks` (from the Ultron days, already set in
   `local.properties`) signs FRIDAY. It is kept outside git and must be backed up in **two** places. Android only accepts
   an update signed with the same key, so losing it strands every user. The tester and debug keys stay separate.
-- **The release workflow:** `.github/workflows/release.yml` builds the release APK on a version tag, runs the tests,
-  publishes the files to Hosting, and keeps the last three APKs. It replaces the old AWS OTA workflow; `docs/CI_CD.md`
-  still describes that and is rewritten with it (Sprint 6.2).
+- **The release workflow:** `.github/workflows/release.yml` builds the release APK when a tag `v<version>` is pushed, runs
+  the tests, publishes the files to Hosting, then keeps the APK in a GitHub release. Hosting serves only the current
+  APK; **every** version stays in GitHub Releases (this replaces the old "keep three" idea). It replaces the old AWS OTA
+  workflow, and `docs/CI_CD.md` now describes it.
 - **Testers keep using Firebase App Distribution** for pre-release builds (section 18).
+
+**One-time setup before the first release** (nothing here is automatic):
+1. `firebase login --reauth` on the dev PC (the saved login has expired), then `firebase deploy --only hosting` once to
+   publish the pages, and check them on `https://friday-nandivex.web.app`. This is the first public publish, so it needs
+   your OK.
+2. In the Firebase console, Hosting → **Add custom domain** → `friday.nandivex.in`. Firebase shows a TXT record and A
+   records; add them in GoDaddy's DNS page for `nandivex.in`. The certificate follows by itself (up to a day).
+3. In GitHub, add the secrets and the variable listed in `docs/CI_CD.md` (the release keystore as base64 and its
+   passwords, plus `RELEASE_CERT_SHA256`), and give the service account the **Firebase Hosting Admin** role.
+4. Have a lawyer read `site/privacy.html` and `site/terms.html`. They describe how version 0.0.21 behaves and are a
+   plain-language starting point, not legal advice.
+5. Tag a release: `git tag v0.0.21 && git push origin v0.0.21`.
 
 **Costs of this route:** no Play trust badge or discovery, users must allow "install unknown apps" once, the sideload
 restriction on accessibility (section 7) needs a clear guide, and we handle payments support ourselves. Security
@@ -272,11 +287,11 @@ Done in Sprint 2.3 (README, strings, channels, help page). Still open:
   empty folders left under `mcp/` on the dev PC (git does not track them).
 - **Contact email:** `contact@nandivex.in`. The app, README and an old changelog line said `support@nandivex.com`, the
   wrong domain; fixed in the contact-email change. The website's support page and the privacy policy use it too.
-- `docs/CI_CD.md` still describes the AWS OTA release and is rewritten with the new release workflow (Sprint 6.2).
 - Update `docs/PRIVACY_PLAN.md` and the privacy policy: the app no longer touches contacts, calls, files or location
   beyond the Wi-Fi name, and screen text goes to Gemini.
 - Change `docs/Idea.md` and `README.md` to describe a hands-free phone control assistant.
-- `sites/ultron-showcase/` is the old Ultron showcase. Leave it until the new site exists, then remove it.
+- `sites/ultron-showcase/` is the old Ultron showcase. It is not in git (`sites/` is gitignored), so it exists only on the
+  dev PC; delete the folder by hand when you no longer need it.
 - `track.md` keeps logging every change.
 
 ## 15. Other features worth building
@@ -406,13 +421,14 @@ and 6.2 can run before Phase 4 or 5.
   Android 10, 13 and 15 (**not tested yet: needs the site from Sprint 6.2 and your phones**).
 
 **Sprint 6.2: The website and the release workflow**
-- Build: the Firebase Hosting site on `friday.nandivex.in` (landing, Download, sideloading guide, privacy, terms,
-  support; you add the DNS records at GoDaddy), `release.yml`
+- **Built:** the Firebase Hosting site (landing, Download, install guide, privacy, terms, 404; one stylesheet and one
+  script, no outside resources, a strict Content Security Policy), `release.yml`
   (tag → tests → release APK → upload to Hosting → `latest.json` last), a rewritten `docs/CI_CD.md`, and removal of
   `sites/ultron-showcase/`.
 - Demo: you push a version tag, and within minutes the site offers the new APK with its checksum, and an installed
   phone shows "Update available".
-- Done when: a broken or older build can never replace a newer `latest.json`, and the last three APKs are kept.
+- Done when: a broken or older build can never replace a newer `latest.json` (**tested in `tests/ci`**), every APK is kept
+  in GitHub Releases, and the setup in section 12 is done (**not yet**: it needs your Firebase login, GoDaddy and GitHub).
 
 **Sprint 6.3: Go live and AWS teardown**
 - Build: Razorpay **live** mode, Crashlytics dashboards and alerts, a phased rollout (`latest.json` can hold a
