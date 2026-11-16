@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lets the voice assistant press Back/Home, scroll, and, only when a screen tool is switched on in
-     Settings, read the visible screen text and tap or type on the user's command. -->
+<!-- FRIDAY's hands-free phone control. When you ask by voice, it reads the visible screen text and presses, taps, types,
+     scrolls and swipes for you. It is not an accessibility tool for people with disabilities, so it does not claim to be. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/accessibility_service_description"
     android:accessibilityEventTypes="typeWindowStateChanged"
@@ -8,6 +8,6 @@
     android:canPerformGestures="true"
     android:canTakeScreenshot="true"
     android:canRetrieveWindowContent="true"
-    android:isAccessibilityTool="true"
+    android:isAccessibilityTool="false"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="100" />

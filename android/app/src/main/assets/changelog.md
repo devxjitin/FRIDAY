@@ -3,6 +3,18 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.21 - 2026-11-16
+
+### Added
+- The website release can now update itself. When you open F.R.I.D.A.Y. it checks the Nandivex site (at most every 12 hours), and About has a "Check for updates" button. You choose when to download, and Android asks you to confirm the install.
+- An update is only installed if it comes from the Nandivex site, matches its checksum, is a newer F.R.I.D.A.Y. and is signed with the same key.
+- On Android 13 and newer, the phone control screen now explains how to get past a greyed-out accessibility switch ("Allow restricted settings").
+
+### Changed
+- F.R.I.D.A.Y. no longer says it is an accessibility tool for people with disabilities, because it is a general hands-free assistant.
+- Removed the permission to draw over other apps, which nothing used.
+- Removed access to all files from the app's file sharing, which nothing used.
+
 ## 0.0.20 - 2026-11-16
 
 ### Fixed

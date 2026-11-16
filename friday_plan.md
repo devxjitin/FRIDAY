@@ -38,9 +38,9 @@ Every decision below follows from four facts:
 | Sprint 3.5 | Alarms, timers, reminders, show-notification and status tools removed; read-only Abilities page | 0.0.19 |
 | Decision D7 | Route B chosen: release from our own website (this plan update) | n/a |
 
-**Not built yet:** Firebase sign-in and Firestore rules, onboarding, free trial, coupons, Razorpay, Play or website
-release, wake word. The activation-key screen from the Ultron days still guards release builds; tester and debug builds
-skip it.
+**Not built yet:** Firebase sign-in and Firestore rules, onboarding, free trial, coupons, Razorpay, the website itself,
+the release workflow, wake word. The old activation-key screen is already gone: every build opens straight to the
+assistant until the free trial and accounts arrive in Phase 4.
 
 ---
 
@@ -229,8 +229,9 @@ the plan screen opens when it ends. The trial is app-managed through Firebase.
 - **The updater (in the app):** checks `latest.json` on open, shows "Update available" with the notes, downloads the APK
   into the app's cache (the `FileProvider` for `updates/` already exists), checks the SHA-256, and hands it to Android's
   installer. This needs `REQUEST_INSTALL_PACKAGES`, which is fine off Play. Never auto-installs without a tap.
-- **The release key:** one new release signing key, kept outside git, backed up in **two** places. Android only accepts an
-  update signed with the same key, so losing it strands every user. The tester and debug keys stay separate.
+- **The release key:** the existing release key `android/keystore/nivi-release.jks` (from the Ultron days, already set in
+  `local.properties`) signs FRIDAY. It is kept outside git and must be backed up in **two** places. Android only accepts
+  an update signed with the same key, so losing it strands every user. The tester and debug keys stay separate.
 - **The release workflow:** `.github/workflows/release.yml` builds the release APK on a version tag, runs the tests,
   publishes the files to Hosting, and keeps the last three APKs. It replaces the old AWS OTA workflow; `docs/CI_CD.md`
   still describes that and is rewritten with it (Sprint 6.2).
@@ -390,17 +391,19 @@ and 6.2 can run before Phase 4 or 5.
 
 **Sprint 6.1: Release build and updater**
 - Build:
-  - Release signing key (`RELEASE_*` in `local.properties`, backed up in two places) and a `release` build that works
-    without the debug or tester shortcuts.
+  - Release signing with the existing key (`RELEASE_*` in `local.properties`, backed up in two places) and a `release`
+    build that works without the debug or tester shortcuts. **Built.**
   - `isAccessibilityTool="false"`, a corrected service comment, drop `SYSTEM_ALERT_WINDOW`, add
-    `REQUEST_INSTALL_PACKAGES` (release only).
-  - The in-app updater: reads `latest.json`, shows notes, downloads, checks SHA-256, opens the installer. Unit tests for
-    the version comparison and checksum.
-  - The "Allow restricted settings" help in the phone control gate, with pictures.
+    `REQUEST_INSTALL_PACKAGES` (release only). **Built.**
+  - The in-app updater: reads `latest.json`, shows notes, downloads, checks SHA-256 and the signer, opens the installer.
+    Unit tests for the manifest, host allow-list, version, Android minimum and rollout rules. **Built** (release build
+    only; an About-page "Check for updates" button).
+  - The "Allow restricted settings" help in the phone control gate. **Built as text steps**; pictures come with the website
+    guide in Sprint 6.2.
 - Demo: install the release APK from a file, hit the restricted-settings step and get past it with the in-app guide,
   turn on phone control, then install a newer build through the updater and keep all data.
-- Done when: the release manifest matches section 13, and an update installs over the previous release on Android 10,
-  13 and 15.
+- Done when: the release manifest matches section 13 (**checked**), and an update installs over the previous release on
+  Android 10, 13 and 15 (**not tested yet: needs the site from Sprint 6.2 and your phones**).
 
 **Sprint 6.2: The website and the release workflow**
 - Build: the Firebase Hosting site on `friday.nandivex.in` (landing, Download, sideloading guide, privacy, terms,
