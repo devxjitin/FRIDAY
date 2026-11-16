@@ -1,12 +1,13 @@
 # FRIDAY: product plan
 
 Owner: Nandivex Technologies · Package `com.nandivex.friday` · Plan date 2026-11-13 · **Rewritten 2026-11-16** ·
-App version on `main`: **0.0.25**; Sprint 5.1 (0.0.26) is in review
+App version on `main`: **0.0.26** · Plan updated after your app review of 2026-11-16 (section 12)
 
-**Status in one line:** the app itself (voice, phone control tools, theme, persona) is built and works in tester builds.
-On 2026-11-16 the distribution decision changed from "our own website" to **Google Play only**. The website download,
-the in-app updater and the Razorpay plan were built or planned for the old route and now have to be removed or
-replaced. The setup screen, the Play Store work and the payment model are not started.
+**Status in one line:** voice control, the phone tools, the Play-only cleanup and first-run setup are built and merged
+(0.0.26). Your review of 2026-11-16 found that the app does not look or read like a professional product (colours,
+logos, font, wording, sidebar, Help, Storage, Usage) and asked for accounts with email verification, age, and plans with
+a trial chosen in setup. Those are now Phases 6 and 7. Accessibility-tool readiness, the Play launch and payments are
+not started.
 
 Rules for this file: every line is true on the date above. "Done" means merged to `main` with tests, lint and build
 passing. Nothing here is a promise about Google's review: Google decides, and the plan says where that risk is.
@@ -24,7 +25,7 @@ paralysis, a temporary injury). This is not marketing wording: it is the conditi
 
 What FRIDAY does not do by itself: it does not call, text, message, pay or post on its own initiative. When the user
 asks for one of those, FRIDAY opens the app and does it on screen, the way the user's hands would, and asks before
-the final irreversible tap (Sprint 6.2).
+the final irreversible tap (Sprint 8.2).
 
 ## 2. Hard constraints (decided)
 
@@ -41,7 +42,7 @@ the final irreversible tap (Sprint 6.2).
      serve an accessibility need. (Non-tools also need a disclosure video; tools are exempt from the in-app disclosure,
      but FRIDAY keeps its disclosure anyway, in setup.)
    - **What this means:** FRIDAY's model decides what to tap next, so FRIDAY can be on Play **only as a genuine
-     accessibility tool**. Phase 6 is the work for that. If Google does not accept FRIDAY as an accessibility tool,
+     accessibility tool**. Phase 8 is the work for that. If Google does not accept FRIDAY as an accessibility tool,
      the only Play-safe version is one without model-driven screen control, which is not this product. There is no
      third option on Play.
 3. **Play's other rules that change our code** (checked 2026-11-16):
@@ -53,7 +54,8 @@ the final irreversible tap (Sprint 6.2).
    - Play subscription free trials are **at least 3 days**. A 1-day trial is not possible with Play Billing.
    - Uploads are App Bundles (`.aab`) with Play App Signing.
 4. **Firebase only, no AWS.** Project `friday-nandivex`.
-5. **The user brings their own Gemini API key.** The key never leaves the phone except to call Gemini.
+5. **Gemini access:** today the user brings their own Gemini API key, which never leaves the phone except to call
+   Gemini. This may change with D9 (Nandivex-provided Gemini included in the plan).
 
 ---
 
@@ -106,13 +108,15 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | # | Where | Problem | Fix in |
 |---|---|---|---|
 | R1 **(fixed in 4.1)** | `ProfilePage.kt`, `AccessViewModel.kt`, `License.kt`, `ActivationScreen` | The Ultron activation-key system is dead but still on screen: Profile shows a fake key "FRIDAY-OPEN", plan "Open", and **Refresh / Remove key buttons that do nothing**. | 4.1 |
-| R2 | `KnowledgeBaseProvider.kt` (prompt) | The prompt says "Never ask if they are sure". That contradicts asking before Send / pay / delete. | 6.2 |
+| R2 | `KnowledgeBaseProvider.kt` (prompt) | The prompt says "Never ask if they are sure". That contradicts asking before Send / pay / delete. | 8.2 |
 | R3 **(fixed in 4.1)** | `ApiKeyStore` embedding key, `AssistantOptions.DATASET_MODEL` | Leftovers of the removed Knowledge base. (`VisitorStrings.kt` is still used for the status line, so it stays.) | 4.1 |
 | R4 **(fixed in 4.1)** | `build.gradle.kts` | `targetSdk = 35`; Play needs 36. | 4.1 |
 | R5 **(fixed in 4.2)** | `README.md` | Still describes calls, alarms, web search and connectors, all removed. Says "Play Store build" next to a website updater. | 4.2 |
 | R6 **(fixed in 4.2)** | `docs/Idea.md`, `docs/PRIVACY_PLAN.md`, `docs/VIEWMODEL_SPLIT_PLAN.md` | Old white-label kiosk plan, a privacy plan for removed tools, a finished refactor plan. | 4.2 |
-| R7 **(fixed in 4.1)** | Merged manifest | The advertising ID (`AD_ID`) and `ACCESS_ADSERVICES_*` arrived from Firebase libraries although FRIDAY shows no ads; removed with `tools:node="remove"`. `WAKE_LOCK`, the install-referrer and `READ_GSERVICES` permissions went away with Analytics in 4.3; re-check the merged manifest in 8.1. | 4.1 |
-| R8 | API key and name | Entered only in Settings; a new user is not guided. No agreement is ever accepted. | 5.1 |
+| R7 **(fixed in 4.1)** | Merged manifest | The advertising ID (`AD_ID`) and `ACCESS_ADSERVICES_*` arrived from Firebase libraries although FRIDAY shows no ads; removed with `tools:node="remove"`. `WAKE_LOCK`, the install-referrer and `READ_GSERVICES` permissions went away with Analytics in 4.3; re-check the merged manifest in 9.1. | 4.1 |
+| R8 **(fixed in 5.1)** | API key and name | Entered only in Settings; a new user is not guided. No agreement is ever accepted. | 5.1 |
+| R9 | Setup key step, agreement | Google's Gemini API terms (read 2026-11-16) say **"Do not submit sensitive, confidential, or personal information to the Unpaid Services"**, and FRIDAY sends screen content. The setup still says "Get a free key". With a free key FRIDAY is used against Google's terms. | D9, then 6.4 / 7.3 |
+| R10 | Whole app | Google's Gemini API terms say users **"must be 18 years of age or older"** and an app may not be **"directed towards or is likely to be accessed by individuals under the age of 18"**. FRIDAY has no age check today. | 7.1 |
 
 ---
 
@@ -120,13 +124,13 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 
 | Item | Action |
 |---|---|
-| In-app updater (`UpdateManifest`, `UpdateInstaller`, `UpdateController`, `UpdateDialog`, About "Check for updates", `SELF_UPDATE`, `UPDATE_URLS`) and their tests | Delete. Optionally replace with Play In-App Updates (Sprint 8.2). |
+| In-app updater (`UpdateManifest`, `UpdateInstaller`, `UpdateController`, `UpdateDialog`, About "Check for updates", `SELF_UPDATE`, `UPDATE_URLS`) and their tests | Delete. Optionally replace with Play In-App Updates (Sprint 9.2). |
 | `REQUEST_INSTALL_PACKAGES` (`src/release/AndroidManifest.xml`), `updates/` FileProvider path | Delete. |
 | Restricted-settings help in the phone control gate | Delete: Play installs are not restricted. |
-| `.github/workflows/release.yml`, `scripts/release_files.py`, `tests/ci/test_release_files.py`, release secrets in `docs/CI_CD.md` | Replace with a workflow that builds a signed `.aab` and uploads to Play's internal track (Sprint 8.2). |
+| `.github/workflows/release.yml`, `scripts/release_files.py`, `tests/ci/test_release_files.py`, release secrets in `docs/CI_CD.md` | Replace with a workflow that builds a signed `.aab` and uploads to Play's internal track (Sprint 9.2). |
 | `site/download.html`, `site/download.js`, `site/install-guide.html`, APK redirect in `firebase.json` | Delete. Keep `index`, `privacy`, `terms`, `404`: Play requires a public privacy policy URL. |
-| Razorpay design (old sections 11, Phase 5), coupons `FRIDAYFREE`, `trials/{deviceHash}` | Drop. Replaced by Phase 7 (Play Billing) if FRIDAY is paid at all. |
-| `isAccessibilityTool="false"` | Becomes `true` in Sprint 6.1, only together with the product work that makes it honest. |
+| Razorpay design (old sections 11, Phase 5), coupons `FRIDAYFREE`, `trials/{deviceHash}` | Drop. Replaced by Phase 7 (Play Billing). |
+| `isAccessibilityTool="false"` | Becomes `true` in Sprint 8.1, only together with the product work that makes it honest. |
 | PR #25 | Close without merging. |
 | Changelog entries 0.0.21 / 0.0.22 that mention the website | Leave history as is; the next entry says updates now come from Play. |
 
@@ -137,12 +141,16 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | # | Question | Recommendation |
 |---|---|---|
 | D1 | **Play developer account:** personal or organisation (Nandivex)? | Organisation. It needs a D-U-N-S number but skips the "12 testers for 14 days" closed test that new personal accounts must pass before production. |
-| D2 | **Free or paid?** The user already pays Google for Gemini through their own key. | Decide before Phase 7. Options: (a) free; (b) Play subscription with a 3-day+ trial. Accessibility users are often price-sensitive; (a) is simplest and has the lowest review risk. |
-| D3 | **Prices** (only if D2 = paid). | You decide. |
-| D4 | **Name.** F.R.I.D.A.Y. is a Marvel character. Play enforces intellectual-property rules at review and on complaints. | Use a listing name that does not depend on Marvel (for example "FRIDAY – Hands-Free Phone Access"), no Marvel quotes, art or "Iron Man" references. A trademark search before launch. A full rename is the safest option. |
+| D2 | **Free or paid?** | **Decided 2026-11-16: paid plans with a trial**, chosen in setup and upgradable later (your review, item 8). |
+| D3 | **Prices** and which plans (monthly, yearly, tiers). | You decide. |
+| D4 | **Name.** F.R.I.D.A.Y. is a Marvel character. Play enforces intellectual-property rules at review and on complaints. | Use a listing name that does not depend on Marvel (for example "FRIDAY – Hands-Free Phone Access"), no Marvel quotes, art or "Iron Man" references, and a trademark search before launch. A full rename is the safest option. Decide **before** the new logo (6.1), so it is not drawn twice. |
 | D5 | **Persona.** A witty "Boss" assistant reads as a general assistant, which Play says does not qualify. | Keep the voice calm and short; make chat and memory secondary features of an access tool, not the headline. |
-| D6 | **Setup details:** what besides the name? | Only what the app uses: name, how to be addressed, language. No email, phone or address while there is no account, so the Data safety form stays small. |
-| D7 | **Firebase Analytics, anonymous sign-in, App Check** while nothing uses them. | **Decided 2026-11-16: removed** (Sprint 4.3). Crashlytics stays. Add them back only when a feature needs them. |
+| D6 | **Setup details.** | **Superseded 2026-11-16 by your review:** name, age and a verified email, in an account (Phase 7). |
+| D7 | **Firebase Analytics, anonymous sign-in, App Check** while nothing uses them. | **Decided 2026-11-16: removed** (4.3). Accounts (7.1) bring Firebase Authentication back for a real reason; Analytics stays out unless you ask for it. |
+| D8 | **How the email is verified.** | **Google sign-in** (Google has already verified the email; one tap; works on Firebase's free plan), with **email link sign-in** as the fallback for people without a Google account on the phone. A typed 6-digit code needs our own mail sender and Cloud Functions; skip it. |
+| D9 | **Whose Gemini key?** (R9) Google's terms forbid sending personal information to the unpaid Gemini tier, and asking people to pay us while they also pay Google is a hard sell. | Two honest options. **(a)** Users keep their own key, but setup asks for a key with **billing enabled** (paid tier) and says why. **(b)** Nandivex pays for Gemini and the subscription includes it: the app gets short-lived tokens from our Cloud Function, so there is no key in setup at all. (b) is the cleaner product for a paid app, but Nandivex then pays Google for every minute of use, prices (D3) must cover that, and it needs the Firebase **Blaze** plan. Decide before Phase 7. |
+| D10 | **Trial.** Play subscription trials are at least 3 days and are part of a Play subscription purchase. | Either a Play free trial (3 days or more, inside the subscription) or an app-managed free period with no purchase (our server records it once per account). Decide with D3. |
+| D11 | **Age.** (R10) | Ask the **year of birth** in setup; under 18 cannot continue (Gemini terms). Use only an age band (18–24, 25–39, 40–59, 60+) to set the tone and pace of replies, never to change what FRIDAY will do. |
 
 ---
 
@@ -183,14 +191,15 @@ build through Firebase App Distribution.
 | Phase | Goal | Sprints | Status | Needs from you |
 |---|---|---|---|---|
 | 1. Foundation | Package, Firebase, tester delivery, dead weight out | 1.1–1.3 | **Done** | – |
-| 2. Identity | Look, voice, name | 2.1–2.3 | **Done** | – |
+| 2. Identity | Look, voice, name | 2.1–2.3 | **Done** (the look is redone in Phase 6) | – |
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
-| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (merged, PRs #26–#28) | – |
-| 5. Setup | Your setup screen: details, API key, agreement | 5.1 | **Done** | lawyer's read of the agreement, TalkBack check |
-| 6. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 6.1–6.3 | To do | D4, D5, testers with disabilities |
-| 7. Monetisation | Play Billing (only if paid) | 7.1–7.2 | Blocked on D2 | D2, D3 |
-| 8. Play launch | Console, policy forms, testing tracks, release | 8.1–8.3 | To do | D1, account, legal review |
-| 9. Extras | Faster ways to start, routines | 9.1–9.2 | Later | pick |
+| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | **Done** (PRs #26–#28) | – |
+| 5. Setup | Setup screen: details, API key, agreement | 5.1 | **Done** (PR #29) | lawyer's read of the agreement, TalkBack check |
+| 6. Brand and UI overhaul | Purple brand, new logos, system font, human wording, new sidebar, Help, Storage, Usage | 6.1–6.5 | To do — **next** | D4, the Nandivex logo file, your approval of the design (6.1) |
+| 7. Accounts, profile and plans | Verified email, age, profile, plans and trial in setup, upgrade, account deletion | 7.1–7.4 | To do | D1, D3, D8, D9, D10, D11, Play account |
+| 8. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 8.1–8.3 | To do | D5, testers with disabilities |
+| 9. Play launch | Console, policy forms, testing tracks, release | 9.1–9.3 | To do | D1, legal review |
+| 10. Extras | Faster ways to start, routines | 10.1–10.2 | Later | pick |
 
 ### Phase 4: Play-only cleanup
 
@@ -223,14 +232,98 @@ build through Firebase App Distribution.
 - Built: `ui/SetupScreens.kt`, `viewmodel/SetupViewModel.kt`, `data/SetupLogic.kt` (routing rules, terms version, name rule), `data/Agreement.kt` (the in-app agreement text) and `network/GeminiKeyCheck.kt` (asks Google for the first page of models with the key in a header; the key is saved only after Google accepts it). Routing in `MainActivity`: setup steps, then the phone control gate, then a one-time "all set" screen, then home. The voice session (`AccessGate`) stays closed until setup has nothing left to ask. 20 new unit tests (`SetupLogicTest`, `GeminiKeyCheckTest`).
 - Differences from the section 6 sketch, so the plan stays true: one name field ("What should FRIDAY call you?", with a "Use Boss" shortcut) instead of name plus a separate form of address; **no voice sample** (a sample would need its own Gemini call, so the voice step says you will hear it in your first conversation); the agreement text lives in the app and does **not** link to the website because the site is not deployed yet.
 - Checked: tests, lint and build pass; on an Android 16 phone with an existing key the app opens on the agreement, the Accept button stays disabled until the box is ticked, Decline is there.
-- **Phone check:** you completed the setup on a fresh install (Android 16). Still **not** checked: TalkBack reading every step, and the agreement text read by a lawyer (8.1). What you saw go wrong, if anything, is not recorded here: tell me and it goes into the next sprint.
+- **Phone check:** you completed the setup on a fresh install (Android 16). Still **not** checked: TalkBack reading every step, and the agreement text read by a lawyer (9.1). What you saw go wrong, if anything, is not recorded here: tell me and it goes into the next sprint.
 - Done when: no path reaches home without an accepted agreement, a saved name and a checked key (**proved in `SetupLogicTest` for every combination**, and walked through on the phone).
 
-### Phase 6: Accessibility tool readiness
+### Phase 6: Brand and UI overhaul (your review, items 1–6 and 9–13)
+
+Design is a matter of taste, so this phase starts with pictures you approve, not code.
+
+**Sprint 6.1: Design direction (approval before code)**
+- Build: one page of mock-ups for you to approve: the purple palette in light and dark (with contrast numbers), two or
+  three FRIDAY logo concepts in purple, where the Nandivex logo sits (welcome, About, splash), the system font, and the
+  new home, sidebar, Profile, Help, Storage and Usage screens.
+- Needs from you: D4 (the name, because the logo carries it) and the **Nandivex Technologies logo as an SVG or a large
+  PNG**. I cannot create the company's logo; I can only place the one you give me.
+- Done when: you have picked one direction in writing. Nothing in 6.2–6.5 starts before that.
+
+**Sprint 6.2: Brand in the app** (items 1–4)
+- Build: the purple palette as the app's palette (light and dark), with `PaletteContrastTest` updated so every text
+  colour stays at 4.5:1 or better; the new FRIDAY logo as adaptive, monochrome and splash icons (vector) and the 512 px
+  store icon; the Nandivex logo on the welcome screen, About and the splash; the **system font** (`FontFamily.Default`)
+  everywhere, with the bundled Inter font and its licence file removed; the HUD ring and voice ribbon recoloured.
+- Done when: no teal or amber is left in `Color.kt`, the contrast test passes, and the icons look right on your phone's
+  home screen in light and dark.
+
+**Sprint 6.3: Navigation and sidebar** (items 6, 12, 13)
+- Build: a new sidebar: a header with the user's name, email and plan (filled from 7.1); then **Home**, **What FRIDAY
+  can do**, **History**, **Memory**; then **Account** (Profile, Plan); then **App** (Settings, Usage, Storage); then
+  **Help & support** and **About**. Material 3 navigation items with a clear selected state, 48 dp touch targets, one
+  icon style, and the same page header on every page.
+- Done when: every page is reachable in two taps, TalkBack reads every item, and you approve it on the phone.
+
+**Sprint 6.4: Pages and wording** (items 5, 9, 10, 11)
+- **Help & support**, laid out like other apps: frequently asked questions (expandable, searchable), Contact support
+  (email with version and phone filled in), Report a problem, Suggest a feature, Privacy policy, Terms. **"Request a
+  phone control" is removed.**
+- **Storage:** the total used by FRIDAY at the top, a bar split by category (conversation history, memories, temporary
+  files, settings), and for each category its size, what it is, and its own Clear button with a confirmation.
+- **Usage:** today / 7 days / 30 days: voice minutes, sessions, commands, actions done on the screen, actions that
+  failed, the apps FRIDAY opened most, the tools used most, and the busiest times of day. **All counted on the phone;
+  nothing is sent anywhere.** New counters start from the version that adds them, so earlier days show less.
+- **Wording:** every user-facing text rewritten in plain, short, human language (screens, buttons, errors, toasts,
+  agreement, Help, Abilities page, store text), with one style guide in `docs/WRITING.md`, and the R9 fix to the key
+  step once D9 is decided. You read and approve the agreement and Help text.
+- Done when: you approve each page on the phone, and the Usage numbers match a session you counted by hand.
+
+**Sprint 6.5: UI polish pass**
+- Build: consistent spacing, cards, buttons, empty states, loading states and motion on every page; large text and
+  dark mode checked on every screen; an Accessibility Scanner run with no errors.
+- Done when: you call it professional, screen by screen. This sprint repeats until you do.
+
+### Phase 7: Accounts, profile and plans (your review, items 7 and 8)
+
+Accounts change the privacy story: email, age and plan become personal data that leaves the phone, the Data safety form
+grows, and Play then **requires a way to delete the account inside the app and a web page to request deletion**.
+
+**Sprint 7.1: Account and verified email** (D8, D11)
+- Build: Firebase Authentication again (Google sign-in, email link as fallback); a `users/{uid}` document in Firestore
+  with name, year of birth, email and its verified flag, written only by its own signed-in user; real
+  `firestore.rules` with emulator tests; the **18+ check** from the year of birth, with a clear message for under-18s.
+  Setup becomes: Welcome → Agreement → Sign in and verify email → About you (name, year of birth, language) → Plan →
+  Gemini access (per D9) → Voice → Permissions → Phone control → All set.
+- Profile page: name, email with a "Verified" badge, age band, plan, member since, edit, sign out, **Delete account**
+  (removes the Firestore document and the sign-in), plus the deletion request page on the website.
+- Done when: rules tests prove a user can read and write only their own document, delete removes everything on the
+  server, and an under-18 year of birth cannot get past setup.
+
+**Sprint 7.2: Age-aware replies** (D11)
+- Build: the age band goes into the session instructions to set tone, speed and wording (for example slower, fuller
+  confirmations for 60+). It never changes which actions FRIDAY will or will not do. Unit tests for the band rules.
+- Done when: you hear the difference between two bands on the phone and agree it is respectful.
+
+**Sprint 7.3: Plans and trial in setup** (D3, D9, D10)
+- Build: Play Billing Library; the plans you create in Play Console; the Plan step in setup (trial and paid plans, with
+  price, period, renewal and how to cancel shown before purchase); purchase verification on the server (Cloud Functions
+  + Play Developer API + Real-time developer notifications, Firebase **Blaze** plan); an `entitlements/{uid}` document
+  only the server writes; access gated by the entitlement, with an offline grace period; developer access through Play
+  licence testers, not a code in the app. If D9 = (b), the Cloud Function that gives short-lived Gemini tokens to
+  users with an active plan is built here too.
+- Done when: test purchases, trial start and end, renewals, cancellations and refunds from Play's test tools change
+  access correctly, and no secret is in the app.
+
+**Sprint 7.4: Upgrade and manage**
+- Build: a Plan page (current plan, renewal date, upgrade or change plan through Play's subscription replacement, a
+  "Manage in Google Play" link for cancelling and payment methods), and clear messages when a payment fails or a plan
+  ends.
+- Done when: an upgrade in test mode changes the plan without a double charge, and a cancelled plan keeps access until
+  its end date.
+
+### Phase 8: Accessibility tool readiness
 
 This phase is what decides whether Play accepts FRIDAY. It is product work, not a flag change.
 
-**Sprint 6.1: Access-first product pass**
+**Sprint 8.1: Access-first product pass**
 - Build: `isAccessibilityTool="true"` with an honest service description; spoken feedback after every action and on
   every failure; "what's on my screen" read-out; a mode that keeps listening between commands so the user never has to
   touch the mic button; FRIDAY's own UI checked with Accessibility Scanner and TalkBack (labels, touch targets,
@@ -239,78 +332,66 @@ This phase is what decides whether Play accepts FRIDAY. It is product work, not 
 - Done when: the scanner shows no errors on FRIDAY's screens, and the Play accessibility declaration text is drafted
   from what the app really does.
 
-**Sprint 6.2: Safe screen actions** (was 3.6)
+**Sprint 8.2: Safe screen actions** (was 3.6)
 - Build: confirmation before irreversible taps (Send, Pay, Delete, Post, Buy, Confirm), detected from the button label
   and the app (messaging, payments, banking, shopping), asked aloud ("Send this to Rahul?"), answered by voice; remove
   the "never ask if they are sure" prompt line (R2); unit tests for labels, apps, Hindi / Hinglish / English yes and no.
 - Phone check: "Message Rahul on WhatsApp that I'm late" types it and asks before Send.
 - Done when: the tests pass and no tested Send / Pay button is pressed without a spoken yes.
 
-**Sprint 6.3: Everyday jobs, measured**
+**Sprint 8.3: Everyday jobs, measured**
 - Build: a written test list of common jobs done through the screen (call a contact, WhatsApp text, set an alarm in
   Clock, play music, open a route in Maps, take a note, read the latest message), tried on at least three phone brands;
   prompt and tool fixes for the weak ones; the jobs that work reliably listed on the Abilities page, the others not
   claimed.
 - Done when: the Abilities page claims only what passed.
 
-### Phase 7: Monetisation (only if D2 = paid)
+### Phase 9: Play launch
 
-**Sprint 7.1: Play Billing subscription**
-- Build: Play Billing Library, monthly and/or yearly plans with a free trial of 3 days or more, a plan screen after
-  setup, an offline grace period. Purchase verification on a server (Cloud Functions + Play Developer API + Real-time
-  developer notifications), which needs the Firebase **Blaze** (pay-as-you-go) plan. Developer and tester access
-  through Play **licence testers**, not a coupon code in the app.
-- Done when: test purchases, renewals, cancellations and refunds from Play's test tools change access correctly.
-
-**Sprint 7.2: Account page**: plan, renewal date, a "Manage subscription" link to Play. Play handles cancel and refunds.
-
-Note: if FRIDAY stays free, Phase 7 and Google sign-in are not needed at all; the app keeps working without an account.
-
-### Phase 8: Play launch
-
-**Sprint 8.1: Play Console readiness**
+**Sprint 9.1: Play Console readiness**
 - You: create the Play developer account (D1), pay the fee, verify identity.
-- Build / write: store listing (name per D4, short and full description, 512 px icon, 1024×500 feature graphic,
+- Build / write: store listing (name per D4, short and full description, the 512 px icon from 6.2, 1024×500 feature graphic,
   phone screenshots); privacy policy and terms on `friday.nandivex.in` (or `friday-nandivex.web.app`) rewritten for the
   Play app; **Data safety** form (voice audio and screen content sent to Gemini to perform requests, name and memory on
-  device, crash data to Crashlytics, the Firebase-library permissions from R7); content rating; target audience;
-  **Accessibility API declaration**; **App access instructions** so reviewers can test (they need a working Gemini key:
-  decide whether to give them a limited key or a test mode, because without one they cannot use the app and the review
-  can fail); a lawyer's read of the terms and privacy policy.
+  device, crash data to Crashlytics, and from Phase 7 the account data: email, year of birth, plan); content rating; target audience;
+  **Accessibility API declaration**; **App access instructions** so reviewers can test (a test account with an active plan and Gemini access per D9,
+  because without them reviewers cannot use the app and the review can fail); the account deletion web page; a lawyer's read of the terms and privacy policy.
 - Done when: every Play Console section shows complete.
 
-**Sprint 8.2: Testing tracks and release pipeline**
+**Sprint 9.2: Testing tracks and release pipeline**
 - Build: a workflow that builds the signed AAB and uploads to the **internal** track; Play App Signing enrolled with
   the existing release key as the upload key (`android/keystore/nivi-release.jks`, backed up in two places); optional
   Play In-App Updates prompt; Crashlytics alerts.
 - Then: internal test → closed test (with real users who need hands-free access) → submit for production review.
 - Done when: a build reaches testers from Play and installs over the previous one.
 
-**Sprint 8.3: Production and teardown**
+**Sprint 9.3: Production and teardown**
 - Staged rollout (for example 10% → 50% → 100%) watching crash-free users; then, with your OK and after a backup,
   delete the AWS resources and the old Firebase project `ultron-5350c` (do not touch `future-self-booth-api` or
   `/age-prediction/hf-token`).
 - Done when: the app is live on Play and the AWS bill is ₹0.
 
-### Phase 9: Extras (after launch, you pick)
+### Phase 10: Extras (after launch, you pick)
 
-- **9.1 Quick start:** Quick Settings tile, home-screen widget, wake word "Hey FRIDAY" (on-device, opt-in; engine and its
+- **10.1 Quick start:** Quick Settings tile, home-screen widget, wake word "Hey FRIDAY" (on-device, opt-in; engine and its
   licence to be chosen; battery drain measured before it ships).
-- **9.2 Routines:** user-defined fixed sequences ("Good night" = Do Not Disturb, low brightness, Wi-Fi off) run without
+- **10.2 Routines:** user-defined fixed sequences ("Good night" = Do Not Disturb, low brightness, Wi-Fi off) run without
   the model; a typed command bar.
 
 ---
 
 ## 8. Waiting on you
 
-1. Close PR #25 (or tell me to).
-2. D1–D6 (section 5).
-3. Play developer account (and D-U-N-S if organisation).
-4. Final Terms of Use and Privacy Policy text, read by a lawyer.
-5. Back up the release key `android/keystore/nivi-release.jks` and its passwords in two separate places.
-6. Phone checks still open: 3.4, 3.5, the 0.0.20 email fix.
-7. Testers who rely on hands-free access, for Sprints 6.1–6.3 and the closed test.
-8. Your OK before the AWS / `ultron-5350c` teardown.
+1. D1, D3, D4, D5, D8, D9, D10, D11 (section 5). **D4 and D9 first:** the logo depends on D4, and setup and prices
+   depend on D9.
+2. The **Nandivex Technologies logo** file (SVG, or a PNG at least 1024 px wide).
+3. Your approval of the design direction (6.1) before any UI code.
+4. Play developer account (and a D-U-N-S number if organisation).
+5. Final Terms of Use and Privacy Policy text, read by a lawyer (accounts, age and payments change them).
+6. Back up the release key `android/keystore/nivi-release.jks` and its passwords in two separate places.
+7. Phone checks still open: 3.4, 3.5, the 0.0.20 email fix, TalkBack on setup, a Crashlytics test crash (4.3).
+8. Testers who rely on hands-free access, for Sprints 8.1–8.3 and the closed test.
+9. Your OK before the AWS / `ultron-5350c` teardown.
 
 No longer needed (website route): GoDaddy DNS records for the download site, Razorpay account and KYC, GitHub
 release-key secrets for `release.yml`. The domain is still useful for the privacy policy page.
@@ -319,15 +400,19 @@ release-key secrets for `release.yml`. The domain is still useful for the privac
 
 | Risk | What we do |
 |---|---|
-| **Google does not accept FRIDAY as an accessibility tool** (the biggest risk; Google decides) | Phase 6 makes access the real primary purpose; honest declaration; closed test with real users. If refused, we learn the reason before any public launch; the fallback is a reduced build without model-driven screen control, which is a different product and needs a new decision. |
-| Play's policy text changes | Re-read the Accessibility API page before 8.1 and before every major update. |
+| **Google does not accept FRIDAY as an accessibility tool** (the biggest risk; Google decides) | Phase 8 makes access the real primary purpose; honest declaration; closed test with real users. If refused, we learn the reason before any public launch; the fallback is a reduced build without model-driven screen control, which is a different product and needs a new decision. |
+| Play's policy text changes | Re-read the Accessibility API page before 9.1 and before every major update. |
 | Marvel IP complaint | D4. |
-| Screen text tricks FRIDAY into pressing Send or Pay | Untrusted-text marking (done) and spoken confirmation (6.2). |
-| App layouts change and screen jobs break | 6.3 test list; claim only what works. |
-| Reviewers cannot test without a Gemini key | App access instructions and a reviewer key or test mode (8.1). |
+| Screen text tricks FRIDAY into pressing Send or Pay | Untrusted-text marking (done) and spoken confirmation (8.2). |
+| App layouts change and screen jobs break | 8.3 test list; claim only what works. |
+| Reviewers cannot test without an account, a plan and Gemini access | A reviewer test account with an active plan (9.1). |
 | Gemini key limits, cost or regional availability | Clear errors from the setup check and during use; the user owns the key. |
 | Losing the signing key | Play App Signing holds the app key; the upload key can be reset through Play support, but keep two backups anyway. |
-| Free-tier Gemini data use | The setup screen and privacy policy point to Google's Gemini API terms; we do not claim more privacy than Google gives. |
+| Free-tier Gemini keys break Google's terms for personal data (R9) | D9: a paid-tier key or Gemini provided by Nandivex. Until then the setup wording is fixed in 6.4. |
+| Under-18 users (R10) | Year-of-birth check in setup (7.1); store listing and target audience set to adults (9.1). |
+| Accounts add personal data and Play's deletion rule | In-app and web account deletion (7.1); Data safety and privacy policy updated in the same change. |
+| Gemini costs if Nandivex pays (D9 b) | Prices set to cover use; per-user limits in the token function; a Google Cloud budget alert. |
+| "Modern" and "professional" are a matter of taste | Mock-ups approved before code (6.1); 6.5 repeats until you approve each screen. |
 
 ## 10. Delivery during development (unchanged)
 
@@ -346,3 +431,24 @@ contacts, calendar, location, notifications, files, app usage, sharing, weather,
 reminders, show-notification, sensor and device-info tools (3.5); the website download, self-updater and Razorpay
 plan (2026-11-16, Play-only decision). Permissions removed with them are listed in the changelog entries 0.0.18,
 0.0.19 and 0.0.21.
+
+## 12. Your app review of 2026-11-16 and where each point goes
+
+| # | What you found | Where it is fixed |
+|---|---|---|
+| 1 | The colour theme is not good; it should be purple | 6.1 (pick), 6.2 (build) |
+| 2 | There is no Nandivex Technologies logo | 6.2, with the logo file from you |
+| 3 | The FRIDAY logo is poor; it should be purple | 6.1 (concepts), 6.2 (icons) |
+| 4 | The font is not good; use the system font | 6.2 |
+| 5 | The wording reads as AI-generated | 6.4 (rewrite and style guide) |
+| 6 | Sidebar content and structure are poor | 6.3 |
+| 7 | Profile needs user details such as age, so FRIDAY can talk according to age | 7.1 (year of birth, 18+ check), 7.2 (age-aware replies) |
+| 8 | Email with verification in setup, plan choice with a trial in setup, upgrade later | 7.1 (email), 7.3 (plans and trial), 7.4 (upgrade) |
+| 9 | Help & support is not professional; remove "Request a phone control" | 6.4 |
+| 10 | The Storage page has no structure | 6.4 |
+| 11 | The Usage page has too little analytics | 6.4 (counted on the phone only) |
+| 12 | The sidebar buttons are not professional | 6.3 |
+| 13 | Overall the UI does not look modern | 6.1–6.5 |
+
+Two of these collide with Google's own rules, so they are decisions and not only tasks: age (Gemini is for 18+ only,
+R10, D11) and free Gemini keys with personal screen data (R9, D9).
