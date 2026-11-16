@@ -3,9 +3,6 @@ package com.nandivex.friday.data
 /** Static catalogs of Live API options the settings screen lets the user pick from. */
 object AssistantOptions {
 
-    /** Fixed Gemini text model that prepares PDFs into knowledge datasets. */
-    const val DATASET_MODEL = "gemini-3.5-flash-lite"
-
     data class LiveModel(val id: String, val label: String)
 
     /** Live API models the user can choose between in Developer settings. The first one is the default. */

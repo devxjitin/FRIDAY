@@ -68,7 +68,6 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     private val _uiState = MutableStateFlow(AssistantUiState())
     val uiState: StateFlow<AssistantUiState> = _uiState.asStateFlow()
 
-    private val updates = UpdateController(application, viewModelScope, _uiState)
 
     /** Mic level while listening, playback level while speaking. Kept out of [uiState] because it changes
      *  ~25 times a second and only the voice ribbon needs it; putting it in the state recomposed the whole screen. */
@@ -451,7 +450,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch { runCatching { usageStore.clear() } }
     }
 
-    /** Measures the temporary files (downloaded updates, previews) the app keeps in its cache. */
+    /** Measures the temporary files (previews) the app keeps in its cache. */
     private fun refreshCacheSize() {
         viewModelScope.launch {
             val bytes = withContext(Dispatchers.IO) { getApplication<Application>().cacheDir.walkTopDown().filter { it.isFile }.sumOf { it.length() } }
@@ -602,7 +601,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    saveDeveloperConfiguration(apiKeyStore, apiKeyChange, null) {
+                    saveDeveloperConfiguration(apiKeyStore, apiKeyChange) {
                         settingsStore.setDeveloperSettings()
                     }
                 }
@@ -659,16 +658,7 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
     fun onAppForegrounded() {
         session.onAppForegrounded()
         startPendingAssist()
-        updates.checkInBackground()
     }
-
-    fun onCheckForUpdates() = updates.checkNow()
-
-    fun onStartUpdate() = updates.startDownload()
-
-    fun onInstallUpdate() = updates.install()
-
-    fun onDismissUpdate() = updates.dismiss()
 
     /** Resume also covers returning from dialogs without an intervening Activity stop. */
     fun onAppResumed() {

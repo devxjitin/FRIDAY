@@ -40,20 +40,15 @@ import com.nandivex.friday.ui.theme.ThemePrefs
 import com.nandivex.friday.ui.theme.applyWindowColors
 import com.nandivex.friday.ui.theme.paletteFor
 import com.nandivex.friday.viewmodel.AssistantViewModel
-import com.nandivex.friday.ui.AccessCheckingScreen
-import com.nandivex.friday.ui.ActivationScreen
-import com.nandivex.friday.ui.LicenseSummary
 import com.nandivex.friday.ui.PhoneControlScreen
 import com.nandivex.friday.data.AccessChecks
-import com.nandivex.friday.viewmodel.AccessState
-import com.nandivex.friday.viewmodel.AccessViewModel
+import com.nandivex.friday.data.AccessGate
 
 class MainActivity : ComponentActivity() {
 
     // Held at Activity scope (not just inside the Compose tree) so onStart/onStop below can
     // reach the same instance Compose is observing.
     private val viewModel: AssistantViewModel by viewModels()
-    private val access: AccessViewModel by viewModels()
     /** Skips the key re-check on the very first start; the access view model already runs one. */
     private var startedOnce = false
 
@@ -98,7 +93,6 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         viewModel.onAppForegrounded()
-        if (startedOnce) access.refresh(quiet = true)
         startedOnce = true
     }
 
@@ -209,29 +203,11 @@ class MainActivity : ComponentActivity() {
                     color = com.nandivex.friday.ui.theme.AssistantBackground,
                     contentColor = com.nandivex.friday.ui.theme.AssistantTextPrimary
                 ) {
-                    val accessState by access.state.collectAsState()
-                    val unlocked = accessState is AccessState.Active
-                    LaunchedEffect(unlocked) { viewModel.onAccessChanged(unlocked) }
-                    when (val gate = accessState) {
-                        AccessState.Checking -> { AccessCheckingScreen(); return@Surface }
-                        is AccessState.NeedsKey -> {
-                            ActivationScreen(gate, storeUrl = "", onActivate = access::activate, onOpenStore = {})
-                            return@Surface
-                        }
-                        is AccessState.Active -> Unit
-                    }
-                    val active = accessState as AccessState.Active
+                    // Arms the warm voice session (and any waiting assistant gesture) once the gate is open.
+                    LaunchedEffect(Unit) { viewModel.onAccessChanged(AccessGate.unlocked) }
                     if (!phoneControlOn) {
                         PhoneControlScreen(
-                            onAgree = { runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } },
-                            onOpenAppInfo = {
-                                runCatching {
-                                    startActivity(
-                                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                                            .setData(Uri.fromParts("package", packageName, null))
-                                    )
-                                }
-                            }
+                            onAgree = { runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } }
                         )
                         return@Surface
                     }
@@ -270,7 +246,6 @@ class MainActivity : ComponentActivity() {
                         hasMicPermission = micGranted,
                         micPermissionPermanentlyDenied = micPermissionPermanentlyDenied,
                         themeMode = themeMode,
-                        license = LicenseSummary(active.key, active.status),
                         actions = AssistantActions(
                             onMicTapped = { viewModel.onMicTapped() },
                             onMuteToggled = { viewModel.onMuteToggled() },
@@ -297,10 +272,6 @@ class MainActivity : ComponentActivity() {
                             onHistoryTapped = { viewModel.onHistoryTapped() },
                             onHelpTapped = { viewModel.onHelpTapped() },
                             onAbilitiesTapped = { viewModel.onAbilitiesTapped() },
-                            onCheckForUpdates = { viewModel.onCheckForUpdates() },
-                            onStartUpdate = { viewModel.onStartUpdate() },
-                            onInstallUpdate = { viewModel.onInstallUpdate() },
-                            onDismissUpdate = { viewModel.onDismissUpdate() },
                             onSendFeatureRequest = { form, done ->
                                 viewModel.onSendFeatureRequest(form, done)
                             },
@@ -320,7 +291,6 @@ class MainActivity : ComponentActivity() {
                             onDeveloperTapped = { viewModel.onDeveloperTapped() },
                             onAboutTapped = { viewModel.onAboutTapped() },
                             onProfileTapped = { viewModel.onProfileTapped() },
-                            onRefreshLicense = { access.refresh(quiet = true) },
                             onDismissSettings = { viewModel.onDismissSettings() },
                             onClearApiKey = { viewModel.onClearApiKey() },
                             onLiveModelSelected = { id -> viewModel.onLiveModelSelected(id) },
@@ -334,7 +304,6 @@ class MainActivity : ComponentActivity() {
                                 viewModel.onSaveDeveloperChanges(apiKey)
                             },
                             onDismissToast = { viewModel.onDismissToast() },
-                            onRemoveLicense = { access.removeKey() },
                         ),
                     )
                 }

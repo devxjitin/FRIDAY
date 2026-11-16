@@ -414,11 +414,8 @@ class DeviceToolRunner(
                 "Ask the user to switch it off and on again in Accessibility settings, then try again."
         }
         start(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        val restricted = if (Build.VERSION.SDK_INT >= 33) {
-            " If the switch is greyed out, open FRIDAY's App info, tap the three dots and choose Allow restricted settings first."
-        } else ""
         return "status=permission_needed\nThe accessibility service is not enabled. The Accessibility settings were opened; " +
-            "the user must turn on FRIDAY there, then ask again.$restricted"
+            "the user must turn on FRIDAY there, then ask again."
     }
 
     private fun globalAction(action: Int, label: String): String {

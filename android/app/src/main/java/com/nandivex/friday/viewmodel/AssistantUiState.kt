@@ -67,6 +67,4 @@ data class AssistantUiState(
     /** Bumps each time a tool needs Android permissions; the activity shows the dialog for [requestedPermissions]. */
     val permissionRequestId: Int = 0,
     val requestedPermissions: List<String> = emptyList(),
-    /** The website update: offer, download, install. Stays None in builds that have no updater. */
-    val update: UpdateUiState = UpdateUiState.None,
 )
