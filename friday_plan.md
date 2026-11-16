@@ -1,7 +1,7 @@
 # FRIDAY: rebuild plan (Ultron → FRIDAY)
 
 Owner: Nandivex Technologies · Plan date: 2026-11-13 · Updated: 2026-11-16 · Status: **Phases 1 and 2 done, Phase 3 done
-(version 0.0.19), Phases 4 to 7 still to build**
+(version 0.0.19), Phases 4 to 7 still to build · Distribution: own website (route B, decided)**
 
 ## 1. Product vision
 
@@ -16,8 +16,9 @@ Every decision below follows from four facts:
    tool is built in and always on. The sidebar page "What F.R.I.D.A.Y. can do" lists them, read-only.
 2. **Phone control permission first.** On every open, until it is on, the app shows a disclosure and sends the user to
    turn on FRIDAY's accessibility service. The home screen stays closed without it.
-3. **Distribution is an open decision (D7).** Google Play restricts the Accessibility API hard, so how FRIDAY is
-   distributed decides its permissions, payments and updates.
+3. **Distribution is our own website, not Google Play (D7, decided 2026-11-16).** Google Play restricts the
+   Accessibility API hard, so FRIDAY is released as a signed APK from a Nandivex-owned site, with its own updater and
+   Razorpay payments. Google Play stays a later option (section 12).
 4. **Firebase only, no AWS.** One backend that you own, under the Firebase project `friday-nandivex`.
 
 ---
@@ -35,6 +36,7 @@ Every decision below follows from four facts:
 | Sprints 3.1 to 3.3 | Connectors, calls, SMS, WhatsApp, Wi-Fi / Bluetooth toggles, strobe and SOS torch, dark mode, battery saver | 0.0.15 to 0.0.17 |
 | Sprint 3.4 | **Vision change:** connectors, calls, SMS, WhatsApp, contacts, calendar, location, notifications, files, app usage, share, weather and web search removed; phone control gate on open | 0.0.18 |
 | Sprint 3.5 | Alarms, timers, reminders, show-notification and status tools removed; read-only Abilities page | 0.0.19 |
+| Decision D7 | Route B chosen: release from our own website (this plan update) | n/a |
 
 **Not built yet:** Firebase sign-in and Firestore rules, onboarding, free trial, coupons, Razorpay, Play or website
 release, wake word. The activation-key screen from the Ultron days still guards release builds; tester and debug builds
@@ -46,13 +48,13 @@ skip it.
 
 | # | Question | My recommendation |
 |---|---|---|
-| D1 | **Payments.** If FRIDAY is on Play, digital subscriptions must use Google Play Billing. In India, Razorpay can sit next to it only through Google's **User Choice Billing**. Off Play (D7, route B) there is no such rule and Razorpay alone is fine. | Decide after D7. Route A: User Choice Billing. Route B: Razorpay only. |
+| D1 | **Payments.** On Play, digital subscriptions must use Google Play Billing. Off Play there is no such rule. | **Decided with D7:** Razorpay only. If FRIDAY ever goes on Play, add Play Billing then. |
 | D2 | Package name. | **Done:** `com.nandivex.friday`. |
 | D3 | **Plan prices** (monthly / yearly, INR). | You decide. The plan supports both. |
 | D4 | **Name and IP.** F.R.I.D.A.Y. is a Marvel character. Marvel names, quotes and film artwork risk a takedown. | App name "FRIDAY – Voice Assistant", personality *inspired by* the film AI, no Marvel names or logos. |
 | D5 | Knowledge base, YouTube, Images page. | **Done:** all removed. |
 | D6 | Firebase account and project. | **Done:** project `friday-nandivex`. |
-| **D7** | **Distribution route.** On 2026-11-16 I read Google's Accessibility API policy page. It says that an app that is not an accessibility tool may not use the API "to autonomously initiate, plan, and execute actions", and that only services whose main purpose is helping people with disabilities may set `isAccessibilityTool`. A general voice assistant does not qualify. FRIDAY's tap-and-type loop is exactly that kind of autonomy. | See section 12 for the three routes. I recommend **route B first** (website and Firebase App Distribution, Razorpay only), and trying route A only if you are willing to run FRIDAY as a real accessibility tool for people with disabilities. Please read the Play page yourself before you commit: this is from my one reading of it. |
+| **D7** | **Distribution route.** Google's Accessibility API policy (read 2026-11-16) says an app that is not an accessibility tool may not use the API "to autonomously initiate, plan, and execute actions", and only services whose main purpose is helping people with disabilities may set `isAccessibilityTool`. A general voice assistant does not qualify, and FRIDAY's tap-and-type loop is that kind of autonomy. | **Decided: route B.** Release from our own website and Firebase App Distribution, Razorpay only. See section 12. |
 
 ---
 
@@ -120,8 +122,13 @@ Also: `save_memory` and `forget_memory` (150 short notes about the user, kept on
   Settings. "Agree and turn on" opens Android's accessibility settings. It re-checks every time the app resumes.
 - After it is on, the app asks once for the runtime permissions the tools use: location (Wi-Fi name) and nearby devices
   (Bluetooth, Android 12 and newer). Microphone and notifications are asked on first launch.
-- Housekeeping: the comment in `accessibility_service_config.xml` still says screen tools are "switched on in Settings"
-  and the file sets `isAccessibilityTool="true"`. Fix both together with D7: the flag must match what we declare to Google.
+- **Sideloaded installs on Android 13 and newer:** Android treats an app that came from a browser or file manager (not
+  from a store) as "restricted" and greys out its accessibility switch until the user opens the app's info page and
+  chooses "Allow restricted settings" (menu with three dots). The gate must show this step with pictures, and we must
+  test it on a real phone with the website APK and with the App Distribution build (Sprint 4.1 and 6.1).
+- Housekeeping, now that D7 is decided: the comment in `accessibility_service_config.xml` still says screen tools are
+  "switched on in Settings", and the file sets `isAccessibilityTool="true"`. FRIDAY is not an accessibility tool, so set
+  it to `false` and rewrite the comment (Sprint 6.1).
 
 ## 8. Theme and logo (done in Sprints 2.2 and 2.3)
 
@@ -134,7 +141,9 @@ Done in Sprint 1.1: project, Android app, `google-services.json` (gitignored), A
 
 Still to do (Phase 4 and 5):
 1. **Authentication** (Google sign-in, phone OTP optional), **Firestore**, **Cloud Functions** (Node 22, `asia-south1`),
-   **App Check** (Play Integrity if on Play, otherwise device attestation or none).
+   **Firebase Hosting** (the download site, section 12), and **App Check**. App Check's Play Integrity needs a
+   Play-installed app to give a full verdict, so for sideloaded builds we rely on Auth, security rules and rate limits,
+   and decide in Sprint 4.2 whether App Check can still help.
 2. Debug and release **SHA-1 / SHA-256** fingerprints. Google sign-in fails without them.
 3. `firestore.rules`: users read only their own `entitlements/{uid}` and `users/{uid}`. Clients cannot write
    entitlements, coupons or trials; only Cloud Functions can.
@@ -173,13 +182,13 @@ App listens to entitlements/{uid} (read-only for the user)
 ```
 
 - `entitlements/{uid}`: `plan` (trial | monthly | yearly | developer), `status` (active | halted | cancelled |
-  expired), `expiresAt`, `source` (razorpay | play | coupon | trial), `subscriptionId`.
+  expired), `expiresAt`, `source` (razorpay | coupon | trial), `subscriptionId`.
 - Razorpay `key_secret` and the webhook secret live in Functions secrets. Only the public `key_id` is in the app.
+  Razorpay is the only payment method (D1), so there is no Play Billing and no User Choice Billing.
 - Cached status with an offline grace period (3 days), read from Firestore's offline cache.
-- Account page: plan, renewal date, **Cancel subscription** (cancel at cycle end).
+- Account page: plan, renewal date, **Cancel subscription** (cancel at cycle end). With no Play, we also own refunds, GST invoices and support for payments.
 - Replaces the Ultron-era `License.kt` (`ULTR-…` keys), `AccessViewModel` and `ActivationScreen`.
 - You do the Razorpay merchant account, KYC and the Plans in the Razorpay dashboard. I add the plan IDs.
-- **Play Billing** (route A only): the Play Billing Library plus a `verifyPlayPurchase` function writing the same doc.
 
 **Coupons** (`FRIDAYFREE` = developer code):
 - Live in `coupons/{code}`, written only by Cloud Functions. Redeemed through `redeemCoupon(code)`. The code is never in
@@ -191,56 +200,73 @@ App listens to entitlements/{uid} (read-only for the user)
   → Developer creates, disables and lists coupons.
 
 **1-day free trial:** `startTrial()` writes `entitlements/{uid} = { plan: "trial", expiresAt: now + 24h }`. Once per
-account and once per device (`trials/{deviceHash}`: hash of the device attestation plus `ANDROID_ID` and the signing
-hash), so reinstalling or making a new Google account on the same phone does not restart it. A countdown shows on home;
-the plan screen opens when it ends. The trial is app-managed: Play's own free trials are longer than a day.
+account and once per device (`trials/{deviceHash}`: hash of `ANDROID_ID` and the app signing certificate, and
+the device attestation where the phone gives one), so reinstalling or making a new Google account on the same phone does not restart it. A countdown shows on home;
+the plan screen opens when it ends. The trial is app-managed through Firebase.
 
-## 12. Distribution routes (decision D7)
+## 12. Distribution: our own website (route B, decided)
 
-Google's Accessibility API policy (read on 2026-11-16; check the live page again before any submission):
+**Why:** Google's Accessibility API policy (read on 2026-11-16; check the live page again before any Play submission)
 - An app that is **not** an accessibility tool must not use the API to autonomously initiate, plan and execute actions.
-  Fixed, human-defined scripts are not covered by that rule. FRIDAY's model decides what to tap next, so it is covered.
-- `isAccessibilityTool="true"` is for services whose **main purpose** is helping people with disabilities. A general
-  voice assistant that also helps some of them does not qualify.
-- A tool that does qualify may use autonomy for that core purpose. It must describe the feature, the disabilities
-  served and the target users, and send a video. Non-tools need a prominent disclosure and a declaration video.
-- Misdeclaring is grounds for suspension of the developer account.
+  Fixed, human-defined scripts are not covered. FRIDAY's model decides what to tap next, so it is covered.
+- `isAccessibilityTool="true"` is for services whose **main purpose** is helping people with disabilities. FRIDAY is not
+  one, so we do not claim it.
+- Misdeclaring is grounds for suspension of a developer account. Staying off Play avoids that risk entirely.
 
-| Route | What it means | Cost and risk |
-|---|---|---|
-| **A. Google Play as an accessibility tool** | Position FRIDAY honestly as hands-free voice control for people who cannot use a touchscreen (like Voice Access). The store listing, onboarding and declaration all say so. | Highest review risk. The disability use must be the true core purpose, not a label. If rejected, resubmitting costs weeks. Needs Play Billing next to Razorpay (D1). |
-| **B. Own website and Firebase App Distribution (recommended first)** | Signed APK on the Nandivex site and App Distribution. Updates go through our own updater. Razorpay only, no Play fee. Sideloading needs "install unknown apps" and a clear explanation. | No store review of the Accessibility API. Smaller reach, and no Play trust badge. Can add other stores later (Samsung Galaxy Store, Amazon Appstore), which have their own rules to read. |
-| **C. Play with a reduced FRIDAY** | A Play build without autonomous screen control: only fixed-script tools (torch, volume, brightness, panels) and the system's own gestures. | Safe on Play, but it is not the product vision. Treat it as a fallback only. |
+**What we build**
+- **The site:** a Firebase Hosting site in `friday-nandivex` (free, HTTPS, can move to a Nandivex domain later). Pages:
+  landing, **Download**, sideloading guide with pictures (including "Allow restricted settings"), privacy policy, terms,
+  support contact.
+- **The release files:** `FRIDAY.apk` and `latest.json` (`versionCode`, `versionName`, `apkUrl`, `sha256`, `notes`,
+  `minAndroid`). `latest.json` is written last, so a half-uploaded release is never offered.
+- **The updater (in the app):** checks `latest.json` on open, shows "Update available" with the notes, downloads the APK
+  into the app's cache (the `FileProvider` for `updates/` already exists), checks the SHA-256, and hands it to Android's
+  installer. This needs `REQUEST_INSTALL_PACKAGES`, which is fine off Play. Never auto-installs without a tap.
+- **The release key:** one new release signing key, kept outside git, backed up in **two** places. Android only accepts an
+  update signed with the same key, so losing it strands every user. The tester and debug keys stay separate.
+- **The release workflow:** `.github/workflows/release.yml` builds the release APK on a version tag, runs the tests,
+  publishes the files to Hosting, and keeps the last three APKs. It replaces the old AWS OTA workflow; `docs/CI_CD.md`
+  still describes that and is rewritten with it (Sprint 6.2).
+- **Testers keep using Firebase App Distribution** for pre-release builds (section 18).
 
-Whatever the route, the in-app disclosure (section 7) stays, and the sideload build keeps its own updater, so the plan's
-old "no self-update on Play" step only applies to routes A and C.
+**Costs of this route:** no Play trust badge or discovery, users must allow "install unknown apps" once, the sideload
+restriction on accessibility (section 7) needs a clear guide, and we handle payments support ourselves. Security
+comes from signed builds, a checksum shown on the download page, and HTTPS only.
+
+**Later options.** Other stores (Samsung Galaxy Store, Amazon Appstore, Xiaomi GetApps) have their own rules to read
+before we submit. Google Play stays possible in one of two forms, each needing its own decision:
+- **As an accessibility tool**, only if FRIDAY truly becomes hands-free control for people who cannot use a touchscreen,
+  with that as the real core purpose. Needs Play Billing next to Razorpay.
+- **A reduced build** without autonomous screen control (fixed-script tools only). Safe on Play, but not the vision.
 
 ## 13. Permissions today (manifest of version 0.0.19)
 
 | Permission or service | Why | Play note |
 |---|---|---|
-| `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, foreground service (`microphone`, `specialUse`) | Voice session | Foreground service types need a use description in Play Console |
+| `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, foreground service (`microphone`, `specialUse`) | Voice session | Normal. (A Play listing would need a use description for the foreground service types.) |
 | `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE` | Gemini and network status | Normal |
 | `POST_NOTIFICATIONS`, `VIBRATE` | Service notification, vibrate tool | Normal |
 | `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` | Android only shows the Wi-Fi name with location access | Foreground only. Disclose in Data safety |
 | `BLUETOOTH` (to Android 11), `BLUETOOTH_CONNECT` | Bluetooth status and paired devices | Normal |
 | `ACCESS_NOTIFICATION_POLICY` | Do Not Disturb | Special access, user-granted |
 | `WRITE_SETTINGS` | Brightness, screen timeout, auto-rotate | Special access, user-granted |
-| `SYSTEM_ALERT_WINDOW` | Declared for starting screens from the background, but no code uses it (checked 2026-11-16) | Drop it in Sprint 6.1: Play asks why every sensitive permission is there |
-| **Accessibility service** | The whole product | See section 12 |
+| `SYSTEM_ALERT_WINDOW` | Declared for starting screens from the background, but no code uses it (checked 2026-11-16) | Drop it in Sprint 6.1: it makes Android show a scary warning for nothing |
+| **Accessibility service** | The whole product | Not on Play: no Play review. Disclosed in the app (section 7) and on the website |
 | Voice interaction and recognition services | Default assistant role (hold home or power) | Normal |
 
 Not requested, and to keep it that way: `ACCESS_BACKGROUND_LOCATION`, `QUERY_ALL_PACKAGES` (the `<queries>` block lists
-launcher apps instead), `REQUEST_INSTALL_PACKAGES` (only needed if route B ships its own updater: then declare it).
+launcher apps instead). **To add in Sprint 6.1:** `REQUEST_INSTALL_PACKAGES`, for the updater (release build only).
 
 ## 14. Rebrand and housekeeping
 
 Done in Sprint 2.3 (README, strings, channels, help page). Still open:
 - `git grep -i ultron` should only hit `track.md` history and `docs/ultron-changelog.md`. Check `docs/`, and delete the
   empty folders left under `mcp/` on the dev PC (git does not track them).
+- `docs/CI_CD.md` still describes the AWS OTA release and is rewritten with the new release workflow (Sprint 6.2).
 - Update `docs/PRIVACY_PLAN.md` and the privacy policy: the app no longer touches contacts, calls, files or location
   beyond the Wi-Fi name, and screen text goes to Gemini.
 - Change `docs/Idea.md` and `README.md` to describe a hands-free phone control assistant.
+- `sites/ultron-showcase/` is the old Ultron showcase. Leave it until the new site exists, then remove it.
 - `track.md` keeps logging every change.
 
 ## 15. Other features worth building
@@ -279,7 +305,7 @@ torch SOS blink stays.
 | **3. Hands-free control** | The tool set, the gate and the Abilities page | 3.1 – 3.5 done, 3.6 next | **Almost done** | phone tests |
 | **4. Accounts and setup** | Onboarding, sign-in, free trial, wake word | 4.1 – 4.3 | To do | none |
 | **5. Subscriptions** | Coupons, Razorpay, account page | 5.1 – 5.3 | To do | D3, Razorpay account and KYC |
-| **6. Release** | Policy-compliant release on the route you choose | 6.1 – 6.3 | To do | **D7**, D1 |
+| **6. Release** | Signed APK, updater and download site on our own website | 6.1 – 6.3 | To do | domain choice, Razorpay live keys |
 | **7. Extras** | Faster ways to reach FRIDAY | 7.1 – 7.2 | To do | pick which ones |
 
 ---
@@ -348,33 +374,38 @@ removed; the plan keeps them in the history only.
   Cancel keeps access until the cycle ends.
 - Done when: webhook tests cover every event and duplicate deliveries.
 
-### Phase 6: Release (route chosen in D7)
+### Phase 6: Release from our own website (route B)
 
-**Sprint 6.1: Release readiness (all routes)**
+The site and the updater do not depend on accounts or payments. If you want testers on a public link sooner, Sprints 6.1
+and 6.2 can run before Phase 4 or 5.
+
+**Sprint 6.1: Release build and updater**
 - Build:
-  - Re-read Google's Accessibility API policy and settle D7. Make `isAccessibilityTool`, the declaration, the store text,
-    the in-app disclosure and the privacy policy all say the same true thing.
-  - Drop `SYSTEM_ALERT_WINDOW` (nothing uses it). Privacy policy and terms pages on the Nandivex site.
-  - Own signing key for release (`RELEASE_*` in `local.properties`, kept out of git).
-  - Updater: route B ships its own update check against the Nandivex site; routes A and C use Play In-App Updates.
-- Demo: a release build installs cleanly, shows the disclosure before the Android settings screen, and passes lint with
-  no policy warnings.
-- Done when: the release manifest matches section 13 and nothing is declared that the app does not use.
+  - Release signing key (`RELEASE_*` in `local.properties`, backed up in two places) and a `release` build that works
+    without the debug or tester shortcuts.
+  - `isAccessibilityTool="false"`, a corrected service comment, drop `SYSTEM_ALERT_WINDOW`, add
+    `REQUEST_INSTALL_PACKAGES` (release only).
+  - The in-app updater: reads `latest.json`, shows notes, downloads, checks SHA-256, opens the installer. Unit tests for
+    the version comparison and checksum.
+  - The "Allow restricted settings" help in the phone control gate, with pictures.
+- Demo: install the release APK from a file, hit the restricted-settings step and get past it with the in-app guide,
+  turn on phone control, then install a newer build through the updater and keep all data.
+- Done when: the release manifest matches section 13, and an update installs over the previous release on Android 10,
+  13 and 15.
 
-**Sprint 6.2: Publish**
-- Route B: signed APK on the Nandivex site, download page with a sideloading guide, App Distribution for testers,
-  Razorpay live mode.
-- Route A or C: register the Play Console **organization** account (you, with the D-U-N-S number), Play App Signing,
-  store listing and Data safety form, the Accessibility declaration with video, User Choice Billing (D1) with a
-  `verifyPlayPurchase` function, then internal and closed testing.
-- Demo: testers install FRIDAY from the chosen channel and subscribe.
-- Done when: the chosen channel accepts the build, or we move to another route and resubmit.
+**Sprint 6.2: The website and the release workflow**
+- Build: the Firebase Hosting site (landing, Download, sideloading guide, privacy, terms, support), `release.yml`
+  (tag → tests → release APK → upload to Hosting → `latest.json` last), a rewritten `docs/CI_CD.md`, and removal of
+  `sites/ultron-showcase/`.
+- Demo: you push a version tag, and within minutes the site offers the new APK with its checksum, and an installed
+  phone shows "Update available".
+- Done when: a broken or older build can never replace a newer `latest.json`, and the last three APKs are kept.
 
-**Sprint 6.3: Production and AWS teardown**
-- Build: staged rollout (10% → 50% → 100% on Play, or a phased link on the site), Crashlytics dashboards and alerts, and
-  with your OK a backup and then deletion of the AWS resources and the old `ultron-5350c` project. A notice goes to
-  existing Ultron users.
-- Done when: crash-free users are above 99% at 100% rollout and the AWS bill is ₹0.
+**Sprint 6.3: Go live and AWS teardown**
+- Build: Razorpay **live** mode, Crashlytics dashboards and alerts, a phased rollout (`latest.json` can hold a
+  percentage until it is 100), and, with your OK, a backup and then deletion of the AWS resources and the old
+  `ultron-5350c` project. A notice goes to existing Ultron users.
+- Done when: crash-free users are above 99% at full rollout and the AWS bill is ₹0.
 
 ### Phase 7: Extras (you pick)
 
@@ -388,7 +419,10 @@ Wi-Fi off), run locally without model planning, and a typed command bar on home.
 
 | Risk | Mitigation |
 |---|---|
-| **Play rejects the Accessibility use, or suspends the account for a misdeclaration** | D7: ship on route B first, and only declare what is true. Never set `isAccessibilityTool` unless FRIDAY really is one. |
+| Play bans accessibility-driven assistants | Not on Play (D7). Never set `isAccessibilityTool` unless FRIDAY truly is one. |
+| Sideloading puts users off, and Android 13+ greys out the accessibility switch until "Allow restricted settings" | A picture guide in the gate and on the site, tested on real phones in Sprints 4.1 and 6.1. |
+| Losing the release signing key strands every user | Two offline backups, checked before the first public release. |
+| A bad update reaches everyone | `latest.json` is written last, with a rollout percentage and a checksum. |
 | Prompt injection from text on screen makes FRIDAY press Send or pay | Untrusted-content marking now; confirmation before irreversible actions in Sprint 3.6. |
 | App layouts change and the screen tools break | The Sprint 3.6 test list, and `look_at_screen` as a fallback. Report the reliable jobs honestly. |
 | Marvel IP complaint | D4: no Marvel names or artwork, "inspired" persona. |
@@ -423,4 +457,4 @@ Wi-Fi off), run locally without model planning, and a typed command bar on home.
 |---|---|---|---|
 | `debug` | `com.nandivex.friday.debug` | debug key | adb / Gradle |
 | `beta` | `com.nandivex.friday.tester` | tester key | Firebase App Distribution |
-| `release` | `com.nandivex.friday` | release key | Website or Play Store, depending on D7 |
+| `release` | `com.nandivex.friday` | release key | Our website (D7, route B) |
