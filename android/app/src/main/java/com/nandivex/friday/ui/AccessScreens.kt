@@ -55,7 +55,7 @@ fun PhoneControlScreen(onAgree: () -> Unit) {
 }
 
 @Composable
-private fun DisclosureLine(title: String, text: String) {
+internal fun DisclosureLine(title: String, text: String) {
     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text(title, color = AssistantTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(2.dp))
@@ -64,7 +64,7 @@ private fun DisclosureLine(title: String, text: String) {
 }
 
 @Composable
-private fun AccessFrame(content: @Composable () -> Unit) {
+internal fun AccessFrame(content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().background(AssistantBackground), contentAlignment = Alignment.Center) {
         Column(
             Modifier.widthIn(max = 420.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
@@ -74,7 +74,7 @@ private fun AccessFrame(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun Heading(title: String, subtitle: String) {
+internal fun Heading(title: String, subtitle: String) {
     AppIconTile(56.dp)
     Spacer(Modifier.height(18.dp))
     Text(title, color = AssistantTextPrimary, fontSize = 24.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
@@ -83,7 +83,7 @@ private fun Heading(title: String, subtitle: String) {
 }
 
 @Composable
-private fun PrimaryButton(text: String, enabled: Boolean, onClick: () -> Unit) {
+internal fun PrimaryButton(text: String, enabled: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,

@@ -177,19 +177,26 @@ class AssistantViewModel(application: Application) : AndroidViewModel(applicatio
                 .catch { e -> Log.e("AssistantError", "Failed to read removed memory", e) }
                 .collect { items -> _uiState.update { it.copy(removedMemories = items) } }
         }
-        // First Keystore access is slow and can fail, so it happens off the main thread.
+        reloadApiKey(replaceWarmSession = false)
+    }
+
+    /** First Keystore access is slow and can fail, so it happens off the main thread. Also called after setup stores a key. */
+    private fun reloadApiKey(replaceWarmSession: Boolean) {
         viewModelScope.launch {
             val resolvedKey = withContext(Dispatchers.IO) { resolveApiKey() }
             session.keysLoaded = true
             _uiState.update {
                 it.copy(
-                    hasApiKey = hasGeminiAccess(),
+                    hasApiKey = resolvedKey.isNotBlank(),
                     currentApiKey = resolvedKey
                 )
             }
-            session.prewarmIfPossible()
+            if (replaceWarmSession) session.invalidateWarmSessionAndReprewarm() else session.prewarmIfPossible()
         }
     }
+
+    /** Setup stored a new Gemini key: pick it up without restarting the app. */
+    fun onApiKeyStoredBySetup() = reloadApiKey(replaceWarmSession = true)
 
     /** The Gemini key the user typed in Settings; blank until they add one. There is no built-in access. */
     private fun resolveApiKey(): String = apiKeyStore.getApiKey().orEmpty()

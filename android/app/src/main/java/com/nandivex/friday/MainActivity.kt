@@ -40,7 +40,12 @@ import com.nandivex.friday.ui.theme.ThemePrefs
 import com.nandivex.friday.ui.theme.applyWindowColors
 import com.nandivex.friday.ui.theme.paletteFor
 import com.nandivex.friday.viewmodel.AssistantViewModel
+import com.nandivex.friday.viewmodel.SetupViewModel
 import com.nandivex.friday.ui.PhoneControlScreen
+import com.nandivex.friday.ui.SetupActions
+import com.nandivex.friday.ui.SetupDoneScreen
+import com.nandivex.friday.ui.SetupLoadingScreen
+import com.nandivex.friday.ui.SetupScreen
 import com.nandivex.friday.data.AccessChecks
 import com.nandivex.friday.data.AccessGate
 
@@ -49,6 +54,7 @@ class MainActivity : ComponentActivity() {
     // Held at Activity scope (not just inside the Compose tree) so onStart/onStop below can
     // reach the same instance Compose is observing.
     private val viewModel: AssistantViewModel by viewModels()
+    private val setup: SetupViewModel by viewModels()
     /** Skips the key re-check on the very first start; the access view model already runs one. */
     private var startedOnce = false
 
@@ -164,7 +170,11 @@ class MainActivity : ComponentActivity() {
             // Ask up front on first launch instead of waiting for the first mic tap. Saved so a
             // rotation doesn't re-fire it; after a denial the on-screen button retries instead.
             var askedOnStart by rememberSaveable { mutableStateOf(false) }
-            LaunchedEffect(notificationPermissionHandled) {
+            // Setup has its own permission step, so these prompts wait until setup has nothing left to ask.
+            val setupState by setup.state.collectAsState()
+            val setupComplete = setupState != null && setupState?.step == null
+            LaunchedEffect(notificationPermissionHandled, setupComplete) {
+                if (!setupComplete) return@LaunchedEffect
                 if (!notificationPermissionHandled) {
                     // The literal avoids an API 33 field reference; before Android 13 the launcher answers at once.
                     notificationPermissionLauncher.launch("android.permission.POST_NOTIFICATIONS")
@@ -203,12 +213,55 @@ class MainActivity : ComponentActivity() {
                     color = com.nandivex.friday.ui.theme.AssistantBackground,
                     contentColor = com.nandivex.friday.ui.theme.AssistantTextPrimary
                 ) {
-                    // Arms the warm voice session (and any waiting assistant gesture) once the gate is open.
-                    LaunchedEffect(Unit) { viewModel.onAccessChanged(AccessGate.unlocked) }
+                    val setupNow = setupState
+                    if (setupNow == null) {
+                        SetupLoadingScreen()
+                        return@Surface
+                    }
+                    // The voice session stays closed until setup has nothing left to ask.
+                    LaunchedEffect(setupNow.step == null) {
+                        AccessGate.unlocked = setupNow.step == null
+                        viewModel.onAccessChanged(AccessGate.unlocked)
+                    }
+                    LaunchedEffect(setupNow.keyVersion) {
+                        if (setupNow.keyVersion > 0) viewModel.onApiKeyStoredBySetup()
+                    }
+                    if (setupNow.step != null) {
+                        SetupScreen(
+                            state = setupNow,
+                            actions = SetupActions(
+                                onWelcomeNext = setup::onWelcomeNext,
+                                onAgreementAccepted = setup::onAgreementAccepted,
+                                onDecline = { finishAffinity() },
+                                onNameChanged = setup::onNameChanged,
+                                onLanguageChanged = setup::onLanguageChanged,
+                                onAboutYouNext = setup::onAboutYouNext,
+                                onKeyEdited = setup::onKeyEdited,
+                                onCheckAndSaveKey = setup::onCheckAndSaveKey,
+                                onKeyNext = setup::onKeyNext,
+                                onVoiceChanged = setup::onVoiceChanged,
+                                onVoiceNext = setup::onVoiceNext,
+                                onPermissionsNext = setup::onPermissionsNext,
+                                onOpenAppSettings = {
+                                    runCatching {
+                                        startActivity(
+                                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                                .setData(Uri.fromParts("package", packageName, null))
+                                        )
+                                    }
+                                }
+                            )
+                        )
+                        return@Surface
+                    }
                     if (!phoneControlOn) {
                         PhoneControlScreen(
                             onAgree = { runCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) } }
                         )
+                        return@Surface
+                    }
+                    if (!setupNow.finished) {
+                        SetupDoneScreen(onStart = setup::onFinished)
                         return@Surface
                     }
                     // Once phone control is on, ask once for what the built-in tools use (Wi-Fi name, Bluetooth, steps).

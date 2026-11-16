@@ -18,6 +18,7 @@ Developed by **Nandivex Technologies**. Not yet released: the plan is to publish
 
 ## What it does today
 
+- **First-run setup:** agreement, name and language, Gemini API key (checked with Google before it is saved), voice, permissions.
 - **Voice control of the phone.** Tap the mic, talk, interrupt any time. Replies come by voice from Gemini Live.
 - **Screen control** through Android's accessibility service: read the screen, tap, type, scroll, swipe, wait for text, and look at the screen as a picture when an app shows no readable text.
 - **Phone navigation:** back, home, recents, notification shade, quick settings, lock screen, screenshot, power menu, split screen.
@@ -35,7 +36,7 @@ The full list is on the **What F.R.I.D.A.Y. can do** page inside the app. It is 
 - Android 10 and newer do not let apps flip Wi-Fi, mobile data, airplane mode, hotspot, NFC, dark mode or battery saver directly, so F.R.I.D.A.Y. opens the panel and taps the switch.
 - Apps that protect their window (banking, some games) cannot be read or screenshotted.
 - No wake word, home-screen widget, Quick Settings tile or typed command bar yet.
-- No account, sign-in or payment. First-run setup (name, API key, agreement) is not built yet (Sprint 5.1).
+- No account, sign-in or payment.
 
 ## Privacy in short
 
@@ -69,7 +70,7 @@ cd android
 ./gradlew bundleRelease                         # App Bundle for Google Play (needs the release key)
 ```
 
-After installing, open the app, allow the microphone, turn on FRIDAY in Android's accessibility settings, and add your Gemini API key in Settings.
+After installing, open the app and follow first-run setup: accept the agreement, enter your name, paste and check your Gemini API key, pick a voice, allow the microphone, then turn on FRIDAY in Android's accessibility settings.
 
 | Build | Package | Use |
 |---|---|---|
