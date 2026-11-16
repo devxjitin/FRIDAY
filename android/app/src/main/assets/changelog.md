@@ -3,6 +3,11 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.25 - 2026-11-16
+
+### Changed
+- F.R.I.D.A.Y. now uses Firebase for crash reports only. Usage statistics, the anonymous sign-in and the app check were removed because nothing needed them, so less data about you leaves your phone.
+
 ## 0.0.24 - 2026-11-16
 
 ### Changed

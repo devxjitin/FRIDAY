@@ -1,7 +1,7 @@
 # FRIDAY: product plan
 
 Owner: Nandivex Technologies · Package `com.nandivex.friday` · Plan date 2026-11-13 · **Rewritten 2026-11-16** ·
-App version on `main`: **0.0.23**; Sprint 4.2 (0.0.24) is in review on its own branch
+App version on `main`: **0.0.23**; Sprints 4.2 (0.0.24) and 4.3 (0.0.25) are in review
 
 **Status in one line:** the app itself (voice, phone control tools, theme, persona) is built and works in tester builds.
 On 2026-11-16 the distribution decision changed from "our own website" to **Google Play only**. The website download,
@@ -111,7 +111,7 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | R4 **(fixed in 4.1)** | `build.gradle.kts` | `targetSdk = 35`; Play needs 36. | 4.1 |
 | R5 **(fixed in 4.2)** | `README.md` | Still describes calls, alarms, web search and connectors, all removed. Says "Play Store build" next to a website updater. | 4.2 |
 | R6 **(fixed in 4.2)** | `docs/Idea.md`, `docs/PRIVACY_PLAN.md`, `docs/VIEWMODEL_SPLIT_PLAN.md` | Old white-label kiosk plan, a privacy plan for removed tools, a finished refactor plan. | 4.2 |
-| R7 **(fixed in 4.1)** | Merged manifest | The advertising ID (`AD_ID`) and `ACCESS_ADSERVICES_*` arrived from Firebase libraries although FRIDAY shows no ads; removed with `tools:node="remove"`. `WAKE_LOCK` and the Play install-referrer permission still come from libraries and go into the Data safety review (8.1). | 4.1 |
+| R7 **(fixed in 4.1)** | Merged manifest | The advertising ID (`AD_ID`) and `ACCESS_ADSERVICES_*` arrived from Firebase libraries although FRIDAY shows no ads; removed with `tools:node="remove"`. `WAKE_LOCK`, the install-referrer and `READ_GSERVICES` permissions went away with Analytics in 4.3; re-check the merged manifest in 8.1. | 4.1 |
 | R8 | API key and name | Entered only in Settings; a new user is not guided. No agreement is ever accepted. | 5.1 |
 
 ---
@@ -142,7 +142,7 @@ These are real and must be fixed; none is visible in the plan before this rewrit
 | D4 | **Name.** F.R.I.D.A.Y. is a Marvel character. Play enforces intellectual-property rules at review and on complaints. | Use a listing name that does not depend on Marvel (for example "FRIDAY – Hands-Free Phone Access"), no Marvel quotes, art or "Iron Man" references. A trademark search before launch. A full rename is the safest option. |
 | D5 | **Persona.** A witty "Boss" assistant reads as a general assistant, which Play says does not qualify. | Keep the voice calm and short; make chat and memory secondary features of an access tool, not the headline. |
 | D6 | **Setup details:** what besides the name? | Only what the app uses: name, how to be addressed, language. No email, phone or address while there is no account, so the Data safety form stays small. |
-| D7 | **Firebase Analytics and anonymous sign-in** while nothing uses them. | Remove both now (and App Check until a backend needs it). Crashlytics stays. Add them back only when a feature needs them. |
+| D7 | **Firebase Analytics, anonymous sign-in, App Check** while nothing uses them. | **Decided 2026-11-16: removed** (Sprint 4.3). Crashlytics stays. Add them back only when a feature needs them. |
 
 ---
 
@@ -185,7 +185,7 @@ build through Firebase App Distribution.
 | 1. Foundation | Package, Firebase, tester delivery, dead weight out | 1.1–1.3 | **Done** | – |
 | 2. Identity | Look, voice, name | 2.1–2.3 | **Done** | – |
 | 3. Hands-free control | Tools, gate, Abilities page | 3.1–3.5 | **Done** (phone checks pending) | phone checks |
-| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs | 4.1–4.2 | 4.1 **done**, 4.2 in review | – |
+| 4. Play-only cleanup | Remove website route and dead code, target 36, true docs, unused Firebase | 4.1–4.3 | 4.1 **done**, 4.2 and 4.3 in review | – |
 | 5. Setup | Your setup screen: details, API key, agreement | 5.1 | To do | D6, final Terms/Privacy text |
 | 6. Accessibility tool readiness | Make FRIDAY genuinely an access tool, safe and reliable | 6.1–6.3 | To do | D4, D5, testers with disabilities |
 | 7. Monetisation | Play Billing (only if paid) | 7.1–7.2 | Blocked on D2 | D2, D3 |
@@ -210,7 +210,12 @@ build through Firebase App Distribution.
   to Gemini, name and memory on the phone, crash reports to Crashlytics); `docs/CI_CD.md` without the website release.
 - Built: new README that lists only what exists and what does not; `docs/DATA_FLOWS.md` (what goes to Gemini, what stays on the phone, what Firebase receives, every permission) replaces `PRIVACY_PLAN.md`; `Idea.md` and `VIEWMODEL_SPLIT_PLAN.md` deleted; `LATENCY.md` corrected; the unused jsoup library removed.
 - Done when: every feature named in the docs exists in the app.
-- **Found while checking (needs your decision, D7 below):** the app still creates a Firebase **anonymous user** on every launch and includes **Firebase Analytics**, and nothing reads either. The privacy page already says so, but they add data for the Play Data safety form for no benefit.
+- Found while checking: the app created a Firebase anonymous user on every launch and included Firebase Analytics, and nothing read either. Removed in Sprint 4.3.
+
+**Sprint 4.3: Remove unused Firebase parts** — **built 2026-11-16, version 0.0.25, in review**
+- Built: Firebase Analytics, Authentication (anonymous sign-in) and App Check removed from the app, with `FridayApp` and the three `AppCheckInstaller` files; only Crashlytics stays. Privacy page, README and `docs/DATA_FLOWS.md` updated to say so.
+- Not done: a Crashlytics test crash on a phone to prove reports still arrive (the tester build has the long-press test crash in About).
+- Done when: a test crash from a tester build shows up in the Firebase console.
 
 ### Phase 5: Setup
 
