@@ -239,7 +239,7 @@ internal class VoiceSessionController(
             uiState.update {
                 it.copy(
                     voiceState = VoiceState.ERROR,
-                    errorMessage = "The assistant isn't set up yet. Add a Gemini API key in Settings."
+                    errorMessage = "F.R.I.D.A.Y. is not set up yet. Add your Gemini key in Settings."
                 )
             }
             // Send the user to Settings so they can add a key.
@@ -917,7 +917,7 @@ internal class VoiceSessionController(
         uiState.update {
             it.copy(
                 voiceState = VoiceState.ERROR,
-                errorMessage = "The assistant didn't respond in time. Please try again."
+                errorMessage = "F.R.I.D.A.Y. did not respond in time. Please try again."
             )
         }
     }

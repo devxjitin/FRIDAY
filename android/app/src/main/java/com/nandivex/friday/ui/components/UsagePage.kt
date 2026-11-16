@@ -99,7 +99,7 @@ fun UsagePage(
         if (total.voiceSeconds == 0L && total.voiceSessions == 0 && total.toolCalls == 0) {
             PageCard {
                 Text("Nothing yet for this period.", color = AssistantTextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                Text("Talk to the assistant and your usage will show up here.", color = AssistantTextMuted, fontSize = 13.sp,
+                Text("Talk to F.R.I.D.A.Y. and your usage will show up here.", color = AssistantTextMuted, fontSize = 13.sp,
                     modifier = Modifier.padding(top = 4.dp))
             }
             return@PageColumn

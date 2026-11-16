@@ -452,7 +452,7 @@ private fun StatusLine(
         !hasMicPermission -> strings.micRationale to AssistantError
         uiState.voiceState == VoiceState.ERROR ->
             (uiState.errorMessage ?: "Something went wrong") to AssistantError
-        !uiState.hasApiKey -> "The assistant isn't set up yet. Add a Gemini API key in Settings." to AssistantError
+        !uiState.hasApiKey -> "F.R.I.D.A.Y. is not set up yet. Add your Gemini key in Settings." to AssistantError
         uiState.voiceState == VoiceState.CONNECTING -> strings.connectingCancel to AssistantTextSecondary
         uiState.voiceState == VoiceState.RESETTING -> strings.refreshingCancel to AssistantTextSecondary
         uiState.isMicMuted && uiState.voiceState == VoiceState.LISTENING -> strings.micMuted to AssistantError

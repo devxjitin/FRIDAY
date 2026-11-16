@@ -141,7 +141,7 @@ fun MemoryPage(
         }
         if (removedByAssistant.isNotEmpty()) {
             Spacer(Modifier.height(16.dp))
-            PageLabel("Removed by the assistant", top = 0.dp)
+            PageLabel("Removed by F.R.I.D.A.Y.", top = 0.dp)
             removedByAssistant.asReversed().forEach { item ->
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 8.dp).clip(CardShape).background(AssistantSurface)
@@ -180,7 +180,7 @@ fun MemoryPage(
         AlertDialog(
             onDismissRequest = { confirmingClear = false },
             title = { Text("Clear all memory?") },
-            text = { Text("Your assistant will forget everything it saved about you.") },
+            text = { Text("F.R.I.D.A.Y. will forget everything it saved about you. This cannot be undone.") },
             confirmButton = { TextButton(onClick = { onClearAll(); confirmingClear = false }) { Text("Clear all", color = AssistantError) } },
             dismissButton = { TextButton(onClick = { confirmingClear = false }) { Text("Cancel") } }
         )

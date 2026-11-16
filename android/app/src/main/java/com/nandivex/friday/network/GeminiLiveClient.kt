@@ -142,7 +142,7 @@ class GeminiLiveClient(
 
         val timeoutRunnable = Runnable {
             Log.e(TAG, "Setup timed out after ${SETUP_TIMEOUT_MS}ms -- no setupComplete or error received")
-            listener.onError("The assistant isn't available right now. Please try again in a moment.")
+            listener.onError("F.R.I.D.A.Y. cannot reach Google Gemini right now. Please try again in a moment.")
             webSocket?.cancel()
         }
         setupTimeoutRunnable = timeoutRunnable
