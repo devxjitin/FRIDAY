@@ -146,8 +146,8 @@ fun AssistantScreen(
         val drawerContent: @Composable (Modifier) -> Unit = { drawerModifier ->
             AppDrawerContent(
                 selected = currentTab,
-                assistantName = com.nandivex.friday.data.DISPLAY_NAME,
                 userName = uiState.settings.ownerName,
+                appVersion = com.nandivex.friday.BuildConfig.VERSION_NAME,
                 onClose = { scope.launch { drawerState.close() } },
                 onSelect = { tab ->
                     scope.launch { drawerState.close() }

@@ -3,6 +3,12 @@
 The newest version goes first. The first "## x.y.z" heading below is the app's version: the build, the update
 notes and the About page all read it from here. A date after the version is optional.
 
+## 0.0.28 - 2026-11-16
+
+### Changed
+- A new menu. Pages are grouped as Home, What it can do, History and Memory, then Account (Profile), App (Settings, Usage, Storage) and Support (Help and support, About). The header shows the app mark, your name and the app name, and the footer shows the version and "from Nandivex Technologies".
+- Menu rows are larger (48 dp), with a clear purple selected row, and a screen reader announces which row is selected.
+
 ## 0.0.27 - 2026-11-16
 
 ### Changed

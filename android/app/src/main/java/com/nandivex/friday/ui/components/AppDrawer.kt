@@ -43,6 +43,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Insights
@@ -64,86 +67,84 @@ import com.nandivex.friday.ui.theme.AssistantTextSecondary
 /** Pages reachable from the left menu. */
 enum class NavTab(val label: String, val icon: ImageVector) {
     HOME("Home", AssistantIcons.Home),
-    PROFILE("Profile", Icons.Outlined.AccountCircle),
-    MEMORY("Memory", Icons.Outlined.Psychology),
+    ABILITIES("What it can do", Icons.Outlined.Bolt),
     HISTORY("History", Icons.Outlined.History),
-    ABILITIES("What F.R.I.D.A.Y. can do", Icons.Outlined.Bolt),
+    MEMORY("Memory", Icons.Outlined.Psychology),
+    PROFILE("Profile", Icons.Outlined.AccountCircle),
     SETTINGS("Settings", AssistantIcons.Settings),
     USAGE("Usage", Icons.Outlined.Insights),
     STORAGE("Storage", Icons.Outlined.Inventory2),
     DEVELOPER("Developer", Icons.Outlined.Code),
-    HELP("Help & support", Icons.AutoMirrored.Outlined.HelpOutline),
+    HELP("Help and support", Icons.AutoMirrored.Outlined.HelpOutline),
     ABOUT("About", Icons.Outlined.Info)
 }
 
 /** Height of the slim bar at the top of every page; pages reserve this much space under it. */
 val AppTopBarHeight = 56.dp
 
-private val RowHeight = 40.dp
+private val RowHeight = 48.dp
 
-/** The menu in reading order: the basics, what FRIDAY does, what it knows about you, the numbers, then the app itself. */
+/** The menu in reading order: the basics, then your data, your account, the app itself, and help. */
 private val DrawerGroups: List<Pair<String?, List<NavTab>>> = listOf(
-    null to listOf(NavTab.HOME),
-    "Assistant" to listOf(NavTab.ABILITIES),
-    "Your data" to listOf(NavTab.MEMORY, NavTab.HISTORY),
-    "Insights" to listOf(NavTab.USAGE, NavTab.STORAGE),
-    "App" to listOf(NavTab.SETTINGS, NavTab.HELP, NavTab.ABOUT)
+    null to listOf(NavTab.HOME, NavTab.ABILITIES, NavTab.HISTORY, NavTab.MEMORY),
+    "Account" to listOf(NavTab.PROFILE),
+    "App" to listOf(NavTab.SETTINGS, NavTab.USAGE, NavTab.STORAGE),
+    "Support" to listOf(NavTab.HELP, NavTab.ABOUT)
 )
 
 @Composable
 fun AppDrawerContent(
     selected: NavTab,
-    assistantName: String,
-    /** The signed-in buyer's name (or the name set in Settings); blank shows "Your profile". */
+    /** The name set at setup; blank shows only the app name. */
     userName: String,
+    appVersion: String,
     onSelect: (NavTab) -> Unit,
     modifier: Modifier = Modifier,
     onClose: (() -> Unit)? = null,
 ) {
     Column(modifier.statusBarsPadding().navigationBarsPadding()) {
-        DrawerHeader(assistantName, onClose)
+        DrawerHeader(userName, onClose)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp)) {
-            Spacer(Modifier.height(4.dp))
-            // A hairline and a plain caption start each group. Settings sits in the footer.
             DrawerGroups.forEach { (title, tabs) ->
                 if (title != null) NavSection(title)
                 tabs.forEach { tab -> NavRow(tab, tab == selected) { onSelect(tab) } }
             }
             Spacer(Modifier.height(16.dp))
         }
-        DrawerFooter(userName, selected == NavTab.PROFILE) { onSelect(NavTab.PROFILE) }
+        DrawerFooter(appVersion)
     }
 }
 
 @Composable
 private fun NavSection(title: String) {
-    Spacer(Modifier.height(10.dp))
-    Box(Modifier.fillMaxWidth().height(1.dp).background(AssistantOutline))
     Text(
-        text = title,
-        color = AssistantTextMuted,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Medium,
-        modifier = Modifier.padding(start = 12.dp, top = 12.dp, bottom = 4.dp)
+        text = title.uppercase(),
+        color = AssistantTextSecondary,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 6.dp)
     )
 }
 
 @Composable
 private fun NavRow(tab: NavTab, selected: Boolean, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(24.dp)
+    val tint = if (selected) AssistantAccent else AssistantTextPrimary
     Row(
         Modifier.fillMaxWidth().height(RowHeight).clip(shape)
             .then(if (selected) Modifier.background(AssistantSelectedBg, shape) else Modifier)
-            .clickable(onClick = onClick).padding(horizontal = 12.dp),
+            .semantics { this.selected = selected }
+            .clickable(role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(tab.icon, contentDescription = null, modifier = Modifier.size(20.dp), tint = if (selected) AssistantTextPrimary else AssistantTextSecondary)
+        Icon(tab.icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = tint)
         Spacer(Modifier.size(16.dp))
         Text(
             tab.label,
-            color = AssistantTextPrimary,
-            fontSize = 15.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            color = tint,
+            fontSize = 16.sp,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -151,55 +152,39 @@ private fun NavRow(tab: NavTab, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** The assistant's name in a serif on the left and a thin close button on the right: flat, no borders. */
+/** The app mark with the user's name and the app name, and a close button where the menu is a sheet. */
 @Composable
-private fun DrawerHeader(assistantName: String, onClose: (() -> Unit)?) {
-    Row(Modifier.fillMaxWidth().height(64.dp).padding(start = 24.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            assistantName,
-            color = AssistantTextPrimary,
-            fontFamily = androidx.compose.ui.text.font.FontFamily.Default,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Normal,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+private fun DrawerHeader(userName: String, onClose: (() -> Unit)?) {
+    val name = userName.trim()
+    Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        AppIconTile(48.dp)
+        Spacer(Modifier.size(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                if (name.isEmpty()) com.nandivex.friday.data.DISPLAY_NAME else name,
+                color = AssistantTextPrimary, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis
+            )
+            if (name.isNotEmpty()) {
+                Text(com.nandivex.friday.data.DISPLAY_NAME, color = AssistantTextSecondary, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
         if (onClose != null) {
             IconButton(onClick = onClose) {
-                Icon(Icons.Outlined.Close, contentDescription = "Close menu", tint = AssistantTextSecondary, modifier = Modifier.size(22.dp))
+                Icon(Icons.Outlined.Close, contentDescription = "Close menu", tint = AssistantTextSecondary, modifier = Modifier.size(24.dp))
             }
         }
     }
 }
 
-/** Pinned at the bottom: a circle with the first letter of the user's name, then the name. Tapping it opens Profile. */
+/** Pinned at the bottom: the app version and who makes it. */
 @Composable
-private fun DrawerFooter(userName: String, selected: Boolean, onProfile: () -> Unit) {
-    val shape = RoundedCornerShape(16.dp)
-    val shown = userName.trim().ifBlank { "Your profile" }
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp).clip(shape)
-            .then(if (selected) Modifier.background(AssistantSelectedBg, shape) else Modifier)
-            .clickable(onClick = onProfile).padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(Modifier.size(40.dp).background(AssistantSurfaceElevated, CircleShape), contentAlignment = Alignment.Center) {
-            Text(
-                userName.trim().firstOrNull()?.uppercase() ?: "U",
-                color = AssistantTextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Medium
-            )
-        }
-        Spacer(Modifier.size(14.dp))
-        Text(
-            shown,
-            color = AssistantTextPrimary,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
+private fun DrawerFooter(appVersion: String) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 14.dp)) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(AssistantOutline))
+        Spacer(Modifier.height(12.dp))
+        Text("Version $appVersion", color = AssistantTextSecondary, fontSize = 13.sp)
+        Text("from Nandivex Technologies", color = AssistantTextSecondary, fontSize = 13.sp)
     }
 }
 

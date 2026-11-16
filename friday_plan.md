@@ -261,6 +261,7 @@ Design is a matter of taste, so this phase starts with pictures you approve, not
   **Help & support** and **About**. Material 3 navigation items with a clear selected state, 48 dp touch targets, one
   icon style, and the same page header on every page.
 - Done when: every page is reachable in two taps, TalkBack reads every item, and you approve it on the phone.
+- **Built 2026-11-16 (0.0.28, PR pending):** new menu groups, 48 dp rows, selected state for screen readers, header with the app mark and your name, footer with version. The email and plan lines in the header, and a Plan row, wait for Phase 7 (nothing fake is shown). Also fixed: button text colour (it was taking the secondary text colour from the typography, so "Got it" was unreadable on dark).
 
 **Sprint 6.4: Pages and wording** (items 5, 9, 10, 11)
 - **Help & support**, laid out like other apps: frequently asked questions (expandable, searchable), Contact support

@@ -63,7 +63,7 @@ fun WhatsNewCard(entries: List<ChangelogEntry>, onDismiss: () -> Unit) {
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = AssistantAccent, contentColor = AssistantOnButtonFill)
+                    colors = ButtonDefaults.buttonColors(containerColor = com.nandivex.friday.ui.theme.AssistantButtonFill, contentColor = AssistantOnButtonFill)
                 ) { Text("Got it") }
             }
         }
