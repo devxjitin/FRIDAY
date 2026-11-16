@@ -80,4 +80,26 @@ object AssistantIcons {
         arcToRelative(r, r, 0f, true, true, -2 * r, 0f)
         close()
     }
+
+    /** Menu icons: round-capped 2 dp outlines drawn from SVG path data on a 24 dp grid. */
+    private fun outline(name: String, vararg paths: String): ImageVector =
+        ImageVector.Builder(name, 24.dp, 24.dp, 24f, 24f).apply {
+            paths.forEach { d ->
+                addPath(
+                    androidx.compose.ui.graphics.vector.PathParser().parsePathString(d).toNodes(),
+                    stroke = ink, strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round
+                )
+            }
+        }.build()
+
+    val MenuHome: ImageVector by lazy { outline("MenuHome", "M4 11l8-7 8 7v9H4z") }
+    val MenuHistory: ImageVector by lazy { outline("MenuHistory", "M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 8v5l3 2") }
+    val MenuAbilities: ImageVector by lazy { outline("MenuAbilities", "M9 11l2 2 4-4M12 3l8 3v6c0 4-3 7-8 9-5-2-8-5-8-9V6z") }
+    val MenuMemory: ImageVector by lazy { outline("MenuMemory", "M12 3a6 6 0 0 0-4 10.5V17h8v-3.5A6 6 0 0 0 12 3zM9 21h6") }
+    val MenuStorage: ImageVector by lazy { outline("MenuStorage", "M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3") }
+    val MenuUsage: ImageVector by lazy { outline("MenuUsage", "M5 20V10M12 20V4M19 20v-7") }
+    val MenuProfile: ImageVector by lazy { outline("MenuProfile", "M8 8a4 4 0 1 0 8 0 4 4 0 1 0-8 0zM4 21c1-4 4-6 8-6s7 2 8 6") }
+    val MenuSettings: ImageVector by lazy { outline("MenuSettings", "M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0zM12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2") }
+    val MenuHelp: ImageVector by lazy { outline("MenuHelp", "M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.1") }
+    val MenuAbout: ImageVector by lazy { outline("MenuAbout", "M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0zM12 11v6M12 7.5v.1") }
 }

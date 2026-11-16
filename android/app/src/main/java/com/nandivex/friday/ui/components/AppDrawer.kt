@@ -63,17 +63,17 @@ import com.nandivex.friday.ui.theme.AssistantTextSecondary
 
 /** Pages reachable from the left menu. */
 enum class NavTab(val label: String, val icon: ImageVector) {
-    HOME("Home", AssistantIcons.Home),
-    PROFILE("Profile", Icons.Outlined.AccountCircle),
-    MEMORY("Memory", Icons.Outlined.Psychology),
-    HISTORY("History", Icons.Outlined.History),
-    ABILITIES("What it can do", Icons.Outlined.Bolt),
-    SETTINGS("Settings", AssistantIcons.Settings),
-    USAGE("Usage", Icons.Outlined.Insights),
-    STORAGE("Storage", Icons.Outlined.Inventory2),
+    HOME("Home", AssistantIcons.MenuHome),
+    PROFILE("Profile", AssistantIcons.MenuProfile),
+    MEMORY("Memory", AssistantIcons.MenuMemory),
+    HISTORY("History", AssistantIcons.MenuHistory),
+    ABILITIES("What it can do", AssistantIcons.MenuAbilities),
+    SETTINGS("Settings", AssistantIcons.MenuSettings),
+    USAGE("Usage", AssistantIcons.MenuUsage),
+    STORAGE("Storage", AssistantIcons.MenuStorage),
     DEVELOPER("Developer", Icons.Outlined.Code),
-    HELP("Help and support", Icons.AutoMirrored.Outlined.HelpOutline),
-    ABOUT("About", Icons.Outlined.Info)
+    HELP("Help and support", AssistantIcons.MenuHelp),
+    ABOUT("About", AssistantIcons.MenuAbout)
 }
 
 /** Height of the slim bar at the top of every page; pages reserve this much space under it. */
